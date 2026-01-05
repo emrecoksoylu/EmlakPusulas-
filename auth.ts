@@ -18,17 +18,19 @@ async function getUser(email: string) {
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
     ...authConfig,
+    trustHost: true,
+    session: { strategy: "jwt" },
     providers: [
         Credentials({
             async authorize(credentials) {
                 try {
-                    console.log("Authorize attempt for:", credentials?.email);
+                    console.log("[AUTH] Authorize attempt for:", credentials?.email);
                     const parsedCredentials = z
                         .object({ email: z.string().email(), password: z.string().min(6) })
                         .safeParse(credentials);
 
                     if (!parsedCredentials.success) {
-                        console.log("Validation failed:", parsedCredentials.error.flatten());
+                        console.log("[AUTH] Validation failed:", parsedCredentials.error.flatten());
                         return null;
                     }
 
@@ -36,26 +38,27 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                     const user = await getUser(email);
 
                     if (!user) {
-                        console.log("User not found:", email);
+                        console.log("[AUTH] User not found in DB:", email);
                         return null;
                     }
 
                     if (!user.password) {
-                        console.log("User has no password (old or incomplete account):", email);
+                        console.log("[AUTH] User has no password set:", email);
                         return null;
                     }
 
                     const passwordsMatch = await bcrypt.compare(password, user.password);
                     if (passwordsMatch) {
-                        console.log("Auth success for:", email);
+                        console.log("[AUTH] Success:", email);
                         return user;
                     }
 
-                    console.log("Password mismatch for:", email);
+                    console.log("[AUTH] Password mismatch:", email);
                     return null;
-                } catch (error) {
-                    console.error("Critical error in authorize callback:", error);
-                    return null;
+                } catch (error: any) {
+                    console.error("[AUTH] Critical error in authorize:", error?.message || error);
+                    // Throwing the error instead of returning null might show up better in Vercel logs
+                    throw error;
                 }
             },
         }),
@@ -63,18 +66,28 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     callbacks: {
         ...authConfig.callbacks,
         async jwt({ token, user }: { token: any; user?: any }) {
-            if (user) {
-                token.role = user.role;
-                token.companyName = user.companyName;
+            try {
+                if (user) {
+                    token.role = user.role;
+                    token.companyName = user.companyName;
+                }
+                return token;
+            } catch (error) {
+                console.error("[AUTH] Error in jwt callback:", error);
+                return token;
             }
-            return token;
         },
         async session({ session, token }: { session: any; token: any }) {
-            if (session.user) {
-                session.user.role = token.role;
-                session.user.companyName = token.companyName;
+            try {
+                if (session.user) {
+                    session.user.role = token.role;
+                    session.user.companyName = token.companyName;
+                }
+                return session;
+            } catch (error) {
+                console.error("[AUTH] Error in session callback:", error);
+                return session;
             }
-            return session;
         },
     },
 });
