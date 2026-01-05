@@ -5,26 +5,6 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
-declare module "next-auth" {
-    interface Session {
-        user: {
-            role?: string | null
-            companyName?: string | null
-        } & DefaultSession["user"]
-    }
-
-    interface User {
-        role?: string | null
-        companyName?: string | null
-    }
-}
-
-declare module "next-auth/jwt" {
-    interface JWT {
-        role?: string | null
-        companyName?: string | null
-    }
-}
 
 async function getUser(email: string) {
     try {
@@ -83,15 +63,15 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
-                token.role = (user as any).role;
-                token.companyName = (user as any).companyName;
+                (token as any).role = (user as any).role;
+                (token as any).companyName = (user as any).companyName;
             }
             return token;
         },
-        async session({ session, token }) {
+        async session({ session, token }: { session: any, token: any }) {
             if (session.user) {
-                session.user.role = token.role as string;
-                session.user.companyName = token.companyName as string;
+                session.user.role = token.role;
+                session.user.companyName = token.companyName;
             }
             return session;
         },
