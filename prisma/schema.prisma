@@ -1,0 +1,100 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  companyName String?
+  password  String?
+  role      String   @default("user")
+  listings     Listing[]
+  customers    Customer[]
+  errorReports ErrorReport[]
+  createdAt    DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ErrorReport {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  status      String   @default("open") // open, in-progress, resolved
+  
+  agentId     String
+  agent       Agent    @relation(fields: [agentId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?
+  phone     String?
+  notes     String?
+  status    String   @default("lead")
+  
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  
+  interestedListings Listing[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Listing {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  price       String
+  location    String
+  features    String
+  imageUrl    String?
+  status      String   @default("active")
+  source      String   @default("Internal")
+  
+  // Detailed Fields
+  m2Gross       Int?
+  m2Net         Int?
+  roomCount     String?
+  buildingAge   String?
+  floorLocation String?
+  heatingType   String?
+  bathroomCount Int?
+  balcony       Boolean @default(false)
+  furnished     Boolean @default(false)
+  usageStatus   String?
+  dues          Int?
+  creditSuitable Boolean @default(true)
+  
+  agentId     String
+  agent       Agent    @relation(fields: [agentId], references: [id])
+  
+  stats             PlatformStats[]
+  interestedCustomers Customer[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PlatformStats {
+  id        String   @id @default(uuid())
+  platform  String
+  views     Int      @default(0)
+  favorites Int      @default(0)
+  
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  
+  lastChecked DateTime @default(now())
+}
