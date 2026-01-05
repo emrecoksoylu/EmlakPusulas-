@@ -1,10 +1,30 @@
-
-import NextAuth from 'next-auth';
+import NextAuth, { DefaultSession } from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+
+declare module "next-auth" {
+    interface Session {
+        user: {
+            role?: string | null
+            companyName?: string | null
+        } & DefaultSession["user"]
+    }
+
+    interface User {
+        role?: string | null
+        companyName?: string | null
+    }
+}
+
+declare module "next-auth/jwt" {
+    interface JWT {
+        role?: string | null
+        companyName?: string | null
+    }
+}
 
 async function getUser(email: string) {
     try {
