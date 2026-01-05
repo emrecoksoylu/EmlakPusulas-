@@ -26,6 +26,12 @@ export async function createCustomer(formData: FormData) {
     const notes = formData.get("notes") as string
     const status = (formData.get("status") as string) || "lead"
 
+    const minPrice = formData.get("minPrice") ? parseFloat(formData.get("minPrice") as string) : null
+    const maxPrice = formData.get("maxPrice") ? parseFloat(formData.get("maxPrice") as string) : null
+    const preferredLocations = formData.get("preferredLocations") as string
+    const preferredRoomCount = formData.get("preferredRoomCount") as string
+    const propertyType = formData.get("propertyType") as string
+
     await prisma.customer.create({
         data: {
             name,
@@ -33,6 +39,11 @@ export async function createCustomer(formData: FormData) {
             phone,
             notes,
             status,
+            minPrice,
+            maxPrice,
+            preferredLocations,
+            preferredRoomCount,
+            propertyType,
             agentId: agent.id
         }
     })
@@ -71,6 +82,12 @@ export async function updateCustomer(id: string, formData: FormData) {
         throw new Error("Müşteri bulunamadı veya yetkiniz yok.")
     }
 
+    const minPrice = formData.get("minPrice") ? parseFloat(formData.get("minPrice") as string) : null
+    const maxPrice = formData.get("maxPrice") ? parseFloat(formData.get("maxPrice") as string) : null
+    const preferredLocations = formData.get("preferredLocations") as string
+    const preferredRoomCount = formData.get("preferredRoomCount") as string
+    const propertyType = formData.get("propertyType") as string
+
     await prisma.customer.update({
         where: { id },
         data: {
@@ -78,7 +95,12 @@ export async function updateCustomer(id: string, formData: FormData) {
             email,
             phone,
             notes,
-            status
+            status,
+            minPrice,
+            maxPrice,
+            preferredLocations,
+            preferredRoomCount,
+            propertyType
         }
     })
 

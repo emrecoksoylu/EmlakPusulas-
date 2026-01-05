@@ -1,21 +1,26 @@
-
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Printer, Download, ArrowLeft, Save } from "lucide-react"
+import { Printer, ArrowLeft, Save, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 
 export default function RentalContractGenerator() {
-    const printRef = useRef<HTMLDivElement>(null)
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const customerId = searchParams.get("customerId")
+    const listingId = searchParams.get("listingId")
+
+    const [isLoading, setIsLoading] = useState(false)
     const [formData, setFormData] = useState({
         startDate: "",
         duration: "1 Yıl",
         monthlyRent: "",
-        annualRent: "",
         paymentDay: "Her ayın 1. ile 5. günü arası",
         deposit: "",
 
@@ -29,9 +34,19 @@ export default function RentalContractGenerator() {
 
         propertyAddress: "",
         propertyType: "Konut",
-        propertyStatus: "Temiz ve bakımlı",
         fixtures: "Boya-badana yapılmış, kombi çalışır vaziyette."
     })
+
+    useEffect(() => {
+        // Auto-fill from URL params if available
+        if (listingId) {
+            // In a real scenario, fetch listing data
+            // For now, we'll just set a placeholder
+        }
+        if (customerId) {
+            // In a real scenario, fetch customer data
+        }
+    }, [customerId, listingId])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
@@ -40,6 +55,34 @@ export default function RentalContractGenerator() {
 
     const handlePrint = () => {
         window.print()
+    }
+
+    const handleSave = async () => {
+        setIsLoading(true)
+        try {
+            // Save contract to database
+            const response = await fetch("/api/contracts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    type: "Kira Sözleşmesi",
+                    content: JSON.stringify(formData),
+                    customerId,
+                    listingId
+                })
+            })
+
+            if (response.ok) {
+                toast.success("Sözleşme kaydedildi!")
+                router.push("/dashboard/contracts")
+            } else {
+                toast.error("Kaydetme başarısız.")
+            }
+        } catch (error) {
+            toast.error("Bir hata oluştu.")
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (
@@ -61,8 +104,9 @@ export default function RentalContractGenerator() {
                     <Button variant="outline" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" /> Yazdır (PDF)
                     </Button>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                        <Save className="mr-2 h-4 w-4" /> Kaydet
+                    <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSave} disabled={isLoading}>
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Kaydet
                     </Button>
                 </div>
             </div>
@@ -128,7 +172,7 @@ export default function RentalContractGenerator() {
                 </div>
 
                 {/* Preview Section */}
-                <div className="bg-white border shadow-lg rounded-lg p-10 font-serif text-[12px] leading-relaxed max-w-[21cm] mx-auto min-h-[29.7cm] text-black print:m-0 print:border-0 print:shadow-none" ref={printRef}>
+                <div className="bg-white border shadow-lg rounded-lg p-10 font-serif text-[12px] leading-relaxed max-w-[21cm] mx-auto min-h-[29.7cm] text-black print:m-0 print:border-0 print:shadow-none">
                     <h1 className="text-center text-xl font-bold uppercase mb-8 border-b-2 border-black pb-4">KİRA SÖZLEŞMESİ</h1>
 
                     <div className="grid grid-cols-3 border border-black">

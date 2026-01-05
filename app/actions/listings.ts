@@ -70,10 +70,13 @@ export async function createListing(formData: FormData) {
         }
     }
 
+    const priceNumeric = parseFloat(price.replace(/[^0-9.]/g, ''))
+
     await prisma.listing.create({
         data: {
             title,
             price,
+            priceNumeric,
             location,
             description,
             features,

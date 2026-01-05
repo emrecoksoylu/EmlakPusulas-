@@ -28,18 +28,18 @@ export default async function DashboardHome() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
                         {user?.companyName || "Hoş Geldiniz"} 👋
                     </h1>
-                    <p className="text-gray-500 mt-2">
+                    <p className="text-gray-500 mt-2 text-sm sm:text-base">
                         {user?.name} - Emlak portföyünüzün güncel durumu.
                     </p>
                 </div>
                 <Link href="/dashboard/listings/new">
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                        <Plus className="mr-2 h-4 w-4" /> Yeni İlan Ekle
+                    <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                        <Plus className="mr-2 h-4 w-4" /> Yeni İlan
                     </Button>
                 </Link>
             </div>

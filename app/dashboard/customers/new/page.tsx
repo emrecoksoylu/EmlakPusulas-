@@ -88,9 +88,78 @@ export default function NewCustomerPage() {
                         <Textarea
                             id="notes"
                             name="notes"
-                            placeholder="Müşteri talepleri, bütçesi vb..."
-                            className="h-32 resize-none"
+                            placeholder="Müşteri talepleri vb..."
+                            className="h-24 resize-none"
                         />
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-gray-100">
+                        <h3 className="text-lg font-semibold text-blue-900">Arayış Kriterleri (Eşleştirme İçin)</h3>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label htmlFor="minPrice">Min. Bütçe (TL)</Label>
+                                <Input
+                                    id="minPrice"
+                                    name="minPrice"
+                                    type="text"
+                                    placeholder="Örn: 5.000.000"
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, '')
+                                        e.target.value = value ? parseInt(value).toLocaleString('tr-TR') : ''
+                                    }}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="maxPrice">Max. Bütçe (TL)</Label>
+                                <Input
+                                    id="maxPrice"
+                                    name="maxPrice"
+                                    type="text"
+                                    placeholder="Örn: 20.000.000"
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, '')
+                                        e.target.value = value ? parseInt(value).toLocaleString('tr-TR') : ''
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label htmlFor="preferredLocations">Tercih Edilen Bölgeler</Label>
+                                <Input id="preferredLocations" name="preferredLocations" placeholder="Örn: Beşiktaş, Şişli" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="preferredRoomCount">Oda Sayısı</Label>
+                                <Select name="preferredRoomCount">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Seçiniz" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="1+0">1+0</SelectItem>
+                                        <SelectItem value="1+1">1+1</SelectItem>
+                                        <SelectItem value="2+1">2+1</SelectItem>
+                                        <SelectItem value="3+1">3+1</SelectItem>
+                                        <SelectItem value="4+1">4+1+</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="propertyType">Konut Tipi</Label>
+                            <Select name="propertyType">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seçiniz" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Daire">Daire</SelectItem>
+                                    <SelectItem value="Villa">Villa</SelectItem>
+                                    <SelectItem value="Arsa">Arsa</SelectItem>
+                                    <SelectItem value="Ticari">Ticari</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-4 pt-4">
