@@ -59,6 +59,7 @@ export function DashboardSidebar() {
             icon: ShieldCheck,
         })
     }
+    const user = session?.user as any
     return (
         <div className="flex h-full w-64 flex-col border-r bg-white">
             <div className="flex h-16 items-center border-b px-6">
@@ -88,10 +89,10 @@ export function DashboardSidebar() {
                         <Users className="h-6 w-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{((session?.user) as any)?.companyName || session?.user?.name}</p>
-                        <p className="text-xs text-gray-500 truncate">{session?.user?.email}</p>
+                        <p className="text-sm font-semibold text-gray-900 truncate">{user?.companyName || user?.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                         <p className="text-[10px] items-center gap-1 font-bold text-blue-600 flex bg-blue-50 w-fit px-1.5 py-0.5 rounded-full mt-1">
-                            <ShieldCheck className="h-3 w-3" /> {((session?.user) as any)?.role === 'admin' ? 'YÖNETİCİ' : 'DANIŞMAN'}
+                            <ShieldCheck className="h-3 w-3" /> {user?.role === 'admin' ? 'YÖNETİCİ' : 'DANIŞMAN'}
                         </p>
                     </div>
                 </div>

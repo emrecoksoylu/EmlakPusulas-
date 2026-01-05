@@ -24,15 +24,17 @@ export default async function DashboardHome() {
     const activeListings = listings.length
     const totalCustomers = customers.length
 
+    const user = session?.user as any
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                        {((session?.user) as any)?.companyName || "Hoş Geldiniz"} 👋
+                        {user?.companyName || "Hoş Geldiniz"} 👋
                     </h1>
                     <p className="text-gray-500 mt-2">
-                        {((session?.user) as any)?.name} - Emlak portföyünüzün güncel durumu.
+                        {user?.name} - Emlak portföyünüzün güncel durumu.
                     </p>
                 </div>
                 <Link href="/dashboard/listings/new">
