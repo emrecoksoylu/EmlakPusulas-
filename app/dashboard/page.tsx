@@ -32,7 +32,7 @@ export default async function DashboardHome() {
                         {session?.user?.companyName || "Hoş Geldiniz"} 👋
                     </h1>
                     <p className="text-gray-500 mt-2">
-                        {(session?.user as any)?.name} - Emlak portföyünüzün güncel durumu.
+                        {session?.user?.name} - Emlak portföyünüzün güncel durumu.
                     </p>
                 </div>
                 <Link href="/dashboard/listings/new">

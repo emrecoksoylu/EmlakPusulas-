@@ -38,7 +38,7 @@ export async function register(prevState: string | undefined, formData: FormData
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        await prisma.agent.create({
+        await (prisma as any).agent.create({
             data: {
                 email,
                 name,
