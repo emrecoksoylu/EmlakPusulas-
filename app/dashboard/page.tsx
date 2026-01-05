@@ -29,10 +29,10 @@ export default async function DashboardHome() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                        {session?.user?.companyName || "Hoş Geldiniz"} 👋
+                        {((session?.user) as any)?.companyName || "Hoş Geldiniz"} 👋
                     </h1>
                     <p className="text-gray-500 mt-2">
-                        {session?.user?.name} - Emlak portföyünüzün güncel durumu.
+                        {((session?.user) as any)?.name} - Emlak portföyünüzün güncel durumu.
                     </p>
                 </div>
                 <Link href="/dashboard/listings/new">
