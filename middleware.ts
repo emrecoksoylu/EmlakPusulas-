@@ -1,3 +1,6 @@
+import NextAuth from 'next-auth';
+import { authConfig } from './auth.config';
+
 const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
 
 // Debug log for Vercel
