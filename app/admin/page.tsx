@@ -7,6 +7,8 @@ import { logout } from "@/app/actions/authenticate"
 import { Button } from "@/components/ui/button"
 import { AdminReportItem } from "@/components/AdminReportItem"
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminPage() {
     const session = await auth()
 

@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button"
 import { FileText, Plus, Search, Filter } from "lucide-react"
 import Link from "next/link"
 
+export const dynamic = 'force-dynamic'
+
 export default function ContractsPage() {
     const contractTypes = [
         {
