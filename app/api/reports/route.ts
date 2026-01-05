@@ -2,6 +2,8 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: Request) {
     try {
         const session = await auth()
@@ -15,7 +17,7 @@ export async function POST(req: Request) {
             return new NextResponse("Missing fields", { status: 400 })
         }
 
-        const agent = await prisma.agent.findUnique({
+        const agent = await (prisma as any).agent.findUnique({
             where: { email: session.user.email }
         })
 
@@ -23,7 +25,7 @@ export async function POST(req: Request) {
             return new NextResponse("Agent not found", { status: 404 })
         }
 
-        const report = await prisma.errorReport.create({
+        const report = await (prisma as any).errorReport.create({
             data: {
                 title,
                 description,
