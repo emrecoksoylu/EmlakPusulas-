@@ -5,6 +5,11 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
+// Robust check for Vercel Environment
+if (typeof window === 'undefined' && !process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
+    console.error("FATAL ERROR: AUTH_SECRET is not defined in Vercel Environment Variables. Auth will fail.");
+}
+
 
 async function getUser(email: string) {
     try {
