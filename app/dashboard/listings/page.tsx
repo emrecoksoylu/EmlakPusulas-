@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     const activeListings = listings.filter(l => l.status === 'active' || !l.status)
     const passiveListings = listings.filter(l => l.status === 'passive' || l.status === 'archived')
 
-    const renderListingGrid = (items: Listing[]) => {
+    const renderListingGrid = (items: any[]) => {
         if (items.length === 0) {
             return (
                 <div className="rounded-lg border bg-white p-12 text-center shadow-sm">
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
 
         return (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((listing: Listing) => (
+                {items.map((listing) => (
                     <div key={listing.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group flex flex-col hover:border-blue-200 transition-all relative">
                         <Link href={`/dashboard/listings/${listing.id}`} className="absolute inset-0 z-0" />
                         <div className="relative z-10 pointer-events-none flex flex-col h-full">

@@ -27,7 +27,7 @@ export async function saveContract(data: {
 }
 
 export async function getContracts() {
-    return await prisma.contract.findMany({
+    const contracts = await prisma.contract.findMany({
         include: {
             customer: true,
             listing: true
@@ -36,4 +36,19 @@ export async function getContracts() {
             createdAt: 'desc'
         }
     })
+
+    return contracts.map(contract => ({
+        ...contract,
+        listing: contract.listing ? {
+            ...contract.listing,
+            priceNumeric: (contract.listing as any).priceNumeric ? (contract.listing as any).priceNumeric.toNumber() : null
+        } : null,
+        // sanitize customer if needed, but customer usually doesn't have Decimal unless minPrice/maxPrice are there.
+        // Customer has minPrice/maxPrice as Decimal? Yes.
+        customer: {
+            ...contract.customer,
+            minPrice: (contract.customer as any).minPrice ? (contract.customer as any).minPrice.toNumber() : null,
+            maxPrice: (contract.customer as any).maxPrice ? (contract.customer as any).maxPrice.toNumber() : null
+        }
+    }))
 }

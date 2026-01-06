@@ -60,7 +60,7 @@ export async function createListing(formData: FormData) {
 
     const priceNumeric = parseFloat(price.replace(/[^0-9.]/g, ''))
 
-    await prisma.listing.create({
+    await (prisma as any).listing.create({
         data: {
             title,
             price,
@@ -93,7 +93,7 @@ export async function createListing(formData: FormData) {
 export async function getListings() {
     const agent = await getDefaultAgent()
 
-    return await prisma.listing.findMany({
+    const listings = await prisma.listing.findMany({
         where: {
             agentId: agent.id
         },
@@ -104,6 +104,11 @@ export async function getListings() {
             createdAt: 'desc'
         }
     })
+
+    return listings.map(listing => ({
+        ...listing,
+        priceNumeric: (listing as any).priceNumeric ? (listing as any).priceNumeric.toNumber() : null
+    }))
 }
 export async function updateListingStatus(listingId: string, newStatus: 'active' | 'passive') {
     await (prisma as any).listing.update({
