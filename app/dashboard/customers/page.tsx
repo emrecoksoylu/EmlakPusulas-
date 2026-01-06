@@ -52,7 +52,7 @@ export default async function CustomersPage() {
                                         <p className="text-xs text-gray-400 italic">Kayıt yok</p>
                                     </div>
                                 ) : (
-                                    filteredCustomers.map((customer: Customer) => (
+                                    filteredCustomers.map((customer) => (
                                         <div key={customer.id} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:border-blue-200 transition-all group relative">
                                             <Link href={`/dashboard/customers/${customer.id}`} className="absolute inset-0 z-0" />
                                             <div className="relative z-10 pointer-events-none">
