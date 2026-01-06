@@ -26,12 +26,21 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
+// Custom types to handle Decimal -> number conversion for client components
+type CustomerWithNumber = Omit<Customer, 'minPrice' | 'maxPrice'> & {
+    minPrice: number | null;
+    maxPrice: number | null;
+}
+
+type ListingWithRelations = Omit<Listing, 'priceNumeric'> & {
+    priceNumeric: number | null;
+    interestedCustomers: CustomerWithNumber[];
+    images: string[];
+}
+
 interface ListingDetailClientProps {
-    listing: Listing & {
-        interestedCustomers: Customer[];
-        images: string[];
-    }
-    allCustomers: Customer[]
+    listing: ListingWithRelations
+    allCustomers: CustomerWithNumber[]
 }
 
 export default function ListingDetailClient({ listing, allCustomers }: ListingDetailClientProps) {
