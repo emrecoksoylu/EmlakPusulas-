@@ -15,14 +15,57 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2, Upload, Home, Ruler, Building, Info } from "lucide-react"
+import { Loader2, Upload, Home, Ruler, Building, Info, X } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
 export function ListingForm() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
-    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [uploading, setUploading] = useState(false)
+    const [previewUrls, setPreviewUrls] = useState<string[]>([])
+    const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
+
+    const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return
+
+        const files = Array.from(e.target.files)
+        setUploading(true)
+
+        const formData = new FormData()
+        files.forEach(file => formData.append("images", file))
+
+        try {
+            // Local preview first
+            const localPreviews = files.map(file => URL.createObjectURL(file))
+            setPreviewUrls(prev => [...prev, ...localPreviews])
+
+            // Upload to Supabase
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || "Upload failed")
+            }
+
+            setUploadedUrls(prev => [...prev, ...data.urls])
+            toast.success(`${files.length} fotoğraf yüklendi`)
+        } catch (error) {
+            console.error("Upload error:", error)
+            toast.error("Fotoğraf yüklenirken hata oluştu")
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const removeImage = (index: number) => {
+        setPreviewUrls(prev => prev.filter((_, i) => i !== index))
+        setUploadedUrls(prev => prev.filter((_, i) => i !== index))
+    }
 
     // AI Generation State
     const [aiPrompt, setAiPrompt] = useState("")
@@ -34,9 +77,6 @@ export function ListingForm() {
 
         try {
             const formData = new FormData(e.currentTarget)
-            if (imageFile) {
-                formData.append("image", imageFile)
-            }
 
             // Handle checkboxes explicitly if needed, but FormData usually handles 'on'
             // We will trust server action to handle "on" conversion
@@ -232,17 +272,52 @@ export function ListingForm() {
                     Görseller ve Açıklama
                 </h3>
 
-                <div className="space-y-2">
-                    <Label htmlFor="image">İlan Fotoğrafı</Label>
-                    <div className="flex items-center gap-4">
-                        <Input
-                            id="image"
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)}
-                            className="cursor-pointer file:cursor-pointer"
-                        />
+                <div className="space-y-4">
+                    <Label>İlan Fotoğrafları</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Upload Button */}
+                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors relative h-32">
+                            <input
+                                type="file"
+                                id="images"
+                                multiple
+                                accept="image/*"
+                                onChange={handleImageSelect}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                disabled={uploading}
+                            />
+                            {uploading ? (
+                                <Loader2 className="h-8 w-8 text-blue-500 animate-spin mb-2" />
+                            ) : (
+                                <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                            )}
+                            <span className="text-xs text-gray-500 font-medium">
+                                {uploading ? "Yükleniyor..." : "Fotoğraf Yükle"}
+                            </span>
+                        </div>
+
+                        {/* Image Previews */}
+                        {previewUrls.map((url, index) => (
+                            <div key={url} className="relative group rounded-xl overflow-hidden border border-gray-200 h-32 bg-gray-100">
+                                <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={() => removeImage(index)}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                                {index === 0 && (
+                                    <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] py-1 text-center backdrop-blur-sm">
+                                        Kapak Fotoğrafı
+                                    </span>
+                                )}
+                            </div>
+                        ))}
                     </div>
+                    {uploadedUrls.map(url => (
+                        <input key={url} type="hidden" name="images" value={url} />
+                    ))}
                 </div>
 
                 <div className="space-y-2">

@@ -7,17 +7,20 @@ import { redirect } from "next/navigation"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 
-// Helper to get or create a default agent for development
-async function getDefaultAgent() {
-    const email = "demo@emlakasistani.com"
+import { auth } from "@/auth"
 
-    return await prisma.agent.upsert({
-        where: { email },
-        update: {},
-        create: {
-            email,
-            name: "Demo Emlakçı"
-        }
+// Helper to get current authenticated agent
+async function getDefaultAgent() {
+    const session = await auth()
+
+    if (!session?.user?.email) {
+        throw new Error("Unauthorized")
+    }
+
+    const email = session.user.email
+
+    return await prisma.agent.findUniqueOrThrow({
+        where: { email }
     })
 }
 
@@ -44,30 +47,15 @@ export async function createListing(formData: FormData) {
     const dues = parseInt(formData.get("dues") as string) || null
     const creditSuitable = formData.get("creditSuitable") === "on"
 
-    const file = formData.get("image") as File
+    const imageIds = formData.getAll("images") as string[]
 
-    let imageUrl = "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80" // Default
+    // Default image if no images provided
+    let imageUrl = "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
+    let images: string[] = []
 
-    if (file && file.size > 0) {
-        try {
-            const bytes = await file.arrayBuffer()
-            const buffer = Buffer.from(bytes)
-
-            // Ensure directory exists
-            const uploadDir = join(process.cwd(), "public", "uploads")
-            await mkdir(uploadDir, { recursive: true })
-
-            // Create unique filename
-            const filename = `${Date.now()}-${file.name.replace(/\s/g, '-')}`
-            const filepath = join(uploadDir, filename)
-
-            // Write file
-            await writeFile(filepath, buffer)
-            imageUrl = `/uploads/${filename}`
-        } catch (error) {
-            console.error("Error uploading file:", error)
-            // Continue with default image if upload fails
-        }
+    if (imageIds.length > 0) {
+        images = imageIds
+        imageUrl = imageIds[0]
     }
 
     const priceNumeric = parseFloat(price.replace(/[^0-9.]/g, ''))
@@ -94,7 +82,8 @@ export async function createListing(formData: FormData) {
             creditSuitable,
             source: "Internal",
             agentId: agent.id,
-            imageUrl
+            imageUrl,
+            images
         }
     })
 

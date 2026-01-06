@@ -4,16 +4,19 @@
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 
-async function getDefaultAgent() {
-    const email = "demo@emlakasistani.com"
+import { auth } from "@/auth"
 
-    return await prisma.agent.upsert({
-        where: { email },
-        update: {},
-        create: {
-            email,
-            name: "Demo Emlakçı"
-        }
+async function getDefaultAgent() {
+    const session = await auth()
+
+    if (!session?.user?.email) {
+        throw new Error("Unauthorized")
+    }
+
+    const email = session.user.email
+
+    return await prisma.agent.findUniqueOrThrow({
+        where: { email }
     })
 }
 
@@ -54,7 +57,7 @@ export async function createCustomer(formData: FormData) {
 export async function getCustomers() {
     const agent = await getDefaultAgent()
 
-    return await prisma.customer.findMany({
+    const customers = await prisma.customer.findMany({
         where: {
             agentId: agent.id
         },
@@ -62,6 +65,12 @@ export async function getCustomers() {
             createdAt: 'desc'
         }
     })
+
+    return customers.map(customer => ({
+        ...customer,
+        minPrice: customer.minPrice ? customer.minPrice.toNumber() : null,
+        maxPrice: customer.maxPrice ? customer.maxPrice.toNumber() : null,
+    }))
 }
 
 export async function updateCustomer(id: string, formData: FormData) {
@@ -111,10 +120,18 @@ export async function updateCustomer(id: string, formData: FormData) {
 export async function getCustomer(id: string) {
     const agent = await getDefaultAgent()
 
-    return await prisma.customer.findFirst({
+    const customer = await prisma.customer.findFirst({
         where: {
             id,
             agentId: agent.id
         }
     })
+
+    if (!customer) return null
+
+    return {
+        ...customer,
+        minPrice: customer.minPrice ? customer.minPrice.toNumber() : null,
+        maxPrice: customer.maxPrice ? customer.maxPrice.toNumber() : null,
+    }
 }

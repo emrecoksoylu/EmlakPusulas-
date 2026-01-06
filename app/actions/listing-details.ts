@@ -6,13 +6,25 @@ import { prisma } from "@/lib/prisma"
 
 // Get single listing with details
 export async function getListing(id: string) {
-    return await prisma.listing.findUnique({
+    const listing = await prisma.listing.findUnique({
         where: { id },
         include: {
             interestedCustomers: true,
             agent: true
         }
     })
+
+    if (!listing) return null
+
+    return {
+        ...listing,
+        priceNumeric: listing.priceNumeric ? listing.priceNumeric.toNumber() : null,
+        interestedCustomers: listing.interestedCustomers.map(customer => ({
+            ...customer,
+            minPrice: customer.minPrice ? customer.minPrice.toNumber() : null,
+            maxPrice: customer.maxPrice ? customer.maxPrice.toNumber() : null,
+        }))
+    }
 }
 
 // Add or Remove customer from a listing

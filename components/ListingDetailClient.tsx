@@ -19,7 +19,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, User, Check, ChevronsUpDown, Share2, Power, PowerOff, Loader2 } from "lucide-react"
+import { Plus, Trash2, User, Check, ChevronsUpDown, Share2, Power, PowerOff, Loader2, ChevronLeft, ChevronRight, Info } from "lucide-react"
 import { toggleCustomerInterest } from "@/app/actions/listing-details"
 import { updateListingStatus } from "@/app/actions/listings"
 import { toast } from "sonner"
@@ -27,7 +27,10 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 interface ListingDetailClientProps {
-    listing: Listing & { interestedCustomers: Customer[] }
+    listing: Listing & {
+        interestedCustomers: Customer[];
+        images: string[];
+    }
     allCustomers: Customer[]
 }
 
@@ -37,6 +40,7 @@ export default function ListingDetailClient({ listing, allCustomers }: ListingDe
     const [selectedCustomerId, setSelectedCustomerId] = useState<string>("")
     const [isLoading, setIsLoading] = useState(false)
     const [isStatusUpdating, setIsStatusUpdating] = useState(false)
+    const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
     const availableCustomers = allCustomers.filter(
         c => !listing.interestedCustomers.some(ic => ic.id === c.id)
@@ -122,12 +126,74 @@ export default function ListingDetailClient({ listing, allCustomers }: ListingDe
                             <CardTitle>İlan Detayları</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {listing.imageUrl && (
-                                <img src={listing.imageUrl} alt={listing.title} className="w-full h-64 object-cover rounded-md" />
-                            )}
+                            {/* Image Gallery */}
+                            <div className="relative group">
+                                {listing.images && listing.images.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {/* Main Large Image (Cover) */}
+                                        <div className="relative h-[500px] w-full overflow-hidden rounded-xl border border-gray-100 shadow-sm bg-black flex items-center justify-center group/image">
+
+                                            <img
+                                                src={listing.images[currentImageIndex] || listing.imageUrl || "/placeholder.jpg"}
+                                                alt={listing.title}
+                                                className="relative max-h-full max-w-full object-contain z-10 transition-transform duration-300"
+                                            />
+
+                                            {/* Gradient Overlay for Controls Visibility */}
+                                            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent z-10 pointer-events-none" />
+
+                                            {/* Image Counter - Bottom Right Position */}
+                                            {listing.images.length > 1 && (
+                                                <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-medium tracking-wide z-20 shadow-sm border border-white/10 pointer-events-none flex items-center gap-2">
+                                                    <span className="text-gray-300">Fotoğraf</span>
+                                                    <span className="text-white font-bold">{currentImageIndex + 1}</span>
+                                                    <span className="text-gray-400">/</span>
+                                                    <span className="text-gray-400">{listing.images.length}</span>
+                                                </div>
+                                            )}
+
+                                            {/* Navigation Arrows */}
+                                            {listing.images.length > 1 && (
+                                                <>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentImageIndex(prev => prev === 0 ? listing.images.length - 1 : prev - 1);
+                                                        }}
+                                                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-sm transition-all border border-white/10 shadow-xl z-50 group-hover/image:scale-110 active:scale-95"
+                                                        title="Önceki"
+                                                    >
+                                                        <ChevronLeft className="h-6 w-6" />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentImageIndex(prev => prev === listing.images.length - 1 ? 0 : prev + 1);
+                                                        }}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-sm transition-all border border-white/10 shadow-xl z-50 group-hover/image:scale-110 active:scale-95"
+                                                        title="Sonraki"
+                                                    >
+                                                        <ChevronRight className="h-6 w-6" />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {/* Thumbnails removed as per user request */}
+                                    </div>
+                                ) : listing.imageUrl ? (
+                                    <div className="relative aspect-video overflow-hidden rounded-xl border border-gray-100 shadow-sm">
+                                        <img src={listing.imageUrl} alt={listing.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                                    </div>
+                                ) : null}
+                            </div>
+
                             <div>
-                                <h3 className="font-semibold mb-2">Açıklama</h3>
-                                <p className="text-gray-600 whitespace-pre-wrap">{listing.description}</p>
+                                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                                    <Info className="h-4 w-4 text-blue-600" />
+                                    Açıklama
+                                </h3>
+                                <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">{listing.description}</p>
                             </div>
                             <div>
                                 <h3 className="font-semibold mb-2">Özellikler</h3>

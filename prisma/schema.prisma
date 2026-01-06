@@ -88,6 +88,7 @@ model Listing {
   location     String
   features     String
   imageUrl     String?
+  images       String[] @default([])
   status       String   @default("active")
   source       String   @default("Internal")
 
