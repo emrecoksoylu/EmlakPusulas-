@@ -1,12 +1,12 @@
-export default function robots() {
+import { MetadataRoute } from 'next'
+
+export default function robots(): MetadataRoute.Robots {
     return {
-        rules: [
-            {
-                userAgent: '*',
-                allow: '/',
-                disallow: ['/admin', '/dashboard', '/api'],
-            },
-        ],
-        sitemap: 'https://emlakpusulası.com/sitemap.xml',
+        rules: {
+            userAgent: '*',
+            allow: '/',
+            disallow: ['/dashboard/', '/admin/'],
+        },
+        sitemap: 'https://emlakpusulasi.com/sitemap.xml',
     }
 }
