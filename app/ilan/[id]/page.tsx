@@ -5,6 +5,30 @@ import { Building2, Ruler, Calendar, MapPin, Phone, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatPrice } from "@/lib/utils"
 
+import { PublicListingShare } from "@/components/PublicListingShare"
+import { Metadata } from "next"
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params
+    const listing = await prisma.listing.findUnique({ where: { id } })
+
+    if (!listing) return { title: 'İlan Bulunamadı' }
+
+    const price = formatPrice(parseFloat(listing.price))
+    const title = `${listing.title} - ${price} TL`
+    const description = `${listing.location} konumunda, ${listing.roomCount}, ${listing.m2Net}m² satılık gayrimenkul.`
+
+    return {
+        title: title,
+        description: description,
+        openGraph: {
+            title: title,
+            description: description,
+            images: listing.imageUrl ? [listing.imageUrl] : [],
+        }
+    }
+}
+
 export default async function PublicListingPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const listing = await prisma.listing.findUnique({
@@ -46,7 +70,7 @@ export default async function PublicListingPage({ params }: { params: Promise<{ 
                 <div className="bg-white rounded-xl shadow-xl p-6 flex flex-col items-center justify-center text-center">
                     <span className="text-sm text-gray-500 uppercase tracking-widest font-semibold">Satış Fiyatı</span>
                     <div className="text-4xl font-extrabold text-blue-600 mt-2">
-                        {formatPrice(parseFloat(listing.price))}
+                        {formatPrice(parseFloat(listing.price))} TL
                     </div>
                 </div>
 
@@ -82,11 +106,14 @@ export default async function PublicListingPage({ params }: { params: Promise<{ 
 
                     <div className="space-y-3">
                         <a href={`tel:${listing.agent.email}`} className="block">
-                            {/* Using email as placeholder if phone not available in schema yet, likely needs update but robust fallback */}
+                            {/* Using email as placeholder if phone not available in schema yet */}
                             <Button className="w-full bg-white text-blue-900 hover:bg-gray-100 font-bold h-12">
                                 Hemen Ara
                             </Button>
                         </a>
+
+                        {/* Share Buttons */}
+                        <PublicListingShare title={listing.title} />
                     </div>
                 </div>
             </div>
