@@ -43,8 +43,8 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
             {/* A4 Page Container */}
             <div className="max-w-[210mm] mx-auto bg-white shadow-2xl print:shadow-none print:w-full aspect-[1/1.414] relative flex flex-col overflow-hidden border print:border-0 border-gray-200">
 
-                {/* 1. Main Photo Area (55% height) */}
-                <div className="relative h-[55%] w-full bg-gray-100">
+                {/* 1. Main Photo Area (50% height) - Reduced to prevent overflow */}
+                <div className="relative h-[50%] w-full bg-gray-100">
                     <Image
                         src={mainImage}
                         alt={listing.title}
@@ -54,68 +54,68 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
                     />
 
                     {/* Badge */}
-                    <div className="absolute top-8 right-8 bg-blue-600 text-white px-8 py-3 text-4xl font-black rounded-l-xl shadow-lg print:shadow-none tracking-widest">
+                    <div className="absolute top-6 right-6 bg-blue-600 text-white px-6 py-2 text-3xl font-black rounded-l-xl shadow-lg print:shadow-none tracking-widest">
                         SATILIK
                     </div>
                 </div>
 
-                {/* 2. Details Area (45% height) */}
-                <div className="flex-1 p-8 flex flex-col justify-between bg-white relative">
+                {/* 2. Details Area (50% height) */}
+                <div className="flex-1 p-6 flex flex-col justify-between bg-white relative">
 
                     {/* Title & Price */}
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-4 leading-tight uppercase line-clamp-2">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2 leading-tight uppercase line-clamp-2">
                             {listing.title}
                         </h1>
-                        <div className="flex items-center gap-2 text-gray-600 mb-6">
-                            <MapPin className="h-6 w-6" />
-                            <span className="text-2xl">{listing.location}</span>
+                        <div className="flex items-center gap-2 text-gray-600 mb-4">
+                            <MapPin className="h-5 w-5" />
+                            <span className="text-xl">{listing.location}</span>
                         </div>
 
-                        <div className="flex flex-wrap gap-4 mb-6">
-                            <div className="bg-gray-50 px-6 py-4 rounded-xl border border-gray-200 flex-1 min-w-[120px]">
-                                <span className="block text-sm text-gray-500 uppercase font-bold text-center mb-1">Oda</span>
-                                <span className="block text-3xl font-bold text-center text-gray-900">{listing.roomCount}</span>
+                        <div className="flex flex-wrap gap-3 mb-4">
+                            <div className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-1 min-w-[100px]">
+                                <span className="block text-xs text-gray-500 uppercase font-bold text-center mb-1">Oda</span>
+                                <span className="block text-2xl font-bold text-center text-gray-900">{listing.roomCount}</span>
                             </div>
-                            <div className="bg-gray-50 px-6 py-4 rounded-xl border border-gray-200 flex-1 min-w-[120px]">
-                                <span className="block text-sm text-gray-500 uppercase font-bold text-center mb-1">m²</span>
-                                <span className="block text-3xl font-bold text-center text-gray-900">{listing.m2Net}</span>
+                            <div className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-1 min-w-[100px]">
+                                <span className="block text-xs text-gray-500 uppercase font-bold text-center mb-1">m²</span>
+                                <span className="block text-2xl font-bold text-center text-gray-900">{listing.m2Net}</span>
                             </div>
-                            <div className="bg-gray-50 px-6 py-4 rounded-xl border border-gray-200 flex-1 min-w-[120px]">
-                                <span className="block text-sm text-gray-500 uppercase font-bold text-center mb-1">Isıtma</span>
-                                <span className="block text-2xl font-bold text-center text-gray-900">{listing.heatingType?.substring(0, 10) || '-'}</span>
+                            <div className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-1 min-w-[100px]">
+                                <span className="block text-xs text-gray-500 uppercase font-bold text-center mb-1">Isıtma</span>
+                                <span className="block text-xl font-bold text-center text-gray-900">{listing.heatingType?.substring(0, 10) || '-'}</span>
                             </div>
                         </div>
 
                         {/* HUGE PRICE */}
-                        <div className="text-[5rem] leading-none font-black text-blue-700 tracking-tighter mt-4">
+                        <div className="text-[5rem] leading-none font-black text-blue-700 tracking-tighter mt-2">
                             {listing.priceNumeric
                                 ? formatPrice(Number(listing.priceNumeric))
                                 : formatPrice(parseFloat(listing.price.replace(/\./g, '').replace(',', '.')))
                             }
-                            <span className="text-4xl text-gray-400 font-bold ml-2 tracking-normal relative -top-8">TL</span>
+                            <span className="text-3xl text-gray-400 font-bold ml-2 tracking-normal relative -top-8">TL</span>
                         </div>
                     </div>
 
                     {/* Footer: Agent & QR */}
-                    <div className="border-t pt-6 flex items-end justify-between">
+                    <div className="border-t pt-4 flex items-end justify-between">
                         <div>
-                            <p className="text-gray-500 text-sm font-bold uppercase mb-1">Daha Fazla Bilgi İçin</p>
-                            <h2 className="text-2xl font-bold">{listing.agent.companyName || 'EmlakPusulası'}</h2>
-                            <p className="text-xl">{listing.agent.name}</p>
-                            <p className="text-xl font-mono mt-1">{listing.agent.email}</p>
+                            <p className="text-gray-500 text-xs font-bold uppercase mb-1">Daha Fazla Bilgi İçin</p>
+                            <h2 className="text-xl font-bold">{listing.agent.companyName || 'EmlakPusulası'}</h2>
+                            <p className="text-lg">{listing.agent.name}</p>
+                            <p className="text-lg font-mono mt-0.5">{listing.agent.email}</p>
                         </div>
 
                         <div className="flex flex-col items-center">
                             <div className="border-4 border-black p-1">
                                 <ListingQRCode url={publicUrl} />
                             </div>
-                            <p className="text-xs font-bold mt-2 uppercase tracking-wide">İlanı İncele</p>
+                            <p className="text-[10px] font-bold mt-1 uppercase tracking-wide">İlanı İncele</p>
                         </div>
                     </div>
 
                     {/* Decorative Bottom Bar */}
-                    <div className="absolute bottom-0 left-0 w-full h-3 bg-blue-600 print:bg-blue-600" />
+                    <div className="absolute bottom-0 left-0 w-full h-2 bg-blue-600 print:bg-blue-600" />
                 </div>
             </div>
         </div>
