@@ -100,34 +100,50 @@ export async function getListings(filters?: {
 }) {
     const agent = await getDefaultAgent()
 
-    const where: any = {
-        agentId: agent.id
-    }
+    const andConditions: any[] = []
+
+    // Always filter by agent
+    andConditions.push({ agentId: agent.id })
 
     if (filters?.city) {
-        where.location = {
-            contains: filters.city
-        }
+        andConditions.push({
+            location: {
+                contains: filters.city,
+                mode: 'insensitive'
+            }
+        })
     }
 
     if (filters?.district) {
-        where.location = {
-            contains: filters.district
-        }
+        andConditions.push({
+            location: {
+                contains: filters.district,
+                mode: 'insensitive'
+            }
+        })
     }
 
     if (filters?.roomCount && filters.roomCount !== "all") {
-        where.roomCount = filters.roomCount
+        andConditions.push({
+            roomCount: filters.roomCount
+        })
     }
 
     if (filters?.minPrice || filters?.maxPrice) {
-        where.priceNumeric = {}
+        const priceFilter: any = {}
         if (filters.minPrice) {
-            where.priceNumeric.gte = filters.minPrice
+            priceFilter.gte = filters.minPrice
         }
         if (filters.maxPrice) {
-            where.priceNumeric.lte = filters.maxPrice
+            priceFilter.lte = filters.maxPrice
         }
+        andConditions.push({
+            priceNumeric: priceFilter
+        })
+    }
+
+    const where: any = {
+        AND: andConditions
     }
 
     const listings = await (prisma as any).listing.findMany({
