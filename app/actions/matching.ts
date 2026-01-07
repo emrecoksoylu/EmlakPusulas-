@@ -11,7 +11,8 @@ export async function findMatchesForCustomer(customerId: string) {
     if (!customer) return []
 
     // Criteria-based matching
-    return await prisma.listing.findMany({
+    // Criteria-based matching
+    const listings = await prisma.listing.findMany({
         where: {
             status: "active",
             // Price range match
@@ -34,6 +35,11 @@ export async function findMatchesForCustomer(customerId: string) {
             createdAt: 'desc'
         }
     })
+
+    return listings.map(l => ({
+        ...l,
+        priceNumeric: l.priceNumeric ? (l.priceNumeric as any).toNumber() : null
+    }))
 }
 
 export async function findMatchesForListing(listingId: string) {
@@ -45,7 +51,7 @@ export async function findMatchesForListing(listingId: string) {
 
     const price = parseFloat(listing.price.replace(/[^0-9.]/g, ''))
 
-    return await prisma.customer.findMany({
+    const customers = await prisma.customer.findMany({
         where: {
             AND: [
                 {
@@ -72,4 +78,10 @@ export async function findMatchesForListing(listingId: string) {
             createdAt: 'desc'
         }
     })
+
+    return customers.map(c => ({
+        ...c,
+        minPrice: c.minPrice ? (c.minPrice as any).toNumber() : null,
+        maxPrice: c.maxPrice ? (c.maxPrice as any).toNumber() : null
+    }))
 }

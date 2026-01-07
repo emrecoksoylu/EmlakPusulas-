@@ -5,6 +5,7 @@ import Link from "next/link"
 import { getListings } from "@/app/actions/listings"
 import { Listing } from "@prisma/client"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatPrice } from "@/lib/utils"
 
 export const dynamic = 'force-dynamic'
 
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
                                         {listing.title}
                                     </h3>
                                 </div>
-                                <p className="text-lg font-bold text-blue-600 mb-2">{listing.price} TL</p>
+                                <p className="text-lg font-bold text-blue-600 mb-2">{formatPrice(listing.priceNumeric || listing.price)} TL</p>
 
                                 <div className="flex items-center text-sm text-gray-500 mb-4">
                                     <MapPin className="w-4 h-4 mr-1 text-gray-400" />

@@ -15,6 +15,7 @@ import {
 import { Loader2, Save, ArrowLeft, ExternalLink, FileText } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { formatPrice } from "@/lib/utils"
 
 export const dynamic = 'force-dynamic'
 
@@ -162,7 +163,7 @@ export default async function EditCustomerPage({ params }: { params: { id: strin
                                                 <ExternalLink className="h-3 w-3 text-gray-400 group-hover:text-blue-600" />
                                             </Link>
                                         </div>
-                                        <p className="text-blue-600 font-bold text-sm">{listing.price} TL</p>
+                                        <p className="text-blue-600 font-bold text-sm">{formatPrice((listing as any).priceNumeric || listing.price)} TL</p>
                                         <div className="flex gap-2 mt-3">
                                             <Link href={`/dashboard/contracts/rental?customerId=${customer.id}&listingId=${listing.id}`} className="w-full">
                                                 <Button size="sm" variant="outline" className="h-7 text-[10px] w-full">

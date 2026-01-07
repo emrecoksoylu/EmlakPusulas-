@@ -24,7 +24,7 @@ import { toggleCustomerInterest } from "@/app/actions/listing-details"
 import { updateListingStatus } from "@/app/actions/listings"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
+import { cn, formatPrice } from "@/lib/utils"
 
 // Custom types to handle Decimal -> number conversion for client components
 type CustomerWithNumber = Omit<Customer, 'minPrice' | 'maxPrice'> & {
@@ -106,7 +106,7 @@ export default function ListingDetailClient({ listing, allCustomers }: ListingDe
                             {listing.status === 'passive' ? 'PASİF' : 'YAYINDA'}
                         </span>
                     </div>
-                    <p className="text-gray-500">{listing.location} • <span className="text-blue-600 font-bold">{listing.price} TL</span></p>
+                    <p className="text-gray-500">{listing.location} • <span className="text-blue-600 font-bold">{formatPrice(listing.priceNumeric || listing.price)} TL</span></p>
                 </div>
                 <div className="flex gap-2">
                     <Button
@@ -287,7 +287,7 @@ export default function ListingDetailClient({ listing, allCustomers }: ListingDe
                                     ) : (
                                         listing.interestedCustomers.map(customer => {
                                             const featuresList = listing.features.split(',').slice(0, 5).join(', ')
-                                            const message = `Merhaba ${customer.name}, seninle ilgini çekebilecek bir portföy paylaşmak istiyorum.\n\n*${listing.title}*\n\n📍 ${listing.location}\n💰 ${listing.price} TL\n\n🏠 Özellikler: ${featuresList}...\n\n📝 Açıklama: ${listing.description?.substring(0, 100)}...`
+                                            const message = `Merhaba ${customer.name}, seninle ilgini çekebilecek bir portföy paylaşmak istiyorum.\n\n*${listing.title}*\n\n📍 ${listing.location}\n💰 ${formatPrice(listing.priceNumeric || listing.price)} TL\n\n🏠 Özellikler: ${featuresList}...\n\n📝 Açıklama: ${listing.description?.substring(0, 100)}...`
                                             const whatsappUrl = `https://wa.me/${customer.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`
 
                                             return (
