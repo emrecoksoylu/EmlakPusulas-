@@ -76,7 +76,7 @@ export function ListingFilters() {
                             <SelectValue placeholder="Tümü" />
                         </SelectTrigger>
                         <SelectContent>
-                            {districts.map(d => (
+                            {districts.map((d: string) => (
                                 <SelectItem key={d} value={d}>{d}</SelectItem>
                             ))}
                         </SelectContent>
