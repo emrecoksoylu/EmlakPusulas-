@@ -7,9 +7,10 @@ import { formatPrice } from "@/lib/utils"
 import { ListingQRCode } from "@/components/ListingQRCode"
 import { PrintButton } from "@/components/PrintButton"
 
-export default async function PrintListingPage({ params }: { params: { id: string } }) {
+export default async function PrintListingPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
     const listing = await prisma.listing.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: { agent: true }
     })
 

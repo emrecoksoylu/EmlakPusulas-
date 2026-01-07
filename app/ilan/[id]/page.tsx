@@ -5,9 +5,10 @@ import { Building2, Ruler, Calendar, MapPin, Phone, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatPrice } from "@/lib/utils"
 
-export default async function PublicListingPage({ params }: { params: { id: string } }) {
+export default async function PublicListingPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
     const listing = await prisma.listing.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: { agent: true }
     })
 
