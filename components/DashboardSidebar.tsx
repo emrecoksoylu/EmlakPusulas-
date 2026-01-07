@@ -121,7 +121,9 @@ export function DashboardSidebar() {
                         const isActive =
                             item.href === "/dashboard"
                                 ? pathname === "/dashboard"
-                                : pathname === item.href || pathname?.startsWith(item.href + '/')
+                                : item.href === "/dashboard/listings"
+                                    ? pathname === "/dashboard/listings" || (pathname?.startsWith("/dashboard/listings/") && pathname !== "/dashboard/listings/new")
+                                    : pathname === item.href || pathname?.startsWith(item.href + '/')
 
                         return (
                             <Link
