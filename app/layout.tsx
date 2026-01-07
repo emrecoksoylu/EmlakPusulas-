@@ -15,7 +15,22 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "EmlakPusulası - Gayrimenkul Yönetim Paneli",
-  description: "Emlak danışmanları için akıllı portföy ve müşteri yönetim asistanı.",
+  description: "Emlak danışmanları için geliştirilmiş portföy takip, müşteri yönetimi ve sözleşme hazırlama asistanı. İşinizi dijitalleştirin.",
+  keywords: ["emlak", "gayrimenkul", "emlak programı", "crm", "portföy yönetimi", "emlak asistanı", "konut", "arsa", "emlak ofisi yazılımı"],
+  authors: [{ name: "EmlakPusulası Team" }],
+  openGraph: {
+    title: "EmlakPusulası - Akıllı Emlak Asistanınız",
+    description: "Portföyünüzü ve müşterilerinizi tek yerden yönetin. Profesyonel sözleşmeler hazırlayın.",
+    url: "https://emlakpusulası.com",
+    siteName: "EmlakPusulası",
+    locale: "tr_TR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EmlakPusulası",
+    description: "Emlakçılar için hepsi bir arada yönetim paneli.",
+  },
 };
 
 export default function RootLayout({
@@ -24,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="tr" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
