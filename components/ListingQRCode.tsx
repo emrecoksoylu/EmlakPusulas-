@@ -8,8 +8,6 @@ export function ListingQRCode({ url }: { url: string }) {
             value={url}
             size={120}
             level="H"
-            includeMargin={true}
-            includeMargin={true}
         />
     )
 }

@@ -18,6 +18,7 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
         notFound()
     }
 
+    const publicUrl = `https://emlakpusulasi.com/ilan/${listing.id}`
     const mainImage = listing.imageUrl || (listing.images && listing.images.length > 0 ? listing.images[0] : null)
 
     return (
