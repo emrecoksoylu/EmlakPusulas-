@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button"
-import { Plus, MapPin, Edit2 } from "lucide-react"
+import { Plus, MapPin, Edit2, Printer } from "lucide-react"
 import Link from "next/link"
 import { getListings } from "@/app/actions/listings"
 import { Listing } from "@prisma/client"
@@ -79,7 +79,12 @@ export default async function DashboardPage({
                                     <span className={listing.status === 'passive' ? 'text-gray-500 font-medium bg-gray-50 px-2 py-1 rounded' : 'text-green-600 font-medium bg-green-50 px-2 py-1 rounded'}>
                                         {listing.status === 'passive' ? 'Pasif' : 'Yayında'}
                                     </span>
-                                    <div className="pointer-events-auto">
+                                    <div className="pointer-events-auto flex items-center gap-1">
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild title="Vitrin Yazdır">
+                                            <Link href={`/dashboard/listings/${listing.id}/print`} target="_blank">
+                                                <Printer className="w-4 h-4 text-gray-500" />
+                                            </Link>
+                                        </Button>
                                         <Button variant="ghost" size="sm" className="h-8" asChild>
                                             <Link href={`/dashboard/listings/${listing.id}`}>
                                                 <Edit2 className="w-3 h-3 mr-1" /> Düzenle
