@@ -18,7 +18,7 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
         notFound()
     }
 
-    const publicUrl = `https://emlakpusulasi.com/ilan/${listing.id}`
+    const mainImage = listing.imageUrl || (listing.images && listing.images.length > 0 ? listing.images[0] : null)
 
     return (
         <div className="bg-white min-h-screen text-black print:p-0 p-8">
@@ -34,11 +34,11 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
             {/* A4 Page Container */}
             <div className="max-w-[210mm] mx-auto bg-white shadow-2xl print:shadow-none print:w-full aspect-[1/1.414] relative flex flex-col overflow-hidden border print:border-0 border-gray-200">
 
-                {/* 1. Main Photo Area (60% height) */}
-                <div className="relative h-[60%] w-full bg-gray-100">
-                    {listing.imageUrl ? (
+                {/* 1. Main Photo Area (55% height) - slightly reduced to give room for price */}
+                <div className="relative h-[55%] w-full bg-gray-100">
+                    {mainImage ? (
                         <Image
-                            src={listing.imageUrl}
+                            src={mainImage}
                             alt={listing.title}
                             fill
                             className="object-cover"
@@ -51,41 +51,43 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
                     )}
 
                     {/* Badge */}
-                    <div className="absolute top-8 right-8 bg-blue-600 text-white px-6 py-2 text-2xl font-bold rounded-l-xl shadow-lg print:shadow-none">
+                    <div className="absolute top-8 right-8 bg-blue-600 text-white px-8 py-3 text-4xl font-black rounded-l-xl shadow-lg print:shadow-none tracking-widest">
                         SATILIK
                     </div>
                 </div>
 
-                {/* 2. Details Area (40% height) */}
+                {/* 2. Details Area (45% height) */}
                 <div className="flex-1 p-8 flex flex-col justify-between bg-white relative">
 
                     {/* Title & Price */}
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2 leading-tight uppercase">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-4 leading-tight uppercase line-clamp-2">
                             {listing.title}
                         </h1>
                         <div className="flex items-center gap-2 text-gray-600 mb-6">
-                            <MapPin className="h-5 w-5" />
-                            <span className="text-xl">{listing.location}</span>
+                            <MapPin className="h-6 w-6" />
+                            <span className="text-2xl">{listing.location}</span>
                         </div>
 
-                        <div className="flex flex-wrap gap-6 mb-8">
-                            <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
-                                <span className="block text-sm text-gray-500 uppercase font-bold text-center">Oda Sayısı</span>
-                                <span className="block text-2xl font-bold text-center">{listing.roomCount}</span>
+                        <div className="flex flex-wrap gap-4 mb-6">
+                            <div className="bg-gray-50 px-6 py-4 rounded-xl border border-gray-200 flex-1 min-w-[120px]">
+                                <span className="block text-sm text-gray-500 uppercase font-bold text-center mb-1">Oda</span>
+                                <span className="block text-3xl font-bold text-center text-gray-900">{listing.roomCount}</span>
                             </div>
-                            <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
-                                <span className="block text-sm text-gray-500 uppercase font-bold text-center">Net m²</span>
-                                <span className="block text-2xl font-bold text-center">{listing.m2Net} m²</span>
+                            <div className="bg-gray-50 px-6 py-4 rounded-xl border border-gray-200 flex-1 min-w-[120px]">
+                                <span className="block text-sm text-gray-500 uppercase font-bold text-center mb-1">m²</span>
+                                <span className="block text-3xl font-bold text-center text-gray-900">{listing.m2Net}</span>
                             </div>
-                            <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
-                                <span className="block text-sm text-gray-500 uppercase font-bold text-center">Isıtma</span>
-                                <span className="block text-2xl font-bold text-center">{listing.heatingType || '-'}</span>
+                            <div className="bg-gray-50 px-6 py-4 rounded-xl border border-gray-200 flex-1 min-w-[120px]">
+                                <span className="block text-sm text-gray-500 uppercase font-bold text-center mb-1">Isıtma</span>
+                                <span className="block text-2xl font-bold text-center text-gray-900">{listing.heatingType?.substring(0, 10) || '-'}</span>
                             </div>
                         </div>
 
-                        <div className="text-6xl font-black text-blue-700 tracking-tight">
+                        {/* HUGE PRICE */}
+                        <div className="text-[5rem] leading-none font-black text-blue-700 tracking-tighter mt-4">
                             {formatPrice(parseFloat(listing.price))}
+                            <span className="text-4xl text-gray-400 font-bold ml-2 tracking-normal relative -top-8">TL</span>
                         </div>
                     </div>
 
