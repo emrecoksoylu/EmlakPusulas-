@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { getListings } from "@/app/actions/listings"
 import { getCustomers } from "@/app/actions/customers"
+import { DashboardCharts } from "@/components/DashboardCharts"
 
 export const dynamic = 'force-dynamic'
 
@@ -75,6 +76,8 @@ export default async function DashboardHome() {
                     </Card>
                 </Link>
             </div>
+
+            <DashboardCharts listings={listings} />
         </div>
     )
 }
