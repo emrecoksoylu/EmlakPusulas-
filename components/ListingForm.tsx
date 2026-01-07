@@ -124,7 +124,16 @@ export function ListingForm() {
 
                     <div className="space-y-2">
                         <Label htmlFor="price">Fiyat (TL)</Label>
-                        <Input id="price" name="price" placeholder="Örn: 5.250.000" required />
+                        <Input
+                            id="price"
+                            name="price"
+                            placeholder="Örn: 5.250.000"
+                            required
+                            onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '')
+                                e.target.value = value ? parseInt(value).toLocaleString('tr-TR') : ''
+                            }}
+                        />
                     </div>
 
 
