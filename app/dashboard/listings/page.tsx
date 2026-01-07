@@ -9,18 +9,37 @@ import { formatPrice } from "@/lib/utils"
 
 export const dynamic = 'force-dynamic'
 
-export default async function DashboardPage() {
-    const listings = await getListings()
+import { ListingFilters } from "@/components/ListingFilters"
 
-    const activeListings = listings.filter(l => l.status === 'active' || !l.status)
-    const passiveListings = listings.filter(l => l.status === 'passive' || l.status === 'archived')
+export default async function DashboardPage({
+    searchParams,
+}: {
+    searchParams: { [key: string]: string | string[] | undefined }
+}) {
+    // Parse filters from searchParams
+    const filters = {
+        city: searchParams.city as string,
+        district: searchParams.district as string,
+        roomCount: searchParams.roomCount as string,
+        minPrice: searchParams.minPrice ? parseInt(searchParams.minPrice as string) : undefined,
+        maxPrice: searchParams.maxPrice ? parseInt(searchParams.maxPrice as string) : undefined,
+    }
+
+    const listings = await getListings(filters)
+
+    const activeListings = listings.filter((l: any) => l.status === 'active' || !l.status)
+    const passiveListings = listings.filter((l: any) => l.status === 'passive' || l.status === 'archived')
 
     const renderListingGrid = (items: any[]) => {
         if (items.length === 0) {
             return (
                 <div className="rounded-lg border bg-white p-12 text-center shadow-sm">
-                    <h3 className="mt-2 text-lg font-semibold text-gray-900">Bu kategoride ilan bulunmuyor</h3>
-                    <p className="mt-1 text-sm text-gray-500">Yeni bir ilan ekleyerek başlayabilirsiniz.</p>
+                    <h3 className="mt-2 text-lg font-semibold text-gray-900">
+                        {(filters.city || filters.minPrice) ? "Filtrelere uygun ilan bulunamadı" : "Bu kategoride ilan bulunmuyor"}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                        {(filters.city || filters.minPrice) ? "Filtreleri temizleyerek tekrar deneyin." : "Yeni bir ilan ekleyerek başlayabilirsiniz."}
+                    </p>
                 </div>
             )
         }
@@ -89,6 +108,8 @@ export default async function DashboardPage() {
                     </Button>
                 </Link>
             </div>
+
+            <ListingFilters />
 
             <Tabs defaultValue="active" className="w-full">
                 <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">

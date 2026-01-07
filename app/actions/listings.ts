@@ -91,13 +91,47 @@ export async function createListing(formData: FormData) {
     revalidatePath("/dashboard/listings")
 }
 
-export async function getListings() {
+export async function getListings(filters?: {
+    minPrice?: number
+    maxPrice?: number
+    city?: string
+    district?: string
+    roomCount?: string
+}) {
     const agent = await getDefaultAgent()
 
-    const listings = await prisma.listing.findMany({
-        where: {
-            agentId: agent.id
-        },
+    const where: any = {
+        agentId: agent.id
+    }
+
+    if (filters?.city) {
+        where.location = {
+            contains: filters.city
+        }
+    }
+
+    if (filters?.district) {
+        where.location = {
+            contains: filters.district
+        }
+    }
+
+    if (filters?.roomCount && filters.roomCount !== "all") {
+        where.roomCount = filters.roomCount
+    }
+
+    if (filters?.minPrice || filters?.maxPrice) {
+        where.priceNumeric = {}
+        if (filters.minPrice) {
+            where.priceNumeric.gte = filters.minPrice
+        }
+        if (filters.maxPrice) {
+            where.priceNumeric.lte = filters.maxPrice
+        }
+    }
+
+    const listings = await (prisma as any).listing.findMany({
+        where,
         include: {
             stats: true
         },
@@ -106,9 +140,9 @@ export async function getListings() {
         }
     })
 
-    return listings.map(listing => ({
+    return listings.map((listing: any) => ({
         ...listing,
-        priceNumeric: (listing as any).priceNumeric ? (listing as any).priceNumeric.toNumber() : null
+        priceNumeric: listing.priceNumeric ? listing.priceNumeric.toNumber() : null
     }))
 }
 export async function updateListingStatus(listingId: string, newStatus: 'active' | 'passive') {
