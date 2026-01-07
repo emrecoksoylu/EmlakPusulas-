@@ -7,6 +7,8 @@ import { formatPrice } from "@/lib/utils"
 import { ListingQRCode } from "@/components/ListingQRCode"
 import { PrintButton } from "@/components/PrintButton"
 
+import { headers } from "next/headers"
+
 export default async function PrintListingPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const listing = await prisma.listing.findUnique({
@@ -18,8 +20,16 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
         notFound()
     }
 
-    const publicUrl = `https://emlakpusulasi.com/ilan/${listing.id}`
-    const mainImage = listing.imageUrl || (listing.images && listing.images.length > 0 ? listing.images[0] : null)
+    // Dynamic Host Resolution for QR Code
+    const headersList = await headers()
+    const host = headersList.get('host') || 'emlakpusulasi.com'
+    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const publicUrl = `${protocol}://${host}/ilan/${listing.id}`
+
+    // Robust Image Strategy: DB Url -> First Array Image -> Hardcoded Placeholder
+    const mainImage = listing.imageUrl
+        || (listing.images && listing.images.length > 0 ? listing.images[0] : null)
+        || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" // Office placeholder
 
     return (
         <div className="bg-white min-h-screen text-black print:p-0 p-8">
