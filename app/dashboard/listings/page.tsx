@@ -14,15 +14,17 @@ import { ListingFilters } from "@/components/ListingFilters"
 export default async function DashboardPage({
     searchParams,
 }: {
-    searchParams: { [key: string]: string | string[] | undefined }
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+    const params = await searchParams
+
     // Parse filters from searchParams
     const filters = {
-        city: searchParams.city as string,
-        district: searchParams.district as string,
-        roomCount: searchParams.roomCount as string,
-        minPrice: searchParams.minPrice ? parseInt(searchParams.minPrice as string) : undefined,
-        maxPrice: searchParams.maxPrice ? parseInt(searchParams.maxPrice as string) : undefined,
+        city: params.city as string,
+        district: params.district as string,
+        roomCount: params.roomCount as string,
+        minPrice: params.minPrice ? parseInt(params.minPrice as string) : undefined,
+        maxPrice: params.maxPrice ? parseInt(params.maxPrice as string) : undefined,
     }
 
     const listings = await getListings(filters)
