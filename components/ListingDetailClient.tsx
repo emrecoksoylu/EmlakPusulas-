@@ -126,7 +126,7 @@ export default function ListingDetailClient({ listing, allCustomers }: ListingDe
                     </Button>
                     <Button
                         variant="outline"
-                        onClick={() => window.open(`/dashboard/listings/${listing.id}/print`, '_blank')}
+                        onClick={() => window.open(`/print/listings/${listing.id}`, '_blank')}
                         className="text-blue-600 border-blue-200 hover:bg-blue-50"
                         title="Vitrin Kartı Yazdır"
                     >
