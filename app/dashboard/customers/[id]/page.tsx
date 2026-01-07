@@ -16,6 +16,7 @@ import { Loader2, Save, ArrowLeft, ExternalLink, FileText } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { formatPrice } from "@/lib/utils"
+import { CityDistrictSelector } from "@/components/CityDistrictSelector"
 
 export const dynamic = 'force-dynamic'
 
@@ -111,9 +112,11 @@ export default async function EditCustomerPage({ params }: { params: { id: strin
                             </div>
 
                             <div className="grid gap-4 md:grid-cols-2">
+
+
                                 <div className="grid gap-2">
                                     <Label htmlFor="preferredLocations">Tercih Edilen Bölgeler</Label>
-                                    <Input id="preferredLocations" name="preferredLocations" defaultValue={(customer as any).preferredLocations || ""} placeholder="Örn: Beşiktaş, Şişli" />
+                                    <CityDistrictSelector name="preferredLocations" defaultValue={(customer as any).preferredLocations || ""} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="preferredRoomCount">Oda Sayısı</Label>

@@ -17,6 +17,7 @@ import {
 import { Loader2, User } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { CityDistrictSelector } from "@/components/CityDistrictSelector"
 
 export default function NewCustomerPage() {
     const router = useRouter()
@@ -125,9 +126,11 @@ export default function NewCustomerPage() {
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-2">
+
+
                             <div className="grid gap-2">
                                 <Label htmlFor="preferredLocations">Tercih Edilen Bölgeler</Label>
-                                <Input id="preferredLocations" name="preferredLocations" placeholder="Örn: Beşiktaş, Şişli" />
+                                <CityDistrictSelector name="preferredLocations" />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="preferredRoomCount">Oda Sayısı</Label>

@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2, Upload, Home, Ruler, Building, Info, X } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { CityDistrictSelector } from "@/components/CityDistrictSelector"
 
 export function ListingForm() {
     const router = useRouter()
@@ -126,9 +127,10 @@ export function ListingForm() {
                         <Input id="price" name="price" placeholder="Örn: 5.250.000" required />
                     </div>
 
+
+
                     <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="location">Konum / Adres</Label>
-                        <Input id="location" name="location" placeholder="İl, İlçe, Mahalle..." required />
+                        <CityDistrictSelector name="location" labelCity="İl" labelDistrict="İlçe" />
                     </div>
                 </div>
             </div>
