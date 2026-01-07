@@ -86,8 +86,8 @@ export function ListingFilters() {
         updateUrl({ city, district, roomCount, minPrice, maxPrice: e.target.value })
     }
 
-    const cities = turkeyLocations.map(l => l.city)
-    const districts = city ? turkeyLocations.find(l => l.city === city)?.districts || [] : []
+    const cities = Object.keys(turkeyLocations)
+    const districts = city ? (turkeyLocations as any)[city] || [] : []
 
     return (
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6">
