@@ -24,6 +24,8 @@ export const authConfig = {
             if (isOnDashboard) {
                 if (isLoggedIn) return true;
                 return false; // Redirect unauthenticated users to login page
+            } else if (nextUrl.pathname.startsWith('/ilan')) {
+                return true; // Allow public access to listing details
             } else if (isLoggedIn) {
                 return true;
             }
