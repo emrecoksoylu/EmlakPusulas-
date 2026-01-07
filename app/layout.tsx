@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://emlakpusulasi.com"),
   title: "EmlakPusulası - Gayrimenkul Yönetim Paneli",
   description: "Emlak danışmanları için geliştirilmiş portföy takip, müşteri yönetimi ve sözleşme hazırlama asistanı. İşinizi dijitalleştirin.",
   keywords: ["emlak", "gayrimenkul", "emlak programı", "crm", "portföy yönetimi", "emlak asistanı", "konut", "arsa", "emlak ofisi yazılımı"],
