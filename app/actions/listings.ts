@@ -58,7 +58,8 @@ export async function createListing(formData: FormData) {
         imageUrl = imageIds[0]
     }
 
-    const priceNumeric = parseFloat(price.replace(/[^0-9.]/g, ''))
+    // Remove dots (thousand separators) and replace comma with dot (decimal)
+    const priceNumeric = parseFloat(price.replace(/\./g, '').replace(',', '.')) || 0
 
     await (prisma as any).listing.create({
         data: {
