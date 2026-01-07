@@ -43,8 +43,8 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
             {/* A4 Page Container */}
             <div className="max-w-[210mm] mx-auto bg-white shadow-2xl print:shadow-none print:w-full aspect-[1/1.414] relative flex flex-col overflow-hidden border print:border-0 border-gray-200">
 
-                {/* 1. Main Photo Area (50% height) - Reduced to prevent overflow */}
-                <div className="relative h-[50%] w-full bg-gray-100">
+                {/* 1. Main Photo Area (40% height) - Reduced to give text room */}
+                <div className="relative h-[40%] w-full bg-gray-100">
                     <Image
                         src={mainImage}
                         alt={listing.title}
@@ -59,8 +59,8 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
                     </div>
                 </div>
 
-                {/* 2. Details Area (50% height) */}
-                <div className="flex-1 p-6 flex flex-col justify-between bg-white relative">
+                {/* 2. Details Area (60% height) - Expanded to fit content */}
+                <div className="flex-1 p-8 flex flex-col justify-between bg-white relative">
 
                     {/* Title & Price */}
                     <div>
@@ -72,28 +72,28 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
                             <span className="text-xl">{listing.location}</span>
                         </div>
 
-                        <div className="flex flex-wrap gap-3 mb-4">
-                            <div className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-1 min-w-[100px]">
-                                <span className="block text-xs text-gray-500 uppercase font-bold text-center mb-1">Oda</span>
+                        <div className="flex flex-wrap gap-4 mb-4">
+                            <div className="bg-gray-50 px-6 py-3 rounded-xl border border-gray-200 flex-1 min-w-[120px]">
+                                <span className="block text-sm text-gray-500 uppercase font-bold text-center mb-1">Oda</span>
                                 <span className="block text-2xl font-bold text-center text-gray-900">{listing.roomCount}</span>
                             </div>
-                            <div className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-1 min-w-[100px]">
-                                <span className="block text-xs text-gray-500 uppercase font-bold text-center mb-1">m²</span>
+                            <div className="bg-gray-50 px-6 py-3 rounded-xl border border-gray-200 flex-1 min-w-[120px]">
+                                <span className="block text-sm text-gray-500 uppercase font-bold text-center mb-1">m²</span>
                                 <span className="block text-2xl font-bold text-center text-gray-900">{listing.m2Net}</span>
                             </div>
-                            <div className="bg-gray-50 px-4 py-3 rounded-lg border border-gray-200 flex-1 min-w-[100px]">
-                                <span className="block text-xs text-gray-500 uppercase font-bold text-center mb-1">Isıtma</span>
+                            <div className="bg-gray-50 px-6 py-3 rounded-xl border border-gray-200 flex-1 min-w-[120px]">
+                                <span className="block text-sm text-gray-500 uppercase font-bold text-center mb-1">Isıtma</span>
                                 <span className="block text-xl font-bold text-center text-gray-900">{listing.heatingType?.substring(0, 10) || '-'}</span>
                             </div>
                         </div>
 
-                        {/* HUGE PRICE */}
-                        <div className="text-[5rem] leading-none font-black text-blue-700 tracking-tighter mt-2">
+                        {/* PRICE - Made smaller to fit */}
+                        <div className="text-7xl font-black text-blue-700 tracking-tighter mt-2">
                             {listing.priceNumeric
                                 ? formatPrice(Number(listing.priceNumeric))
                                 : formatPrice(parseFloat(listing.price.replace(/\./g, '').replace(',', '.')))
                             }
-                            <span className="text-3xl text-gray-400 font-bold ml-2 tracking-normal relative -top-8">TL</span>
+                            <span className="text-3xl text-gray-400 font-bold ml-2 tracking-normal relative -top-6">TL</span>
                         </div>
                     </div>
 
