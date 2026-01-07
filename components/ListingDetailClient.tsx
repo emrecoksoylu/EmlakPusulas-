@@ -19,7 +19,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, User, Check, ChevronsUpDown, Share2, Power, PowerOff, Loader2, ChevronLeft, ChevronRight, Info } from "lucide-react"
+import { Plus, Trash2, User, Check, ChevronsUpDown, Share2, Power, PowerOff, Loader2, ChevronLeft, ChevronRight, Info, Printer } from "lucide-react"
 import { toggleCustomerInterest } from "@/app/actions/listing-details"
 import { updateListingStatus } from "@/app/actions/listings"
 import { toast } from "sonner"
@@ -123,6 +123,15 @@ export default function ListingDetailClient({ listing, allCustomers }: ListingDe
                             <PowerOff className="mr-2 h-4 w-4" />
                         )}
                         {listing.status === 'passive' ? 'Yayına Al' : 'Pasife Çek'}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => window.open(`/dashboard/listings/${listing.id}/print`, '_blank')}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                        title="Vitrin Kartı Yazdır"
+                    >
+                        <Printer className="mr-2 h-4 w-4" />
+                        Vitrin Yazdır
                     </Button>
                     <Button variant="outline" onClick={() => router.push("/dashboard/listings")}>Geri Dön</Button>
                 </div>
