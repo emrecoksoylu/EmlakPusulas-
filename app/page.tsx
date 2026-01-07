@@ -1,6 +1,10 @@
+```javascript
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Building2, Users, FileText, ArrowRight, ShieldCheck, Zap } from "lucide-react"
+import { motion } from "framer-motion"
 
 export default function Home() {
   const jsonLd = {
@@ -17,15 +21,30 @@ export default function Home() {
     "description": "Emlak danışmanları için geliştirilmiş portföy takip, müşteri yönetimi ve sözleşme hazırlama asistanı."
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
+      
       {/* Navbar */}
-      <header className="px-6 lg:px-8 h-16 flex items-center justify-between border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <motion.header 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 100 }}
+        className="px-6 lg:px-8 h-16 flex items-center justify-between border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50"
+      >
         <div className="flex items-center gap-2 font-bold text-xl text-blue-600">
           <Building2 className="h-6 w-6" />
           <span>EmlakPusulası</span>
@@ -35,19 +54,13 @@ export default function Home() {
             <Button variant="ghost">Giriş Yap</Button>
           </Link>
           <Link href="/register">
-            <Button>Ücretsiz Başla</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700">Ücretsiz Başla</Button>
           </Link>
         </nav>
-      </header>
+      </motion.header>
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-20 lg:py-32 px-6 lg:px-8 text-center bg-gradient-to-b from-blue-50 to-white">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <h1 className="text-4xl lg:text-6xl font-extrabold tracking-tight text-gray-900">
-              Emlak İşinizi <span className="text-blue-600">Dijitale Taşıyın</span>
-            </h1>
-            <p className="text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
               Portföylerinizi yönetin, müşteri taleplerini takip edin ve saniyeler içinde profesyonel sözleşmeler hazırlayın.
               Modern emlak danışmanının yeni asistanı.
             </p>
