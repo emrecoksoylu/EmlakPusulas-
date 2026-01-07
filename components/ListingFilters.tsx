@@ -124,12 +124,12 @@ export function ListingFilters() {
 
                 {/* Search Button */}
                 <div className="flex gap-2">
-                    <Button onClick={handleSearch} className="w-full bg-blue-600 hover:bg-blue-700">
+                    <Button onClick={handleSearch} className="flex-1 bg-blue-600 hover:bg-blue-700">
                         <Search className="h-4 w-4 mr-2" />
                         Ara
                     </Button>
                     {(city || minPrice || maxPrice || roomCount !== "all") && (
-                        <Button variant="ghost" size="icon" onClick={clearFilters} className="text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0" title="Temizle">
+                        <Button variant="outline" onClick={clearFilters} className="text-red-500 hover:text-red-600 hover:bg-red-50 px-3" title="Temizle">
                             <X className="h-4 w-4" />
                         </Button>
                     )}
