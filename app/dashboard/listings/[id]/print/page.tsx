@@ -97,7 +97,10 @@ export default async function PrintListingPage({ params }: { params: Promise<{ i
 
                         {/* HUGE PRICE */}
                         <div className="text-[5rem] leading-none font-black text-blue-700 tracking-tighter mt-4">
-                            {formatPrice(parseFloat(listing.price))}
+                            {listing.priceNumeric
+                                ? formatPrice(Number(listing.priceNumeric))
+                                : formatPrice(parseFloat(listing.price.replace(/\./g, '').replace(',', '.')))
+                            }
                             <span className="text-4xl text-gray-400 font-bold ml-2 tracking-normal relative -top-8">TL</span>
                         </div>
                     </div>
