@@ -1,4 +1,3 @@
-```javascript
 "use client"
 
 import Link from "next/link"
@@ -37,9 +36,9 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      
+
       {/* Navbar */}
-      <motion.header 
+      <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 100 }}
@@ -61,86 +60,134 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-              Portföylerinizi yönetin, müşteri taleplerini takip edin ve saniyeler içinde profesyonel sözleşmeler hazırlayın.
-              Modern emlak danışmanının yeni asistanı.
-            </p>
-            <div className="flex items-center justify-center gap-4 pt-4">
+        <section className="py-20 lg:py-32 px-6 lg:px-8 text-center bg-gradient-to-b from-blue-50 to-white relative overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
+          >
+            {/* Background decorative elements could go here */}
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="max-w-4xl mx-auto space-y-6 relative z-10"
+          >
+            <motion.h1 variants={itemVariants} className="text-4xl lg:text-7xl font-extrabold tracking-tight text-gray-900 leading-tight">
+              Emlak İşinizi <span className="text-blue-600 inline-block">Dijitale Taşıyın</span>
+            </motion.h1>
+            <motion.p variants={itemVariants} className="text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
+              <strong>EmlakPusulası</strong>, modern emlak ofislerinin "Dijital Asistanı"dır. Portföylerinizi yönetin, müşteri taleplerini takip edin ve saniyeler içinde yasal sözleşmeler hazırlayın.
+            </motion.p>
+            <motion.div variants={itemVariants} className="flex items-center justify-center gap-4 pt-4">
               <Link href="/register">
-                <Button size="lg" className="h-12 px-8 text-lg">
-                  Hemen Başla <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button size="lg" className="h-14 px-8 text-lg bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-200 rounded-full">
+                    Hemen Başla <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </motion.div>
               </Link>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </section>
 
         {/* Features Section */}
         <section className="py-20 px-6 lg:px-8 bg-white" id="features">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">Neden EmlakPusulası?</h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <h2 className="text-3xl font-bold text-center mb-4">Neden EmlakPusulası?</h2>
+              <p className="text-center text-gray-500 mb-12 max-w-2xl mx-auto">Geleneksel defter kayıtlarından kurtulun. İşinizi hızlandıran dijital yeteneklerle tanışın.</p>
+            </motion.div>
+
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid md:grid-cols-3 gap-8"
+            >
               {/* Feature 1 */}
-              <div className="p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-lg transition-shadow">
-                <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 text-blue-600">
-                  <Building2 className="h-6 w-6" />
+              <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-white border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div className="h-14 w-14 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600">
+                  <Building2 className="h-7 w-7" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Akıllı Portföy Yönetimi</h3>
-                <p className="text-gray-600">
-                  İlanlarınızı detaylı özelliklerle kaydedin, fotoğraflarınızı yönetin ve anlık durum takibi yapın.
+                <h3 className="text-xl font-bold mb-3">Akıllı Portföy Yönetimi</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  İlanlarınızı detaylı özelliklerle kaydedin, fotoğraflarınızı yönetin. Aktif/Pasif durumlarını tek tıkla değiştirin.
                 </p>
-              </div>
+              </motion.div>
 
               {/* Feature 2 */}
-              <div className="p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-lg transition-shadow">
-                <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center mb-4 text-green-600">
-                  <Users className="h-6 w-6" />
+              <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-white border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div className="h-14 w-14 bg-green-100 rounded-2xl flex items-center justify-center mb-6 text-green-600">
+                  <Users className="h-7 w-7" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Müşteri İlişkileri (CRM)</h3>
-                <p className="text-gray-600">
-                  Alıcı ve satıcı taleplerini not edin, otomatik eşleşmeler yakalayın ve müşteri memnuniyetini artırın.
+                <h3 className="text-xl font-bold mb-3">Müşteri İlişkileri (CRM)</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Alıcı taleplerini ve bütçelerini not edin. EmlakPusulası sizin için portföyünüzden uygun ilanarı otomatik eşleştirsin.
                 </p>
-              </div>
+              </motion.div>
 
               {/* Feature 3 */}
-              <div className="p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:shadow-lg transition-shadow">
-                <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4 text-purple-600">
-                  <FileText className="h-6 w-6" />
+              <motion.div variants={itemVariants} className="p-6 rounded-2xl bg-white border border-gray-100 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div className="h-14 w-14 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 text-purple-600">
+                  <FileText className="h-7 w-7" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Hızlı Sözleşme</h3>
-                <p className="text-gray-600">
-                  Satış vaadi, kapora ve yetki belgelerini şablonlardan saniyeler içinde oluşturun ve yazdırın.
+                <h3 className="text-xl font-bold mb-3">Hızlı Sözleşme</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Satış vaadi, kapora ve yetki belgelerini hukuki şablonlardan saniyeler içinde oluşturun, PDF alın ve yazdırın.
                 </p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </section>
 
         {/* Trust Section */}
-        <section className="py-20 px-6 lg:px-8 border-t">
+        <section className="py-20 px-6 lg:px-8 border-t bg-gray-50/50">
           <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-12 text-center md:text-left">
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold flex items-center justify-center md:justify-start gap-2">
-                <ShieldCheck className="h-6 w-6 text-green-600" />
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="space-y-4"
+            >
+              <h3 className="text-2xl font-bold flex items-center justify-center md:justify-start gap-3">
+                <ShieldCheck className="h-8 w-8 text-green-600" />
                 Güvenli Altyapı
               </h3>
               <p className="text-gray-600">
-                Verileriniz şifreli sunucularda saklanır. Sadece siz ve yetki verdiğiniz ekibiniz erişebilir.
+                Verileriniz 256-bit SSL ile şifreli sunucularda saklanır. Sadece siz ve yetki verdiğiniz ekibiniz erişebilir.
               </p>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold flex items-center justify-center md:justify-start gap-2">
-                <Zap className="h-6 w-6 text-yellow-500" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="space-y-4"
+            >
+              <h3 className="text-2xl font-bold flex items-center justify-center md:justify-start gap-3">
+                <Zap className="h-8 w-8 text-amber-500" />
                 Hızlı ve Mobil Uyumlu
               </h3>
               <p className="text-gray-600">
-                Ofiste bilgisayardan, sahada cep telefonundan kesintisiz ve hızlı erişim.
+                Ofiste, evde veya sahada... Cep telefonunuzdan, tabletinizden tüm işlerinize kesintisiz ve hızlı erişim.
               </p>
-            </div>
+            </motion.div>
           </div>
         </section>
       </main>
 
-      <footer className="py-8 text-center text-sm text-gray-500 border-t">
+      <footer className="py-8 text-center text-sm text-gray-500 border-t bg-white">
         <p>&copy; {new Date().getFullYear()} EmlakPusulası. Tüm hakları saklıdır.</p>
       </footer>
     </div>
