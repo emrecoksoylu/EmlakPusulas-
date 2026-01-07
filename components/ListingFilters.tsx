@@ -1,8 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
-import { useDebouncedCallback } from "use-debounce"
+import { useState } from "react"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -30,60 +29,22 @@ export function ListingFilters() {
         router.push("/dashboard/listings")
     }
 
-    // Debounce URL updates for text/number inputs
-    const updateUrl = useDebouncedCallback((params: Record<string, string>) => {
-        const newSearchParams = new URLSearchParams(searchParams.toString())
+    // Manual search trigger
+    const handleSearch = () => {
+        const newSearchParams = new URLSearchParams()
 
-        Object.entries(params).forEach(([key, value]) => {
-            if (value && value !== "all") {
-                newSearchParams.set(key, value)
-            } else {
-                newSearchParams.delete(key)
-            }
-        })
+        if (city) newSearchParams.set("city", city)
+        if (district) newSearchParams.set("district", district)
+        if (roomCount && roomCount !== "all") newSearchParams.set("roomCount", roomCount)
+        if (minPrice) newSearchParams.set("minPrice", minPrice)
+        if (maxPrice) newSearchParams.set("maxPrice", maxPrice)
 
         router.push(`/dashboard/listings?${newSearchParams.toString()}`)
-    }, 500)
-
-    // Effect to update URL when selected values change directly (Selects)
-    useEffect(() => {
-        const params: Record<string, string> = {}
-        if (city) params.city = city
-        if (district) params.district = district
-        if (roomCount && roomCount !== "all") params.roomCount = roomCount
-
-        // Only trigger if these strictly changed to avoid conflict with debouncer
-        // But for Selects, immediate update is usually better.
-        // We'll trust the individual handlers to manage their URL updates mostly or use a apply button. 
-        // For better UX in modern dashboards, instantaneous or debounced auto-search is preferred.
-
-    }, [city, district, roomCount])
-
+    }
 
     const handleCityChange = (value: string) => {
         setCity(value)
         setDistrict("") // Reset district
-        updateUrl({ city: value, district: "", roomCount, minPrice, maxPrice })
-    }
-
-    const handleDistrictChange = (value: string) => {
-        setDistrict(value)
-        updateUrl({ city, district: value, roomCount, minPrice, maxPrice })
-    }
-
-    const handleRoomChange = (value: string) => {
-        setRoomCount(value)
-        updateUrl({ city, district, roomCount: value, minPrice, maxPrice })
-    }
-
-    const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setMinPrice(e.target.value)
-        updateUrl({ city, district, roomCount, minPrice: e.target.value, maxPrice })
-    }
-
-    const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setMaxPrice(e.target.value)
-        updateUrl({ city, district, roomCount, minPrice, maxPrice: e.target.value })
     }
 
     const cities = Object.keys(turkeyLocations)
@@ -91,7 +52,7 @@ export function ListingFilters() {
 
     return (
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                 {/* City */}
                 <div className="space-y-2">
                     <Label>Şehir</Label>
@@ -100,8 +61,6 @@ export function ListingFilters() {
                             <SelectValue placeholder="Tümü" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all_cities_placeholder" disabled className="hidden">Tümü</SelectItem>
-                            {/* Note: SelectItem value cannot be empty string in some versions, handling clear logic individually if needed or just don't have a clear option inside select */}
                             {cities.map(c => (
                                 <SelectItem key={c} value={c}>{c}</SelectItem>
                             ))}
@@ -112,7 +71,7 @@ export function ListingFilters() {
                 {/* District */}
                 <div className="space-y-2">
                     <Label>İlçe</Label>
-                    <Select value={district} onValueChange={handleDistrictChange} disabled={!city}>
+                    <Select value={district} onValueChange={setDistrict} disabled={!city}>
                         <SelectTrigger>
                             <SelectValue placeholder="Tümü" />
                         </SelectTrigger>
@@ -127,7 +86,7 @@ export function ListingFilters() {
                 {/* Room Count */}
                 <div className="space-y-2">
                     <Label>Oda Sayısı</Label>
-                    <Select value={roomCount} onValueChange={handleRoomChange}>
+                    <Select value={roomCount} onValueChange={setRoomCount}>
                         <SelectTrigger>
                             <SelectValue placeholder="Tümü" />
                         </SelectTrigger>
@@ -151,28 +110,31 @@ export function ListingFilters() {
                         <Input
                             placeholder="Min"
                             value={minPrice}
-                            onChange={handleMinPriceChange}
+                            onChange={(e) => setMinPrice(e.target.value)}
                             type="number"
                         />
                         <Input
                             placeholder="Max"
                             value={maxPrice}
-                            onChange={handleMaxPriceChange}
+                            onChange={(e) => setMaxPrice(e.target.value)}
                             type="number"
                         />
                     </div>
                 </div>
-            </div>
 
-            {/* Active Filters Summary or Clear Button */}
-            {(city || minPrice || maxPrice || roomCount !== "all") && (
-                <div className="mt-4 flex justify-end">
-                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                        <X className="mr-2 h-4 w-4" />
-                        Filtreleri Temizle
+                {/* Search Button */}
+                <div className="flex gap-2">
+                    <Button onClick={handleSearch} className="w-full bg-blue-600 hover:bg-blue-700">
+                        <Search className="h-4 w-4 mr-2" />
+                        Ara
                     </Button>
+                    {(city || minPrice || maxPrice || roomCount !== "all") && (
+                        <Button variant="ghost" size="icon" onClick={clearFilters} className="text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0" title="Temizle">
+                            <X className="h-4 w-4" />
+                        </Button>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     )
 }
