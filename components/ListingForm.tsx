@@ -27,31 +27,20 @@ export function ListingForm() {
     const [previewUrls, setPreviewUrls] = useState<string[]>([])
     const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
 
-    // Debug logging state
-    const [uploadLogs, setUploadLogs] = useState<string[]>([])
-
-    const addLog = (message: string) => {
-        const timestamp = new Date().toLocaleTimeString()
-        setUploadLogs(prev => [`[${timestamp}] ${message}`, ...prev])
-        console.log(`[Upload Debug] ${message}`)
-    }
-
     const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return
 
         const files = Array.from(e.target.files)
         setUploading(true)
-        setUploadLogs([]) // Clear previous logs
-        addLog(`Starting upload for ${files.length} files`)
 
         // Dynamically import compression to avoid SSR issues
         const imageCompression = (await import('browser-image-compression')).default
 
         const options = {
-            maxSizeMB: 0.5, // Aggressive compression (max 500KB)
-            maxWidthOrHeight: 1280, // Safe for mobile data and standard screens
+            maxSizeMB: 1, // Max 1MB
+            maxWidthOrHeight: 1920, // Max 1920px (Full HD is enough)
             useWebWorker: true,
-            initialQuality: 0.7
+            initialQuality: 0.8
         }
 
         try {
@@ -62,28 +51,9 @@ export function ListingForm() {
                     // Only compress images
                     if (file.type.startsWith('image/')) {
                         try {
-                            console.log(`Original size (${file.name}):`, file.size / 1024 / 1024, "MB")
-
-                            const compressedBlob = await imageCompression(file, options)
-
-                            console.log(`Compressed size (${file.name}):`, compressedBlob.size / 1024 / 1024, "MB")
-
-                            // Vercel Serverless Function Limit Check (4.5MB Body Size)
-                            if (compressedBlob.size > 4.5 * 1024 * 1024) {
-                                throw new Error(`Dosya çok büyük: ${file.name} (Sıkıştırma sonrası >4.5MB)`)
-                            }
-
-                            // Create a new File object to ensure we preserve the name
-                            return new File([compressedBlob], file.name, {
-                                type: compressedBlob.type,
-                                lastModified: Date.now(),
-                            })
-                        } catch (err: any) {
+                            return await imageCompression(file, options)
+                        } catch (err) {
                             console.error("Compression failed for", file.name, err)
-                            // If it failed because it's too big, re-throw
-                            if (err.message && err.message.includes("Dosya çok büyük")) {
-                                throw err
-                            }
                             return file // Fallback to original if compression fails
                         }
                     }
@@ -408,21 +378,6 @@ export function ListingForm() {
                         <input key={url} type="hidden" name="images" value={url} />
                     ))}
                 </div>
-
-                {/* Debug Logs Box */}
-                {uploadLogs.length > 0 && (
-                    <div className="bg-gray-900 text-green-400 p-4 rounded-lg text-xs font-mono overflow-y-auto max-h-48 border border-gray-700 shadow-inner">
-                        <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-1">
-                            <span className="font-bold text-gray-300">Yükleme Logları (Hata Durumunda Kopyala)</span>
-                            <button type="button" onClick={() => setUploadLogs([])} className="text-gray-500 hover:text-white">Temizle</button>
-                        </div>
-                        {uploadLogs.map((log, i) => (
-                            <div key={i} className={log.includes("FATAL") || log.includes("Error") ? "text-red-400 font-bold" : ""}>
-                                {log}
-                            </div>
-                        ))}
-                    </div>
-                )}
 
                 <div className="space-y-2">
                     <div className="flex justify-between items-center">
