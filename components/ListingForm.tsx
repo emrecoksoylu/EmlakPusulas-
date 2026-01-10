@@ -51,7 +51,12 @@ export function ListingForm() {
                     // Only compress images
                     if (file.type.startsWith('image/')) {
                         try {
-                            return await imageCompression(file, options)
+                            const compressedBlob = await imageCompression(file, options)
+                            // Create a new File object to ensure we preserve the name
+                            return new File([compressedBlob], file.name, {
+                                type: compressedBlob.type,
+                                lastModified: Date.now(),
+                            })
                         } catch (err) {
                             console.error("Compression failed for", file.name, err)
                             return file // Fallback to original if compression fails
