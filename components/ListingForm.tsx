@@ -113,8 +113,22 @@ export function ListingForm() {
         try {
             const formData = new FormData(e.currentTarget)
 
-            // Handle checkboxes explicitly if needed, but FormData usually handles 'on'
-            // We will trust server action to handle "on" conversion
+            // Manually append images from state to ensure they are sent correctly
+            // First, remove any 'images' that might have been picked up from the DOM (hidden inputs)
+            formData.delete('images')
+
+            // Append each URL from the state
+            if (uploadedUrls.length > 0) {
+                uploadedUrls.forEach(url => {
+                    formData.append('images', url)
+                })
+            } else {
+                // If using 'previewUrls' (blobs) without upload, we can't save. 
+                // But typically uploadedUrls should be populated.
+                console.warn("No uploaded URLs found in state")
+            }
+
+            console.log("Submitting form with images:", uploadedUrls)
 
             await createListing(formData)
             toast.success("İlan başarıyla oluşturuldu.")
