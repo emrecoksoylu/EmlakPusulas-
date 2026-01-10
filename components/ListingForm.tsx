@@ -401,9 +401,15 @@ export function ListingForm() {
 
 
             <div className="flex justify-end">
-                <Button type="submit" size="lg" className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto" disabled={loading}>
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Home className="mr-2 h-4 w-4" />}
-                    İlanı Yayınla
+                <Button type="submit" size="lg" className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto" disabled={loading || uploading}>
+                    {loading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : uploading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Home className="mr-2 h-4 w-4" />
+                    )}
+                    {uploading ? "Fotoğraflar Yükleniyor..." : "İlanı Yayınla"}
                 </Button>
             </div>
         </form>

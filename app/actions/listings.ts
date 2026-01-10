@@ -49,13 +49,21 @@ export async function createListing(formData: FormData) {
 
     const imageIds = formData.getAll("images") as string[]
 
+    console.log("CreateListing Action Triggered")
+    console.log("Title:", title)
+    console.log("Received Image IDs (Raw):", imageIds)
+
     // Default image if no images provided
     let imageUrl = "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
     let images: string[] = []
 
     if (imageIds.length > 0) {
         images = imageIds
+        // Ensure we are not getting empty strings or "[object File]" weirdness
         imageUrl = imageIds[0]
+        console.log("Setting Primary Image URL:", imageUrl)
+    } else {
+        console.log("No images received, using default placeholder")
     }
 
     // Remove dots (thousand separators) and replace comma with dot (decimal)
