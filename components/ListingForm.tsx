@@ -27,11 +27,22 @@ export function ListingForm() {
     const [previewUrls, setPreviewUrls] = useState<string[]>([])
     const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
 
+    // Debug logging state
+    const [uploadLogs, setUploadLogs] = useState<string[]>([])
+
+    const addLog = (message: string) => {
+        const timestamp = new Date().toLocaleTimeString()
+        setUploadLogs(prev => [`[${timestamp}] ${message}`, ...prev])
+        console.log(`[Upload Debug] ${message}`)
+    }
+
     const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return
 
         const files = Array.from(e.target.files)
         setUploading(true)
+        setUploadLogs([]) // Clear previous logs
+        addLog(`Starting upload for ${files.length} files`)
 
         // Dynamically import compression to avoid SSR issues
         const imageCompression = (await import('browser-image-compression')).default
