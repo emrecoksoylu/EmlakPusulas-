@@ -54,7 +54,7 @@ export default async function DashboardPage({
                         <div className="relative z-10 pointer-events-none flex flex-col h-full">
                             <div className="relative h-48 overflow-hidden">
                                 <img
-                                    src={listing.imageUrl || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"}
+                                    src={(listing.images && listing.images.length > 0 ? listing.images[0] : listing.imageUrl) || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"}
                                     alt={listing.title}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                 />
