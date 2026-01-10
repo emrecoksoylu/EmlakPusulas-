@@ -398,6 +398,21 @@ export function ListingForm() {
                     ))}
                 </div>
 
+                {/* Debug Logs Box */}
+                {uploadLogs.length > 0 && (
+                    <div className="bg-gray-900 text-green-400 p-4 rounded-lg text-xs font-mono overflow-y-auto max-h-48 border border-gray-700 shadow-inner">
+                        <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-1">
+                            <span className="font-bold text-gray-300">Yükleme Logları (Hata Durumunda Kopyala)</span>
+                            <button type="button" onClick={() => setUploadLogs([])} className="text-gray-500 hover:text-white">Temizle</button>
+                        </div>
+                        {uploadLogs.map((log, i) => (
+                            <div key={i} className={log.includes("FATAL") || log.includes("Error") ? "text-red-400 font-bold" : ""}>
+                                {log}
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 <div className="space-y-2">
                     <div className="flex justify-between items-center">
                         <Label htmlFor="description">İlan Açıklaması</Label>
