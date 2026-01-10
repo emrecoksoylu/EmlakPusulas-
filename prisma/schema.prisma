@@ -18,6 +18,7 @@ model Agent {
   customers    Customer[]
   errorReports ErrorReport[]
   contracts    Contract[]
+  appointments Appointment[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -55,6 +56,7 @@ model Customer {
 
   interestedListings Listing[]
   contracts          Contract[]
+  appointments       Appointment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -112,6 +114,7 @@ model Listing {
   stats               PlatformStats[]
   interestedCustomers Customer[]
   contracts           Contract[]
+  appointments        Appointment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -127,4 +130,48 @@ model PlatformStats {
   listing   Listing @relation(fields: [listingId], references: [id])
 
   lastChecked DateTime @default(now())
+}
+
+model Appointment {
+  id        String   @id @default(cuid())
+  title     String
+  type      AppointmentType
+  startTime DateTime
+  endTime   DateTime
+  location  String?
+  address   String?
+  
+  // Relations
+  agentId    String
+  agent      Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  
+  listingId  String?
+  listing    Listing?  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  
+  // Metadata
+  notes     String?
+  status    AppointmentStatus @default(SCHEDULED)
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([agentId, startTime])
+}
+
+enum AppointmentType {
+  PROPERTY_VIEWING
+  LAND_REGISTRY
+  NOTARY
+  CLIENT_MEETING
+  OTHER
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
 }

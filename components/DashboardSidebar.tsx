@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, LineChart, ListPlus, Settings, Building2, Users, LayoutDashboard, FileText, LogOut, ShieldCheck, LifeBuoy, Menu, X } from "lucide-react"
+import { Home, LineChart, ListPlus, Settings, Building2, Users, LayoutDashboard, FileText, LogOut, ShieldCheck, LifeBuoy, Menu, X, Calendar } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -28,6 +28,11 @@ const sidebarItems = [
         title: "Müşteriler",
         href: "/dashboard/customers",
         icon: Users,
+    },
+    {
+        title: "Takvim",
+        href: "/dashboard/calendar",
+        icon: Calendar,
     },
     {
         title: "Sözleşmeler",
