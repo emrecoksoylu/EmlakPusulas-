@@ -37,10 +37,10 @@ export function ListingForm() {
         const imageCompression = (await import('browser-image-compression')).default
 
         const options = {
-            maxSizeMB: 1, // Max 1MB
-            maxWidthOrHeight: 1920, // Max 1920px (Full HD is enough)
+            maxSizeMB: 0.5, // Aggressive compression (max 500KB)
+            maxWidthOrHeight: 1280, // Safe for mobile data and standard screens
             useWebWorker: true,
-            initialQuality: 0.8
+            initialQuality: 0.7
         }
 
         try {
@@ -51,14 +51,28 @@ export function ListingForm() {
                     // Only compress images
                     if (file.type.startsWith('image/')) {
                         try {
+                            console.log(`Original size (${file.name}):`, file.size / 1024 / 1024, "MB")
+
                             const compressedBlob = await imageCompression(file, options)
+
+                            console.log(`Compressed size (${file.name}):`, compressedBlob.size / 1024 / 1024, "MB")
+
+                            // Vercel Serverless Function Limit Check (4.5MB Body Size)
+                            if (compressedBlob.size > 4.5 * 1024 * 1024) {
+                                throw new Error(`Dosya çok büyük: ${file.name} (Sıkıştırma sonrası >4.5MB)`)
+                            }
+
                             // Create a new File object to ensure we preserve the name
                             return new File([compressedBlob], file.name, {
                                 type: compressedBlob.type,
                                 lastModified: Date.now(),
                             })
-                        } catch (err) {
+                        } catch (err: any) {
                             console.error("Compression failed for", file.name, err)
+                            // If it failed because it's too big, re-throw
+                            if (err.message && err.message.includes("Dosya çok büyük")) {
+                                throw err
+                            }
                             return file // Fallback to original if compression fails
                         }
                     }
