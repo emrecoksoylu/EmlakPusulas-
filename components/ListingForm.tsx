@@ -33,13 +33,42 @@ export function ListingForm() {
         const files = Array.from(e.target.files)
         setUploading(true)
 
-        const formData = new FormData()
-        files.forEach(file => formData.append("images", file))
+        // Dynamically import compression to avoid SSR issues
+        const imageCompression = (await import('browser-image-compression')).default
+
+        const options = {
+            maxSizeMB: 1, // Max 1MB
+            maxWidthOrHeight: 1920, // Max 1920px (Full HD is enough)
+            useWebWorker: true,
+            initialQuality: 0.8
+        }
 
         try {
-            // Local preview first
-            const localPreviews = files.map(file => URL.createObjectURL(file))
+            toast.info("Fotoğraflar optimize ediliyor...")
+
+            const compressedFiles = await Promise.all(
+                files.map(async (file) => {
+                    // Only compress images
+                    if (file.type.startsWith('image/')) {
+                        try {
+                            return await imageCompression(file, options)
+                        } catch (err) {
+                            console.error("Compression failed for", file.name, err)
+                            return file // Fallback to original if compression fails
+                        }
+                    }
+                    return file
+                })
+            )
+
+            const formData = new FormData()
+            compressedFiles.forEach(file => formData.append("images", file))
+
+            // Local preview update (using compressed files is fine/better)
+            const localPreviews = compressedFiles.map(file => URL.createObjectURL(file))
             setPreviewUrls(prev => [...prev, ...localPreviews])
+
+            toast.info("Yükleme başladı...")
 
             // Upload to Supabase
             const response = await fetch("/api/upload", {
@@ -50,14 +79,19 @@ export function ListingForm() {
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data.error || "Upload failed")
+                // Determine user friendly error
+                let errorMessage = "Yükleme başarısız"
+                if (data.error?.includes("File too large")) errorMessage = "Dosya boyutu çok yüksek (max 5MB)"
+                else if (data.error?.includes("Invalid file type")) errorMessage = "Geçersiz dosya formatı"
+
+                throw new Error(errorMessage)
             }
 
             setUploadedUrls(prev => [...prev, ...data.urls])
-            toast.success(`${files.length} fotoğraf yüklendi`)
-        } catch (error) {
+            toast.success(`${files.length} fotoğraf başarıyla yüklendi`)
+        } catch (error: any) {
             console.error("Upload error:", error)
-            toast.error("Fotoğraf yüklenirken hata oluştu")
+            toast.error(error.message || "Fotoğraf yüklenirken hata oluştu")
         } finally {
             setUploading(false)
         }
