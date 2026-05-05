@@ -13,11 +13,13 @@ if (typeof window === 'undefined' && !process.env.AUTH_SECRET && !process.env.NE
 
 async function getUser(email: string) {
     try {
+        console.log("[AUTH] Fetching user from DB:", email);
         const user = await prisma.agent.findUnique({ where: { email } });
+        console.log("[AUTH] DB Result:", user ? "User found" : "User NOT found");
         return user;
     } catch (error) {
-        console.error('Failed to fetch user:', error);
-        throw new Error('Failed to fetch user.');
+        console.error('[AUTH] DATABASE CONNECTION ERROR:', error);
+        throw new Error('Database connection failed during auth.');
     }
 }
 
