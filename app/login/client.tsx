@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useFormState, useFormStatus } from "react-dom"
+import { useFormStatus } from "react-dom"
 import { authenticate } from "@/app/actions/authenticate"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { Building2, Loader2, KeyRound } from "lucide-react"
 import { SplashIntro } from "@/components/SplashIntro"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useActionState } from "react"
 
 function LoginButton() {
     const { pending } = useFormStatus()
@@ -22,7 +22,7 @@ function LoginButton() {
 }
 
 export function LoginForm() {
-    const [errorMessage, dispatch] = useFormState(authenticate, undefined)
+    const [errorMessage, dispatch] = useActionState(authenticate, undefined)
     const [showSplash, setShowSplash] = useState(false)
 
     useEffect(() => {

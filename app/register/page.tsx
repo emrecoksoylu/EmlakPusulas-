@@ -1,7 +1,8 @@
 
 "use client"
 
-import { useFormState, useFormStatus } from "react-dom"
+import { useActionState } from "react"
+import { useFormStatus } from "react-dom"
 import { register } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,7 +21,7 @@ function RegisterButton() {
 }
 
 export default function RegisterPage() {
-    const [errorMessage, dispatch] = useFormState(register, undefined)
+    const [errorMessage, dispatch] = useActionState(register, undefined)
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
