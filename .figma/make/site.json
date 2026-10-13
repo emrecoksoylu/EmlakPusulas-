@@ -1,0 +1,10 @@
+{
+  "description": "Transform existing website designs into interactive mockups for developers and designers, enhancing collaboration and streamlining the development process.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
