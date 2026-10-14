@@ -5,6 +5,29 @@
   --font-sans: 'Inter', sans-serif;
 }
 
+/* ── Anadolu Sigorta tasarım dili ──
+   Mavi paleti kurumsal laciverte, köşe yarıçaplarını daha keskin hale getirir. */
+@theme {
+  --color-blue-50: #eef2f9;
+  --color-blue-100: #dbe3f2;
+  --color-blue-200: #b7c6e4;
+  --color-blue-300: #8fa5d2;
+  --color-blue-400: #5f7fbd;
+  --color-blue-500: #3a5fa8;
+  --color-blue-600: #2c4f97;
+  --color-blue-700: #1f3b78;
+  --color-blue-800: #1a2c5e;
+  --color-blue-900: #14214a;
+
+  --color-brand-red: #c8102e;
+  --color-brand-red-dark: #a50d26;
+  --color-brand-navy: #1a2c5e;
+
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.3rem;
+  --radius-2xl: 0.4rem;
+}
+
 * {
   font-family: 'Inter', sans-serif;
 }

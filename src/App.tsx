@@ -17,7 +17,7 @@ type Tab =
   | "bilgi-bekleyen"
   | "onay-bekleyen"
   | "teklif-olusturulan"
-type NavItem = "kontrol-paneli" | "filo-yonetim" | "talepler"
+type NavItem = "kontrol-paneli" | "filo-yonetim" | "talepler" | "sozlesmelerim"
 type View = "list" | "create"
 
 interface OnayKaydi {
@@ -227,7 +227,7 @@ function GirisEkrani({ onGiris }: { onGiris: (tur: KullaniciTuru, ad: string) =>
   return (
     <div className="min-h-screen flex" style={{ fontFamily: "Inter, sans-serif" }}>
       {/* Sol panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex-col justify-between p-12 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#14214a] via-[#1a2c5e] to-[#22397a] flex-col justify-between p-12 relative overflow-hidden">
         {/* Dekoratif daireler */}
         <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white/5" />
         <div className="absolute top-1/3 -right-32 w-80 h-80 rounded-full bg-white/5" />
@@ -235,8 +235,7 @@ function GirisEkrani({ onGiris }: { onGiris: (tur: KullaniciTuru, ad: string) =>
 
         <div className="relative">
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white font-bold text-xl">A</div>
-            <span className="text-white font-bold text-2xl tracking-wide">AstraFilo</span>
+            <span className="text-white font-extrabold text-2xl leading-none tracking-tight">ANADOLU<br />SİGORTA</span>
           </div>
           <h1 className="text-4xl font-bold text-white leading-tight mb-4">
             Sigorta Talep<br />Yönetim Sistemi
@@ -268,10 +267,7 @@ function GirisEkrani({ onGiris }: { onGiris: (tur: KullaniciTuru, ad: string) =>
       <div className="flex-1 flex items-center justify-center bg-gray-50 px-6 py-12">
         <div className="w-full max-w-md">
           {/* Logo mobil */}
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold">A</div>
-            <span className="text-blue-600 font-bold text-lg">AstraFilo</span>
-          </div>
+          <div className="mb-8 lg:hidden font-extrabold text-brand-red text-lg leading-none">ANADOLU<br />SİGORTA</div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Hoş geldiniz</h2>
           <p className="text-gray-500 text-sm mb-8">Devam etmek için kullanıcı türünü seçin ve giriş yapın.</p>
@@ -308,7 +304,7 @@ function GirisEkrani({ onGiris }: { onGiris: (tur: KullaniciTuru, ad: string) =>
 
           <button
             onClick={handleGiris}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-3 rounded-xl transition-colors mt-4"
+            className="w-full bg-brand-red hover:bg-brand-red-dark text-white font-semibold text-sm py-3 rounded transition-colors mt-4"
           >
             Giriş Yap
           </button>
@@ -544,9 +540,31 @@ function KontrolPaneli({ onayHavuzu, onDurumGuncelle }: {
 // ── Talep Oluştur Page ─────────────────────────────────────────────────────
 interface TalepSubmitData extends Omit<OnayKaydi, "id" | "olusturulmaTarihi" | "durum"> {
   formData: TalepFormData
+  sozlesmeAdi?: string
+  baslangicTarihi?: string
+  bitisTarihi?: string
+  policeBitisTarihi?: string
 }
 
-function TalepOlusturPage({ onBack, onSubmit }: { onBack: () => void; onSubmit: (kayit: TalepSubmitData) => void }) {
+function TalepOlusturPage({
+  onBack,
+  onSubmit,
+  sozlesmeModu = false,
+}: {
+  onBack: () => void
+  onSubmit: (kayit: TalepSubmitData) => void
+  sozlesmeModu?: boolean
+}) {
+  const [sozlesmeAdi, setSozlesmeAdi] = useState("")
+  const [baslangicTarihi, setBaslangicTarihi] = useState(new Date().toISOString().split("T")[0])
+  const [bitisTarihi, setBitisTarihi] = useState(() => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() + 1)
+    return d.toISOString().split("T")[0]
+  })
+  const [sozlesmeParametreleriAcik, setSozlesmeParametreleriAcik] = useState(false)
+  const [policeBitisTarihi, setPoliceBitisTarihi] = useState("")
+
   const [konu, setKonu] = useState("")
   const [kanalAdi, setKanalAdi] = useState("")
   const [kanalKodu, setKanalKodu] = useState("")
@@ -575,11 +593,12 @@ function TalepOlusturPage({ onBack, onSubmit }: { onBack: () => void; onSubmit: 
   const [operasyonelKiralik, setOperasyonelKiralik] = useState("")
   const [ikameArac, setIkameArac] = useState("")
   const [muafiyet, setMuafiyet] = useState("")
-  const [kilitMekanizmasiLimiti, setKilitMekanizmasiLimiti] = useState("")
-  const [ferdiKazaOlumLimiti, setFerdiKazaOlumLimiti] = useState("")
-  const [ferdiKazaSakatlikLimiti, setFerdiKazaSakatlikLimiti] = useState("")
-  const [ferdiKazaTedaviLimiti, setFerdiKazaTedaviLimiti] = useState("")
-  const [artanMaliSorumlulukLimiti, setArtanMaliSorumlulukLimiti] = useState("")
+  // Kilit mekanizması, koltuk ferdi kaza ve AMS bu formdan kaldırıldı
+  const kilitMekanizmasiLimiti = ""
+  const ferdiKazaOlumLimiti = ""
+  const ferdiKazaSakatlikLimiti = ""
+  const ferdiKazaTedaviLimiti = ""
+  const artanMaliSorumlulukLimiti = ""
   const [policelerTekVade, setPolicelerTekVade] = useState(false)
   const [tekVadeTarih, setTekVadeTarih] = useState("")
   const [ozelSartlar, setOzelSartlar] = useState("")
@@ -718,70 +737,140 @@ function TalepOlusturPage({ onBack, onSubmit }: { onBack: () => void; onSubmit: 
           Geri
         </button>
         <div className="w-px h-5 bg-gray-200" />
-        <h1 className="text-lg font-bold text-gray-900">Filo Talebi Oluştur</h1>
+        <h1 className="text-lg font-bold text-gray-900">{sozlesmeModu ? "Yeni Sözleşme Oluştur" : "Filo Talebi Oluştur"}</h1>
       </div>
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="max-w-5xl mx-auto space-y-6">
 
-          {/* ── Temel Bilgiler ── */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <SectionTitle>Temel Bilgiler</SectionTitle>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="col-span-2">
-                <label className={labelCls}>Konu <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={konu}
-                  onChange={(e) => setKonu(e.target.value)}
-                  placeholder="Talep konusunu giriniz"
-                  className={inputCls}
-                />
+          {sozlesmeModu ? (
+            <>
+              {/* ── Sözleşme Bilgileri ── */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <SectionTitle>Sözleşme Bilgileri</SectionTitle>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="col-span-1 md:col-span-3">
+                    <label className={labelCls}>Sözleşme Adı <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={sozlesmeAdi}
+                      onChange={(e) => setSozlesmeAdi(e.target.value)}
+                      placeholder="Örn: 2026 Kurumsal Filo Çerçeve Sözleşmesi"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Başlangıç Tarihi <span className="text-red-500">*</span></label>
+                    <input
+                      type="date"
+                      value={baslangicTarihi}
+                      onChange={(e) => setBaslangicTarihi(e.target.value)}
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Bitiş Tarihi <span className="text-red-500">*</span></label>
+                    <input
+                      type="date"
+                      value={bitisTarihi}
+                      onChange={(e) => setBitisTarihi(e.target.value)}
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className={labelCls}>Öncelik</label>
-                <select value={oncelik} onChange={(e) => setOncelik(e.target.value)} className={inputCls}>
-                  <option>Düşük</option>
-                  <option>Orta</option>
-                  <option>Yüksek</option>
-                </select>
+
+              {/* ── Sözleşme Parametreleri ── */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <SectionTitle>Sözleşme Parametreleri</SectionTitle>
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={sozlesmeParametreleriAcik}
+                      onChange={(e) => setSozlesmeParametreleriAcik(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Sözleşme Parametreli (Poliçe Bitiş Tarihi Belirle)
+                    </span>
+                  </label>
+
+                  {sozlesmeParametreleriAcik && (
+                    <div className="max-w-xs pt-2 pl-7">
+                      <label className={labelCls}>Poliçe Bitiş Tarihi <span className="text-red-500">*</span></label>
+                      <input
+                        type="date"
+                        value={policeBitisTarihi}
+                        onChange={(e) => setPoliceBitisTarihi(e.target.value)}
+                        className={inputCls}
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Sözleşme dahilindeki poliçelerin azami bitiş tarihi.</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div>
-                <label className={labelCls}>Talep Tipi</label>
-                <select value={talepTipi} onChange={(e) => setTalepTipi(e.target.value)} className={inputCls}>
-                  <option value="">Seçiniz</option>
-                  <option>Yenileme Teklifi</option>
-                  <option>Yeni Teklif</option>
-                  <option>Poliçe İptali</option>
-                  <option>Hasar Bildirimi</option>
-                  <option>Bilgi Talebi</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelCls}>Branş</label>
-                <select value={brans} onChange={(e) => setBrans(e.target.value)} className={inputCls}>
-                  <option value="">Seçiniz</option>
-                  <option>Kasko</option>
-                  <option>Karma Talep</option>
-                  <option>Nakliyat</option>
-                  <option>Yangın</option>
-                  <option>Sağlık</option>
-                  <option>Trafik</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelCls}>E-posta</label>
-                <input
-                  type="email"
-                  value={eposta}
-                  readOnly
-                  aria-readonly="true"
-                  className={`${inputCls} bg-gray-50 text-gray-500 cursor-not-allowed`}
-                />
+            </>
+          ) : (
+            /* ── Temel Bilgiler ── */
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <SectionTitle>Temel Bilgiler</SectionTitle>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="col-span-2">
+                  <label className={labelCls}>Konu <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={konu}
+                    onChange={(e) => setKonu(e.target.value)}
+                    placeholder="Talep konusunu giriniz"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Öncelik</label>
+                  <select value={oncelik} onChange={(e) => setOncelik(e.target.value)} className={inputCls}>
+                    <option>Düşük</option>
+                    <option>Orta</option>
+                    <option>Yüksek</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Talep Tipi</label>
+                  <select value={talepTipi} onChange={(e) => setTalepTipi(e.target.value)} className={inputCls}>
+                    <option value="">Seçiniz</option>
+                    <option>Yenileme Teklifi</option>
+                    <option>Yeni Teklif</option>
+                    <option>Poliçe İptali</option>
+                    <option>Hasar Bildirimi</option>
+                    <option>Bilgi Talebi</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Branş</label>
+                  <select value={brans} onChange={(e) => setBrans(e.target.value)} className={inputCls}>
+                    <option value="">Seçiniz</option>
+                    <option>Kasko</option>
+                    <option>Karma Talep</option>
+                    <option>Nakliyat</option>
+                    <option>Yangın</option>
+                    <option>Sağlık</option>
+                    <option>Trafik</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>E-posta</label>
+                  <input
+                    type="email"
+                    value={eposta}
+                    readOnly
+                    aria-readonly="true"
+                    className={`${inputCls} bg-gray-50 text-gray-500 cursor-not-allowed`}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* ── Kanal & Müşteri Bilgileri ── */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -1230,19 +1319,6 @@ function TalepOlusturPage({ onBack, onSubmit }: { onBack: () => void; onSubmit: 
                   onChange={setIkameArac}
                 />
                 <div className="mb-4">
-                  <label className={labelCls}>Kilit Mekanizması Limiti</label>
-                  <select
-                    value={kilitMekanizmasiLimiti}
-                    onChange={(e) => setKilitMekanizmasiLimiti(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="">Limit seçiniz</option>
-                    <option value="40.000 TL">40.000 TL</option>
-                    <option value="50.000 TL">50.000 TL</option>
-                    <option value="60.000 TL">60.000 TL</option>
-                  </select>
-                </div>
-                <div className="mb-4">
                   <p className="text-xs font-semibold text-gray-600 mb-1">
                     Muafiyet isteniyor mu?
                   </p>
@@ -1262,46 +1338,6 @@ function TalepOlusturPage({ onBack, onSubmit }: { onBack: () => void; onSubmit: 
                       </button>
                     ))}
                   </div>
-                </div>
-                <div className="mb-4">
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Koltuk Ferdi Kaza Teminatı</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { label: "Ölüm Limiti", value: ferdiKazaOlumLimiti, setValue: setFerdiKazaOlumLimiti },
-                      { label: "Sürekli Sakatlık Limiti", value: ferdiKazaSakatlikLimiti, setValue: setFerdiKazaSakatlikLimiti },
-                      { label: "Tedavi Giderleri Limiti", value: ferdiKazaTedaviLimiti, setValue: setFerdiKazaTedaviLimiti },
-                    ].map((alan) => (
-                      <div key={alan.label}>
-                        <label className={labelCls}>{alan.label}</label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min="0"
-                            inputMode="numeric"
-                            value={alan.value}
-                            onChange={(e) => alan.setValue(e.target.value)}
-                            placeholder="0"
-                            className={`${inputCls} pr-8`}
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">₺</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className={labelCls}>Artan Mali Sorumluluk Teminatı</label>
-                  <select
-                    value={artanMaliSorumlulukLimiti}
-                    onChange={(e) => setArtanMaliSorumlulukLimiti(e.target.value)}
-                    className={inputCls}
-                  >
-                    <option value="">Limit seçiniz</option>
-                    <option value="5.000.000 TL">5.000.000 TL</option>
-                    <option value="10.000.000 TL">10.000.000 TL</option>
-                    <option value="15.000.000 TL">15.000.000 TL</option>
-                    <option value="20.000.000 TL">20.000.000 TL</option>
-                  </select>
                 </div>
               </div>
             </div>
@@ -1415,9 +1451,20 @@ function TalepOlusturPage({ onBack, onSubmit }: { onBack: () => void; onSubmit: 
             </button>
             <button
               onClick={() => {
-                if (!konu.trim()) return
+                const effectiveSozlesmeAdi = sozlesmeAdi.trim() || (musteriler[0]?.musteriUnvani ? `${musteriler[0].musteriUnvani} Sözleşmesi` : "Filo Çerçeve Sözleşmesi")
+                if (!sozlesmeModu && !konu.trim()) return
+
                 onSubmit({
-                  konu, oncelik, talepTipi, brans, aracAdedi, eposta,
+                  konu: sozlesmeModu ? effectiveSozlesmeAdi : konu,
+                  oncelik,
+                  talepTipi: talepTipi || "Yeni Sözleşme",
+                  brans: brans || "Kasko",
+                  aracAdedi: aracAdedi || String(parkYeriAraclar.length || 1),
+                  eposta,
+                  sozlesmeAdi: effectiveSozlesmeAdi,
+                  baslangicTarihi,
+                  bitisTarihi,
+                  policeBitisTarihi: sozlesmeParametreleriAcik ? policeBitisTarihi : undefined,
                   formData: {
                     talepTipi, brans, eposta, aracAdedi,
                     kanalAdi, kanalKodu, acenteler, musteriler,
@@ -1431,9 +1478,9 @@ function TalepOlusturPage({ onBack, onSubmit }: { onBack: () => void; onSubmit: 
                   },
                 })
               }}
-              className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-2.5 text-sm font-semibold text-white bg-brand-red hover:bg-brand-red-dark rounded-lg transition-colors shadow-sm"
             >
-              Onaya Gönder
+              {sozlesmeModu ? "Sözleşmeyi Oluştur" : "Onaya Gönder"}
             </button>
           </div>
         </div>
@@ -2190,6 +2237,363 @@ function TramerSayfasi({ talepKonu, onKapat }: { talepKonu: string; onKapat: () 
   )
 }
 
+// ── Tramer Excel E-Tablo Görünümü (Sistemi Tara) ──────────────────────────
+function TramerExcelViewerModal({
+  onClose,
+  baslik = "Tramer_Verileri_Sistem_Tarama.xlsx",
+  sozlesmeAdi = "Sözleşme Teklifi",
+}: {
+  onClose: () => void
+  baslik?: string
+  sozlesmeAdi?: string
+}) {
+  const [aramaMetni, setAramaMetni] = useState("")
+  const [filtreTuru, setFiltreTuru] = useState<"tumu" | "hasarli" | "hasarsiz">("tumu")
+  const [aktifSayfa, setAktifSayfa] = useState<"veri" | "analiz">("veri")
+  const [seciliHucre, setSeciliHucre] = useState<string>("B2")
+
+  const n = (v: string) => parseFloat(v) || 0
+  const hasarVar = (r: TramerKayit) => !!r.hasarDosyaNo
+  const para = (v: number) => "₺" + v.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+
+  const filtreliVeri = tramerVerileri.filter((r) => {
+    if (filtreTuru === "hasarli" && !hasarVar(r)) return false
+    if (filtreTuru === "hasarsiz" && hasarVar(r)) return false
+    if (!aramaMetni.trim()) return true
+    const q = aramaMetni.toLowerCase()
+    return (
+      r.plaka.toLowerCase().includes(q) ||
+      r.musteriAd.toLowerCase().includes(q) ||
+      r.sirket.toLowerCase().includes(q) ||
+      r.hasarDosyaNo.toLowerCase().includes(q) ||
+      r.policeNo.toLowerCase().includes(q)
+    )
+  })
+
+  const toplamMasraf = tramerVerileri.reduce((s, r) => s + n(r.toplamMasraf), 0)
+  const toplamKasko = tramerVerileri.reduce((s, r) => s + n(r.kaskoBedeeli), 0)
+  const hasarliAdet = tramerVerileri.filter(hasarVar).length
+  const frekansYuzde = ((hasarliAdet / (tramerVerileri.length || 1)) * 100).toFixed(1)
+
+  const exceleIndir = () => {
+    const basliklar = [
+      "Sıra", "Plaka", "Müşteri Unvanı", "Araç Türü", "Model Yılı", "Kasko Bedeli",
+      "Poliçe No", "Sigorta Şirketi", "Acente Unvanı", "Poliçe Başlangıç", "Poliçe Bitiş",
+      "Hasar Dosya No", "Hasar Tarihi", "Toplam Masraf (TL)", "Toplam Ödeme (TL)", "Kusur Oranı (%)", "Ürün Tipi",
+    ]
+    const satirlar = tramerVerileri.map((r) => [
+      r.sira, r.plaka, r.musteriAd, r.aracTuru, r.modelYili, r.kaskoBedeeli,
+      r.policeNo, r.sirket, r.acenteUnvani, r.policeBaslangic, r.policeBitis,
+      r.hasarDosyaNo || "Hasarsız", r.hasarTarih || "-", r.toplamMasraf || "0",
+      r.toplamOdeme || "0", r.kusurOrani || "0", r.urunTipi,
+    ])
+    const csv = [basliklar, ...satirlar].map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n")
+    const link = document.createElement("a")
+    link.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }))
+    link.download = `${baslik.replace(/\.xlsx$/i, "")}.csv`
+    link.click()
+  }
+
+  const harfSutunlar = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O"]
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-3 md:p-6" style={{ fontFamily: "Segoe UI, Inter, sans-serif" }}>
+      <div className="w-full max-w-7xl h-[92vh] bg-white rounded-xl shadow-2xl border border-gray-300 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        
+        {/* Excel Title Bar (Green) */}
+        <div className="bg-[#107c41] text-white px-4 py-2 flex items-center justify-between shrink-0 select-none">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded bg-emerald-800 border border-emerald-600 flex items-center justify-center font-bold text-xs tracking-wider shadow-inner">
+              X
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-xs tracking-wide">{baslik}</span>
+                <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-mono font-medium">Salt Okunur E-Tablo</span>
+                <span className="text-[10px] bg-emerald-800 text-emerald-100 px-2 py-0.5 rounded font-medium">Sistem Taraması Tamamlandı</span>
+              </div>
+              <p className="text-[11px] text-emerald-100/80 truncate max-w-md">{sozlesmeAdi} · 13 Kayıt Aktarıldı</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exceleIndir}
+              className="inline-flex items-center gap-1.5 bg-white text-[#107c41] hover:bg-emerald-50 text-xs font-bold px-3 py-1.5 rounded shadow-sm transition-colors"
+              title="CSV / Excel olarak indir"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" strokeLinecap="round" /></svg>
+              Excel (.xlsx) İndir
+            </button>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/20 text-white font-bold text-base transition-colors"
+              title="Kapat"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Excel Ribbon Menu Tabs */}
+        <div className="bg-[#f3f4f6] border-b border-gray-200 px-4 pt-1 flex items-center gap-1 text-xs select-none">
+          {["Dosya", "Giriş", "Ekle", "Sayfa Düzeni", "Formüller", "Veri", "Görünüm"].map((tab, idx) => (
+            <button
+              key={tab}
+              className={`px-3 py-1.5 font-medium rounded-t transition-colors ${
+                idx === 1 ? "bg-white text-gray-900 border-t-2 border-[#107c41] font-bold shadow-xs" : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Excel Quick Toolbar & Filter Strip */}
+        <div className="bg-[#f9fafb] border-b border-gray-200 px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <input
+                type="text"
+                value={aramaMetni}
+                onChange={(e) => setAramaMetni(e.target.value)}
+                placeholder="Hücrelerde ara (Plaka, Şirket, Hasar No)..."
+                className="w-72 pl-8 pr-3 py-1 text-xs border border-gray-300 rounded bg-white focus:outline-none focus:border-[#107c41] focus:ring-1 focus:ring-[#107c41]"
+              />
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+            </div>
+
+            <div className="flex items-center rounded border border-gray-200 bg-white p-0.5">
+              <button
+                onClick={() => setFiltreTuru("tumu")}
+                className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors ${filtreTuru === "tumu" ? "bg-[#107c41] text-white" : "text-gray-600 hover:text-gray-900"}`}
+              >
+                Tümü (13)
+              </button>
+              <button
+                onClick={() => setFiltreTuru("hasarli")}
+                className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors ${filtreTuru === "hasarli" ? "bg-red-600 text-white" : "text-gray-600 hover:text-gray-900"}`}
+              >
+                Hasarlı Araçlar (4)
+              </button>
+              <button
+                onClick={() => setFiltreTuru("hasarsiz")}
+                className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-colors ${filtreTuru === "hasarsiz" ? "bg-emerald-600 text-white" : "text-gray-600 hover:text-gray-900"}`}
+              >
+                Hasarsız (9)
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-gray-500 font-mono text-[11px]">Toplam Kasko: <strong className="text-gray-900 font-semibold">{para(toplamKasko)}</strong></span>
+            <span className="text-gray-300">|</span>
+            <span className="text-gray-500 font-mono text-[11px]">Toplam Hasar: <strong className="text-red-600 font-semibold">{para(toplamMasraf)}</strong></span>
+            <span className="text-gray-300">|</span>
+            <span className="text-gray-500 font-mono text-[11px]">Hasar Frekansı: <strong className="text-amber-700 font-semibold">%{frekansYuzde}</strong></span>
+          </div>
+        </div>
+
+        {/* Formula Bar */}
+        <div className="bg-white border-b border-gray-200 px-3 py-1 flex items-center gap-2 text-xs">
+          <div className="w-14 px-2 py-0.5 text-center font-mono font-bold text-gray-700 bg-gray-50 border border-gray-300 rounded text-[11px]">
+            {seciliHucre}
+          </div>
+          <div className="w-px h-5 bg-gray-200" />
+          <div className="font-serif italic font-bold text-gray-400 text-sm select-none">fx</div>
+          <div className="flex-1 font-mono text-[11px] text-gray-700 truncate bg-gray-50/50 px-2 py-0.5 rounded border border-transparent hover:border-gray-200">
+            =TRAMER_SISTEM_TARA(POLİÇE_GEÇMİŞİ; &quot;{sozlesmeAdi}&quot;; HASAR_KUSUR_ORANI)
+          </div>
+        </div>
+
+        {/* Spreadsheet Area */}
+        {aktifSayfa === "veri" ? (
+          <div className="flex-1 overflow-auto bg-white select-text">
+            <table className="w-full border-collapse text-[11px]">
+              {/* Column Letter Headers (Excel Style) */}
+              <thead className="sticky top-0 z-10 bg-[#f3f4f6]">
+                <tr className="border-b border-gray-300 text-gray-500 text-center font-mono text-[10px]">
+                  <th className="w-10 bg-[#e5e7eb] border-r border-b border-gray-300 py-1 font-semibold"></th>
+                  {harfSutunlar.map((h) => (
+                    <th key={h} className="border-r border-b border-gray-300 py-0.5 font-medium min-w-[70px]">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+                {/* Field Name Headers (Row 1) */}
+                <tr className="border-b border-gray-300 bg-[#eef2f6] text-gray-800 text-left font-semibold">
+                  <td className="w-10 bg-[#e5e7eb] border-r border-gray-300 text-center font-mono text-[10px] text-gray-500 py-1">1</td>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap">Sıra</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap">Plaka</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap min-w-[200px]">Müşteri Unvanı</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap">Araç Türü</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap text-center">Model</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap text-right">Kasko Bedeli</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap">Poliçe No</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap min-w-[160px]">Sigorta Şirketi</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap min-w-[160px]">Acente Unvanı</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap text-center">Hasar Durumu</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap">Hasar Dosya No</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap text-center">Hasar Tarihi</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap text-right">Toplam Masraf</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap text-center">Kusur %</th>
+                  <th className="border-r border-gray-300 px-2 py-1.5 whitespace-nowrap text-center">Ürün</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 font-sans">
+                {filtreliVeri.map((r, idx) => {
+                  const rowNum = idx + 2
+                  const hasar = hasarVar(r)
+                  return (
+                    <tr
+                      key={r.sira}
+                      onClick={() => setSeciliHucre(`B${rowNum}`)}
+                      className={`hover:bg-blue-50/50 cursor-pointer transition-colors ${
+                        hasar ? "bg-red-50/20" : idx % 2 === 1 ? "bg-gray-50/30" : "bg-white"
+                      } ${seciliHucre === `B${rowNum}` ? "ring-1 ring-inset ring-[#107c41]" : ""}`}
+                    >
+                      <td className="bg-[#f3f4f6] border-r border-gray-300 text-center font-mono text-[10px] text-gray-500 py-1 select-none font-semibold">
+                        {rowNum}
+                      </td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-center font-mono font-medium text-gray-500">{r.sira}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 font-mono font-bold text-blue-900 whitespace-nowrap">{r.plaka}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-gray-700 truncate max-w-xs" title={r.musteriAd}>{r.musteriAd}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-gray-800 whitespace-nowrap font-medium">{r.aracTuru}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-center font-mono text-gray-600">{r.modelYili}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-right font-mono text-gray-800 whitespace-nowrap">{para(n(r.kaskoBedeeli))}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 font-mono text-gray-600 whitespace-nowrap">{r.policeNo}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-gray-700 whitespace-nowrap truncate max-w-[170px]" title={r.sirket}>{r.sirket}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-gray-600 whitespace-nowrap truncate max-w-[170px]" title={r.acenteUnvani}>{r.acenteUnvani}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-center whitespace-nowrap">
+                        {hasar ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded bg-red-100 text-red-700 text-[10px] font-bold border border-red-200">
+                            Hasar Var
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded bg-emerald-50 text-emerald-700 text-[10px] font-medium border border-emerald-200">
+                            Hasarsız
+                          </span>
+                        )}
+                      </td>
+                      <td className="border-r border-gray-200 px-2 py-1 font-mono text-gray-700 whitespace-nowrap">{r.hasarDosyaNo || "—"}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-center font-mono text-gray-600 whitespace-nowrap">{r.hasarTarih || "—"}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-right font-mono whitespace-nowrap font-bold text-red-700">
+                        {r.toplamMasraf ? para(n(r.toplamMasraf)) : "—"}
+                      </td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-center font-mono text-gray-600">{r.kusurOrani ? `%${r.kusurOrani}` : "—"}</td>
+                      <td className="border-r border-gray-200 px-2 py-1 text-center font-medium text-gray-600 whitespace-nowrap">{r.urunTipi}</td>
+                    </tr>
+                  )
+                })}
+
+                {/* Excel Totals Formula Row */}
+                <tr className="bg-[#f0f9f3] font-semibold border-t-2 border-b-4 border-[#107c41] text-gray-900 select-none">
+                  <td className="bg-[#e5e7eb] border-r border-gray-300 text-center font-mono text-[10px] text-gray-500 py-1 font-bold">15</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 text-center font-bold text-emerald-900">Σ</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 font-bold text-emerald-900 whitespace-nowrap">TOPLAM</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 text-gray-600 italic">{filtreliVeri.length} Araç Kaydı</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5"></td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 text-center font-mono text-gray-500">—</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 text-right font-mono font-bold text-blue-900">{para(toplamKasko)}</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5"></td>
+                  <td className="border-r border-gray-300 px-2 py-1.5"></td>
+                  <td className="border-r border-gray-300 px-2 py-1.5"></td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 text-center font-bold text-red-700">{hasarliAdet} Hasarlı</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5"></td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 text-center font-mono text-gray-500">—</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 text-right font-mono font-bold text-red-700">{para(toplamMasraf)}</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 text-center font-mono text-gray-700">%{frekansYuzde}</td>
+                  <td className="border-r border-gray-300 px-2 py-1.5 text-center text-emerald-900 font-bold">Kasko/Trafik</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Hasar & Frekans Analizi Tab */
+          <div className="flex-1 overflow-auto p-6 space-y-6 bg-[#f9fafb]">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <p className="text-xs font-semibold text-blue-600">Toplam Sigortalı Araç</p>
+                <p className="text-2xl font-black text-blue-900 mt-1">13</p>
+                <p className="text-[11px] text-blue-700 mt-0.5">Sistem taraması ile tespit edilen</p>
+              </div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-xs font-semibold text-emerald-600">Toplam Kasko Sigorta Bedeli</p>
+                <p className="text-2xl font-black text-emerald-900 mt-1">{para(toplamKasko)}</p>
+                <p className="text-[11px] text-emerald-700 mt-0.5">Ortalama: {para(toplamKasko / 13)} / araç</p>
+              </div>
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                <p className="text-xs font-semibold text-red-600">Toplam Hasar Masrafı</p>
+                <p className="text-2xl font-black text-red-700 mt-1">{para(toplamMasraf)}</p>
+                <p className="text-[11px] text-red-600 mt-0.5">4 hasarlı dosya toplamı</p>
+              </div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-xs font-semibold text-amber-600">Hasar Frekansı</p>
+                <p className="text-2xl font-black text-amber-900 mt-1">%{frekansYuzde}</p>
+                <p className="text-[11px] text-amber-700 mt-0.5">4 dosya / 13 araç</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-xs">
+              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">Hasar Dosyaları Dökümü</h4>
+              <div className="divide-y divide-gray-100">
+                {tramerVerileri.filter(hasarVar).map((r) => (
+                  <div key={r.sira} className="py-2.5 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono font-bold text-blue-900">{r.plaka}</span>
+                      <span className="text-gray-600">{r.aracTuru} ({r.modelYili})</span>
+                      <span className="text-gray-400">·</span>
+                      <span className="font-mono text-gray-700">Dosya: {r.hasarDosyaNo}</span>
+                      <span className="text-gray-400">·</span>
+                      <span className="text-gray-500">{r.hasarTarih}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-gray-500">{r.sirket}</span>
+                      <span className="font-mono font-bold text-red-700">{para(n(r.toplamMasraf))}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Excel Status Bar & Sheet Tabs */}
+        <div className="bg-[#f3f4f6] border-t border-gray-300 px-3 py-1 flex items-center justify-between shrink-0 text-xs select-none">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setAktifSayfa("veri")}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-t text-xs font-semibold border-b-2 transition-colors ${
+                aktifSayfa === "veri" ? "bg-white text-[#107c41] border-[#107c41] shadow-xs" : "text-gray-600 hover:bg-gray-200/70 border-transparent"
+              }`}
+            >
+              <span>📄</span> Tramer_Ham_Verileri
+            </button>
+            <button
+              onClick={() => setAktifSayfa("analiz")}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-t text-xs font-semibold border-b-2 transition-colors ${
+                aktifSayfa === "analiz" ? "bg-white text-[#107c41] border-[#107c41] shadow-xs" : "text-gray-600 hover:bg-gray-200/70 border-transparent"
+              }`}
+            >
+              <span>📊</span> Hasar_Ve_Frekans_Ozeti
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3 text-[11px] text-gray-500 font-mono">
+            <span>DURUM: HAZIR</span>
+            <span>·</span>
+            <span>SAYI: {filtreliVeri.length}</span>
+            <span>·</span>
+            <span>TOPLAM: {para(toplamMasraf)}</span>
+            <span>·</span>
+            <span>%100</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 // ── İletişim Sekmesi ──────────────────────────────────────────────────────
 function IletisimSekmesi({
   talepId, tur, mesajlar, kullaniciAdi, kullaniciTuru, onMesajGonder,
@@ -2659,31 +3063,10 @@ function DetayForm({ talep }: { talep: Talep }) {
             { label: "Operasyonel Kiralık", value: fd?.operasyonelKiralik },
             { label: "İkame Araç Teminatı", value: fd?.ikameArac },
             { label: "Muafiyet", value: fd?.muafiyet },
-            { label: "Kilit Mekanizması Limiti", value: fd?.kilitMekanizmasiLimiti },
-            { label: "Artan Mali Sorumluluk Limiti", value: fd?.artanMaliSorumlulukLimiti },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between px-4 py-2.5 text-xs">
               <span className="text-gray-500">{label}</span>
               <span className={`font-semibold ${value ? "text-gray-700" : "text-gray-300"}`}>{value || "—"}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Koltuk Ferdi Kaza */}
-      <div>
-        <SecHeader>Koltuk Ferdi Kaza Teminatı</SecHeader>
-        <div className="bg-gray-50 border border-gray-200 rounded-xl divide-y divide-gray-100">
-          {[
-            { label: "Ölüm Limiti", value: fd?.ferdiKazaOlumLimiti },
-            { label: "Sürekli Sakatlık Limiti", value: fd?.ferdiKazaSakatlikLimiti },
-            { label: "Tedavi Giderleri Limiti", value: fd?.ferdiKazaTedaviLimiti },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex items-center justify-between px-4 py-2.5 text-xs">
-              <span className="text-gray-500">{label}</span>
-              <span className={`font-semibold ${value ? "text-gray-700" : "text-gray-300"}`}>
-                {value ? `${Number(value).toLocaleString("tr-TR")} ₺` : "—"}
-              </span>
             </div>
           ))}
         </div>
@@ -2744,10 +3127,12 @@ interface FiloTarihceKaydi {
   islem: string
   aciklama: string
   kullanici: string
-  tur?: "teklif" | "revizyon" | "police" | "ek" | "yenileme"
+  tur?: "teklif" | "revizyon" | "police" | "ek" | "yenileme" | "tramer"
   numara?: string
   baslangic?: string
   bitis?: string
+  odemeNotu?: string
+  dosyalar?: string[]
 }
 
 function FiloNotBolumu({ baslik, aciklama, notlar, onChange }: {
@@ -2833,6 +3218,7 @@ interface FiloUretimKaydi {
   baslangic: string
   bitis: string
   policeBitisTarihi?: string
+  teklifGecerlilikTarihi?: string
   kullanici: string
   durum: string
   yaratan: string
@@ -2852,9 +3238,11 @@ interface FiloUretimKaydi {
   tarihce?: FiloTarihceKaydi[]
   odemeTipi?: string
   odemeKosullari?: string[]
+  odemeNotu?: string
+  odemeDosyalari?: string[]
 }
 
-const filoUretimBaslangicVerisi: FiloUretimKaydi[] = []
+// filoUretimBaslangicVerisi is declared below bosFiloAraci
 
 const bosFiloFiltreleri = {
   sozlesmeAdi: "",
@@ -2942,11 +3330,295 @@ const bosFiloAraci: Omit<FiloAracDetayi, "id"> = {
   anadoluHizmetPaketi: "Anadolu Hizmet - İkamesiz",
 }
 
-function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "normal" }: {
+const filoUretimBaslangicVerisi: FiloUretimKaydi[] = [
+  {
+    id: 1,
+    sozlesmeAdi: "2026 Kurumsal Filo Çerçeve Sözleşmesi",
+    sozlesmeNo: "0000004820/00",
+    versiyon: 1,
+    yenileme: 0,
+    urunAdi: "Kasko",
+    policeTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+    baslangic: "14/10/2026",
+    bitis: "14/10/2027",
+    kullanici: "MS4329",
+    durum: "Tramer Verisi Geldi",
+    onayStatusu: "Onay Bekliyor",
+    onaylayan: "",
+    onayTarihi: "",
+    yaratan: "Bölge",
+    atanan: "GM_UZMAN",
+    acenteAdi: "Emre Acentelik",
+    kontakNo: "3920194821",
+    kontakAdi: "Kurumsal Filo Yetkilisi",
+    kontaklar: [{ id: 1, no: "3920194821", ad: "Kurumsal Filo Yetkilisi" }],
+    acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+    araclar: [{
+      ...bosFiloAraci,
+      id: 1,
+      kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+      kullanimSekli: "Ticari",
+      kilitMekanizmasiLimiti: "50.000 TL",
+      artanMaliSorumlulukLimiti: "10000000",
+      hukuksalKorumaLimiti: "50000",
+      anadoluHizmetPaketi: "Anadolu Hizmet Hususi Otomobil 7/48 (Anadolu Grup 1) Pert Dahil",
+    }],
+    tarihce: [
+      {
+        id: 101,
+        tarih: "14.10.2026 14:15",
+        islem: "Teklif Oluşturuldu",
+        aciklama: "0000004820/00 numaralı sözleşme teklif kaydı oluşturuldu.",
+        kullanici: "MS4329",
+        tur: "teklif",
+        numara: "0000004820/00",
+        baslangic: "14/10/2026",
+        bitis: "14/10/2027",
+      },
+      {
+        id: 102,
+        tarih: "14.10.2026 15:00",
+        islem: "Bölge Onayladı & GM'ye Gönderildi",
+        aciklama: "Bölge uzmanı incelemesi tamamlandı, Genel Müdürlük değerlendirmesine aktarıldı.",
+        kullanici: "BOLGE_UZMAN",
+        tur: "revizyon",
+        numara: "0000004820/00",
+      },
+      {
+        id: 103,
+        tarih: "14.10.2026 15:30",
+        islem: "Sistemi Tara - Tramer Verileri Geldi",
+        aciklama: "Tramer sistemi otomatik tarandı. 13 adet araca ait hasar ve poliçe verileri Excel formatında sisteme bağlandı.",
+        kullanici: "SİSTEM_ROBOT",
+        tur: "tramer",
+        numara: "TRM-2026-EXCEL",
+        dosyalar: ["Tramer_Verileri_Sistem_Tarama.xlsx"],
+        odemeNotu: "13 araçlık tramer hasar dökümü e-tablo dosyası olarak eklendi.",
+      },
+    ],
+  },
+  {
+    id: 2,
+    sozlesmeAdi: "Atlas Araç Kiralama Filo Sözleşmesi",
+    sozlesmeNo: "0000003881/00",
+    versiyon: 1,
+    yenileme: 0,
+    urunAdi: "Kasko",
+    policeTipi: "Kamyonet",
+    baslangic: "12/10/2026",
+    bitis: "12/10/2027",
+    kullanici: "MS4329",
+    durum: "Genel Müdürlük Değerlendirmesinde",
+    onayStatusu: "Onay Bekliyor",
+    onaylayan: "",
+    onayTarihi: "",
+    yaratan: "Bölge",
+    atanan: "GM_UZMAN",
+    acenteAdi: "Emre Acentelik",
+    kontakNo: "1948201948",
+    kontakAdi: "Atlas Araç Kiralama",
+    kontaklar: [{ id: 1, no: "1948201948", ad: "Atlas Araç Kiralama" }],
+    acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+    araclar: [{
+      ...bosFiloAraci,
+      id: 2,
+      kullanimTipi: "Kamyonet",
+      kullanimSekli: "Ticari",
+      kilitMekanizmasiLimiti: "40.000 TL",
+      artanMaliSorumlulukLimiti: "5000000",
+      hukuksalKorumaLimiti: "40000",
+    }],
+    tarihce: [
+      {
+        id: 201,
+        tarih: "12.10.2026 11:00",
+        islem: "Teklif Oluşturuldu",
+        aciklama: "0000003881/00 numaralı teklif kaydı oluşturuldu.",
+        kullanici: "MS4329",
+        tur: "teklif",
+        numara: "0000003881/00",
+        baslangic: "12/10/2026",
+        bitis: "12/10/2027",
+      },
+      {
+        id: 202,
+        tarih: "13.10.2026 10:20",
+        islem: "GM'ye Gönderildi",
+        aciklama: "Bölge değerlendirmesi tamamlanarak Genel Müdürlük değerlendirmesine gönderildi.",
+        kullanici: "BOLGE_UZMAN",
+        tur: "revizyon",
+        numara: "0000003881/00",
+      },
+    ],
+  },
+  {
+    id: 3,
+    sozlesmeAdi: "Ege Turizm ve Taşımacılık Filo Kasko",
+    sozlesmeNo: "0000002194/00",
+    versiyon: 1,
+    yenileme: 0,
+    urunAdi: "Kasko",
+    policeTipi: "Otobüs",
+    baslangic: "10/10/2026",
+    bitis: "10/10/2027",
+    kullanici: "MS4329",
+    durum: "Bölge Değerlendirmesinde",
+    onayStatusu: "Onay Bekliyor",
+    onaylayan: "",
+    onayTarihi: "",
+    yaratan: "Acente",
+    atanan: "BOLGE_UZMAN",
+    acenteAdi: "Emre Acentelik",
+    kontakNo: "3920194821",
+    kontakAdi: "Ege Turizm",
+    kontaklar: [{ id: 1, no: "3920194821", ad: "Ege Turizm" }],
+    acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+    araclar: [{
+      ...bosFiloAraci,
+      id: 3,
+      kullanimTipi: "Otobüs",
+      kullanimSekli: "Ticari",
+      kilitMekanizmasiLimiti: "60.000 TL",
+      artanMaliSorumlulukLimiti: "15000000",
+      hukuksalKorumaLimiti: "60000",
+    }],
+    tarihce: [
+      {
+        id: 301,
+        tarih: "10.10.2026 09:40",
+        islem: "Teklif Oluşturuldu",
+        aciklama: "0000002194/00 numaralı teklif kaydı oluşturuldu.",
+        kullanici: "ACENTE_USER",
+        tur: "teklif",
+        numara: "0000002194/00",
+        baslangic: "10/10/2026",
+        bitis: "10/10/2027",
+      },
+    ],
+  },
+]
+
+// ── Acente: Temel Bilgiler + Teminat & Servis (Sözleşme Talebi için) ─────
+interface AcenteSozlesmeEk {
+  konu: string
+  oncelik: string
+  talepTipi: string
+  brans: string
+  eposta: string
+  servisSarti: string
+  yurtdisiTeminat: string
+  elektrikliArac: string
+  kisaSureliKiralik: string
+  operasyonelKiralik: string
+  ikameArac: string
+  kilitMekanizmasiLimiti: string
+  muafiyet: string
+  ferdiKazaOlumLimiti: string
+  ferdiKazaSakatlikLimiti: string
+  ferdiKazaTedaviLimiti: string
+  artanMaliSorumlulukLimiti: string
+}
+
+const bosAcenteSozlesmeEk: AcenteSozlesmeEk = {
+  konu: "", oncelik: "Orta", talepTipi: "", brans: "", eposta: "acentemail@gmail.com",
+  servisSarti: "", yurtdisiTeminat: "", elektrikliArac: "", kisaSureliKiralik: "", operasyonelKiralik: "",
+  ikameArac: "", kilitMekanizmasiLimiti: "", muafiyet: "", ferdiKazaOlumLimiti: "", ferdiKazaSakatlikLimiti: "",
+  ferdiKazaTedaviLimiti: "", artanMaliSorumlulukLimiti: "",
+}
+
+type AcenteEkProps = {
+  deger: AcenteSozlesmeEk
+  guncelle: (alan: keyof AcenteSozlesmeEk, v: string) => void
+  inputCls: string
+  labelCls: string
+}
+
+function AcenteTemelBilgiler({ deger, guncelle, inputCls, labelCls }: AcenteEkProps) {
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h3 className="mb-4 text-sm font-bold text-gray-800">Temel Bilgiler</h3>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <label className={labelCls}>Konu <span className="text-red-500">*</span></label>
+          <input value={deger.konu} onChange={(e) => guncelle("konu", e.target.value)} placeholder="Talep konusunu giriniz" className={inputCls} />
+        </div>
+        <div>
+          <label className={labelCls}>Öncelik</label>
+          <select value={deger.oncelik} onChange={(e) => guncelle("oncelik", e.target.value)} className={inputCls}>
+            <option>Düşük</option><option>Orta</option><option>Yüksek</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Talep Tipi</label>
+          <select value={deger.talepTipi} onChange={(e) => guncelle("talepTipi", e.target.value)} className={inputCls}>
+            <option value="">Seçiniz</option>
+            <option>Yenileme Teklifi</option><option>Yeni Teklif</option><option>Poliçe İptali</option>
+            <option>Hasar Bildirimi</option><option>Bilgi Talebi</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Branş</label>
+          <select value={deger.brans} onChange={(e) => guncelle("brans", e.target.value)} className={inputCls}>
+            <option value="">Seçiniz</option>
+            <option>Kasko</option><option>Karma Talep</option><option>Nakliyat</option>
+            <option>Yangın</option><option>Sağlık</option><option>Trafik</option>
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>E-posta</label>
+          <input type="email" value={deger.eposta} readOnly className={`${inputCls} cursor-not-allowed bg-gray-50 text-gray-500`} />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AcenteTeminatServis({ deger, guncelle, inputCls, labelCls }: AcenteEkProps) {
+  const radyo = (label: string, alan: keyof AcenteSozlesmeEk, secenekler = ["Evet", "Hayır"]) => (
+    <RadioGroup label={label} options={secenekler} value={deger[alan]} onChange={(v) => guncelle(alan, v)} />
+  )
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h3 className="mb-4 text-sm font-bold text-gray-800">Teminat &amp; Servis Seçenekleri</h3>
+      <div className="grid grid-cols-1 gap-x-10 gap-y-2 md:grid-cols-2">
+        <div>
+          {radyo("Hangi servis şartı talep ediliyor?", "servisSarti", [
+            "Anlaşmalı yetkili ve özel servis", "Anlaşmalı özel servis", "3 yaş sınırlı servis", "Tüm özel servisler",
+          ])}
+          {radyo("Yurtdışı teminatı isteniyor mu?", "yurtdisiTeminat")}
+          {radyo("Elektrikli araç var mı?", "elektrikliArac")}
+          {radyo("Kısa süreli kiralık mı?", "kisaSureliKiralik")}
+          {radyo("Operasyonel kiralık mı?", "operasyonelKiralik")}
+          {radyo("İkame araç teminatı isteniyor mu?", "ikameArac")}
+        </div>
+        <div>
+          <div className="mb-4">
+            <p className="mb-1 text-xs font-semibold text-gray-600">Muafiyet isteniyor mu?</p>
+            <p className="mb-2 text-xs text-gray-400">Rent a Car sözleşmeleri standart %2 muafiyet ile değerlendirilmektedir.</p>
+            <div className="flex flex-wrap gap-2">
+              {["Hayır", "%1", "%2", "%5", "%10", "Tutar"].map((o) => (
+                <button key={o} type="button" onClick={() => guncelle("muafiyet", o)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    deger.muafiyet === o ? "border-blue-600 bg-blue-600 text-white" : "border-gray-200 text-gray-600 hover:border-blue-300"
+                  }`}>{o}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "normal", acenteMi = false, bolgeMi = false, gmMi = false, sozlesmeModu = false }: {
   onBack: () => void
   onSave: (kayit: FiloUretimKaydi) => void
   initialKayit?: FiloUretimKaydi | null
   kayitModu?: "normal" | "ek"
+  acenteMi?: boolean
+  bolgeMi?: boolean
+  gmMi?: boolean
+  sozlesmeModu?: boolean
 }) {
   const isoTarih = (tarih: Date) =>
     `${tarih.getFullYear()}-${String(tarih.getMonth() + 1).padStart(2, "0")}-${String(tarih.getDate()).padStart(2, "0")}`
@@ -2962,7 +3634,7 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
     return parcalar.length === 3 ? parcalar.reverse().join("-") : tarih
   }
 
-  const [sozlesmeAdi, setSozlesmeAdi] = useState(initialKayit?.sozlesmeAdi ?? "")
+  const [sozlesmeAdi, setSozlesmeAdi] = useState(initialKayit?.sozlesmeAdi ?? (sozlesmeModu ? "2026 Kurumsal Filo Çerçeve Sözleşmesi" : ""))
   const [baslangic, setBaslangic] = useState(kayitModu === "ek" ? sistemTarihi : inputTarihi(initialKayit?.baslangic) || sistemTarihi)
   const [bitis, setBitis] = useState(kayitModu === "ek" ? altiAySonrasi(sistemTarihi) : inputTarihi(initialKayit?.bitis) || altiAySonrasi(sistemTarihi))
   const [policeBitisTarihi, setPoliceBitisTarihi] = useState(inputTarihi(initialKayit?.policeBitisTarihi) || altiAySonrasi(sistemTarihi))
@@ -2970,21 +3642,37 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
   const [kontakNo, setKontakNo] = useState("")
   const [kontakAdi, setKontakAdi] = useState("")
   const [kontaklar, setKontaklar] = useState<FiloKontakKaydi[]>(
-    initialKayit?.kontaklar ?? (initialKayit?.kontakNo ? [{ id: 1, no: initialKayit.kontakNo, ad: initialKayit.kontakAdi }] : [])
+    initialKayit?.kontaklar ?? (initialKayit?.kontakNo ? [{ id: 1, no: initialKayit.kontakNo, ad: initialKayit.kontakAdi }] : sozlesmeModu ? [{ id: 1, no: "KNT-4820", ad: "Kurumsal Filo Yetkilisi" }] : [])
   )
   const [acenteKodu, setAcenteKodu] = useState("")
   const [acenteler, setAcenteler] = useState<AcenteKaydi[]>(
     initialKayit?.acenteler ?? [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }]
   )
   const [aracFormu, setAracFormu] = useState(bosFiloAraci)
-  const [araclar, setAraclar] = useState<FiloAracDetayi[]>(initialKayit?.araclar ?? [])
+  const [araclar, setAraclar] = useState<FiloAracDetayi[]>(
+    initialKayit?.araclar ?? (sozlesmeModu ? [{
+      ...bosFiloAraci,
+      id: 1,
+      kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+      primTipi: "Özel İndirim",
+      indirimYuzdesi: "15",
+    }] : [])
+  )
   const [ozelSartlar, setOzelSartlar] = useState<FiloOzelSart[]>(initialKayit?.ozelSartlar ?? [])
   const [hasarOzelNotlar, setHasarOzelNotlar] = useState<FiloOzelSart[]>(initialKayit?.hasarOzelNotlar ?? [])
   const [asistanOzelNotlar, setAsistanOzelNotlar] = useState<FiloOzelSart[]>(initialKayit?.asistanOzelNotlar ?? [])
   const [odemeTipi, setOdemeTipi] = useState(initialKayit?.odemeTipi ?? "Nakit")
   const [odemeKosullari, setOdemeKosullari] = useState<string[]>(initialKayit?.odemeKosullari ?? [])
+  const [odemeNotu, setOdemeNotu] = useState(initialKayit?.odemeNotu ?? "")
+  const [yuklenenDosyalar, setYuklenenDosyalar] = useState<string[]>(initialKayit?.odemeDosyalari ?? [])
   const [hata, setHata] = useState("")
   const [aktifAdim, setAktifAdim] = useState<1 | 2 | 3 | 4>(1)
+  const [acenteEk, setAcenteEk] = useState<AcenteSozlesmeEk>(bosAcenteSozlesmeEk)
+  const acenteEkGuncelle = (alan: keyof AcenteSozlesmeEk, v: string) => {
+    setAcenteEk((prev) => ({ ...prev, [alan]: v }))
+    // Acente için Sözleşme Bilgileri gizli; sözleşme adı Konu alanından gelir
+    if (alan === "konu") { setSozlesmeAdi(v); setHata("") }
+  }
 
   const inputCls = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
   const labelCls = "mb-1.5 block text-xs font-semibold text-gray-600"
@@ -3014,17 +3702,40 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
   }
 
   const aracEkle = () => {
-    if (!aracFormu.kullanimTipi || !aracFormu.primTipi) return
-    setAraclar((prev) => [...prev, { ...aracFormu, id: Date.now() }])
-    setAracFormu(bosFiloAraci)
+    if (!aracFormu.kullanimTipi) return
+    if (!sozlesmeModu && !aracFormu.primTipi) return
+    setAraclar((prev) => [
+      ...prev,
+      sozlesmeModu
+        ? {
+            ...aracFormu,
+            primTipi: "",
+            indirimYuzdesi: "",
+            sabitPrim: "",
+            ozelFiyatOrani: "",
+            acenteKomisyonu: "",
+            id: Date.now(),
+          }
+        : {
+            ...aracFormu,
+            id: Date.now(),
+          },
+    ])
+    setAracFormu((prev) => ({
+      ...prev,
+      kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+      kullanimSekli: "",
+    }))
   }
 
-  const birinciAdimTamam = Boolean(sozlesmeAdi.trim() && baslangic && bitis && kontaklar.length && acenteler.length)
+  const birinciAdimTamam = sozlesmeModu
+    ? Boolean(sozlesmeAdi.trim() && baslangic && bitis)
+    : Boolean((sozlesmeAdi.trim() || acenteEk.konu.trim()) && baslangic && bitis && kontaklar.length && acenteler.length)
   const ikinciAdimTamam = araclar.length > 0
 
   const adimaGit = (adim: 1 | 2 | 3 | 4) => {
     if (adim >= 2 && !birinciAdimTamam) {
-      setHata("Devam etmek için sözleşme bilgilerini tamamlayıp en az bir kontak ekleyiniz.")
+      setHata(sozlesmeModu ? "Devam etmek için sözleşme adı, başlangıç ve bitiş tarihlerini giriniz." : "Devam etmek için sözleşme bilgilerini tamamlayıp en az bir kontak ekleyiniz.")
       return
     }
     if (adim >= 3 && !ikinciAdimTamam) {
@@ -3036,15 +3747,16 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
   }
 
   const kaydet = (kayitTipi: "teklif" | "police") => {
-    if (!sozlesmeAdi.trim() || !baslangic || !bitis) {
+    const etkiliSozlesmeAdi = sozlesmeAdi.trim() || (sozlesmeModu ? "Kurumsal Filo Çerçeve Sözleşmesi" : "")
+    if (!etkiliSozlesmeAdi || !baslangic || !bitis) {
       setHata("Sözleşme adı, başlangıç tarihi ve bitiş tarihi zorunludur.")
       return
     }
-    if (kontaklar.length === 0) {
+    if (!sozlesmeModu && kontaklar.length === 0) {
       setHata("En az bir kontak ekleyiniz.")
       return
     }
-    if (araclar.length === 0) {
+    if (!sozlesmeModu && araclar.length === 0) {
       setHata("En az bir araç bilgisi ekleyiniz.")
       return
     }
@@ -3084,6 +3796,8 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
         numara: kayitModu === "ek" || kayitTipi === "police" ? policeNo : sozlesmeNo,
         baslangic: tarihFormatla(baslangic),
         bitis: tarihFormatla(bitis),
+        odemeNotu: odemeNotu || undefined,
+        dosyalar: yuklenenDosyalar.length > 0 ? yuklenenDosyalar : undefined,
       },
     ]
     onSave({
@@ -3117,6 +3831,8 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
       tarihce,
       odemeTipi,
       odemeKosullari,
+      odemeNotu,
+      odemeDosyalari: yuklenenDosyalar,
     })
   }
 
@@ -3148,8 +3864,8 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5m7-7l-7 7 7 7" strokeLinecap="round" /></svg>
           </button>
           <div>
-            <h2 className="text-base font-bold text-gray-900">{kayitModu === "ek" ? "Sözleşme Eki Oluştur" : initialKayit ? "Filo Üretim Kaydını Güncelle" : "Yeni Filo Üretim Kaydı"}</h2>
-            <p className="text-xs text-gray-400">{kayitModu === "ek" ? "Mevcut bilgiler yeni sözleşme ekine taşındı" : initialKayit ? `${initialKayit.sozlesmeNo} numaralı teklif revize edilecek` : "Sözleşme, paydaş ve araç bilgilerini tamamlayın"}</p>
+            <h2 className="text-base font-bold text-gray-900">{sozlesmeModu ? "Yeni Sözleşme Oluştur" : kayitModu === "ek" ? "Sözleşme Eki Oluştur" : initialKayit ? "Filo Üretim Kaydını Güncelle" : "Yeni Filo Üretim Kaydı"}</h2>
+            <p className="text-xs text-gray-400">{sozlesmeModu ? "Sözleşme, paydaş ve araç bilgilerini tamamlayın" : kayitModu === "ek" ? "Mevcut bilgiler yeni sözleşme ekine taşındı" : initialKayit ? `${initialKayit.sozlesmeNo} numaralı teklif revize edilecek` : "Sözleşme, paydaş ve araç bilgilerini tamamlayın"}</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -3163,14 +3879,20 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
             <button onClick={() => kaydet("police")} className="rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700">
               Sözleşme Ekini Kaydet
             </button>
+          ) : sozlesmeModu ? (
+            <button onClick={() => kaydet("police")} className="rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700 shadow-sm">
+              Sözleşmeyi Oluştur
+            </button>
           ) : (
             <>
               <button onClick={() => kaydet("teklif")} className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">
                 Teklif Oluştur
               </button>
-              <button onClick={() => kaydet("police")} className="rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700">
-                Poliçelendir
-              </button>
+              {gmMi && (
+                <button onClick={() => kaydet("police")} className="rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700">
+                  Poliçelendir
+                </button>
+              )}
             </>
           )}
         </div>
@@ -3205,115 +3927,191 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
 
         {aktifAdim === 1 && (
           <>
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 className="mb-4 text-sm font-bold text-gray-800">Sözleşme Bilgileri</h3>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div>
-              <label className={labelCls}>Sözleşme Adı <span className="text-red-500">*</span></label>
-              <input value={sozlesmeAdi} onChange={(e) => { setSozlesmeAdi(e.target.value); setHata("") }} placeholder="Sözleşme adını giriniz" className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Başlangıç Tarihi <span className="text-red-500">*</span></label>
-              <input
-                type="date"
-                value={baslangic}
-                onChange={(e) => {
-                  const yeniBaslangic = e.target.value
-                  setBaslangic(yeniBaslangic)
-                  if (yeniBaslangic) {
-                    const otomatikBitis = altiAySonrasi(yeniBaslangic)
-                    setBitis(otomatikBitis)
-                    setPoliceBitisTarihi(otomatikBitis)
-                  }
-                  setHata("")
-                }}
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Bitiş Tarihi <span className="text-red-500">*</span></label>
-              <input type="date" value={bitis} min={baslangic} onChange={(e) => { setBitis(e.target.value); setHata("") }} className={inputCls} />
-            </div>
-          </div>
-        </section>
+            {sozlesmeModu ? (
+              <>
+                {/* ── Sözleşme Bilgileri ── */}
+                <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <h3 className="mb-4 text-sm font-bold text-gray-800">Sözleşme Bilgileri</h3>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                      <label className={labelCls}>Sözleşme Adı <span className="text-red-500">*</span></label>
+                      <input
+                        value={sozlesmeAdi}
+                        onChange={(e) => { setSozlesmeAdi(e.target.value); setHata("") }}
+                        placeholder="Örn: 2026 Kurumsal Filo Çerçeve Sözleşmesi"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Başlangıç Tarihi <span className="text-red-500">*</span></label>
+                      <input
+                        type="date"
+                        value={baslangic}
+                        onChange={(e) => {
+                          const yeniBaslangic = e.target.value
+                          setBaslangic(yeniBaslangic)
+                          if (yeniBaslangic) {
+                            const otomatikBitis = altiAySonrasi(yeniBaslangic)
+                            setBitis(otomatikBitis)
+                            setPoliceBitisTarihi(otomatikBitis)
+                          }
+                          setHata("")
+                        }}
+                        className={inputCls}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Bitiş Tarihi <span className="text-red-500">*</span></label>
+                      <input
+                        type="date"
+                        value={bitis}
+                        min={baslangic}
+                        onChange={(e) => { setBitis(e.target.value); setHata("") }}
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
+                </section>
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-800">Kontaklar</h3>
-              <span className="text-xs text-gray-400">{kontaklar.length} kontak</span>
-            </div>
-            <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-              <input value={kontakNo} onChange={(e) => setKontakNo(e.target.value)} placeholder="Kontak no" className={inputCls} />
-              <input value={kontakAdi} onChange={(e) => setKontakAdi(e.target.value)} placeholder="Kontak adı" className={inputCls} />
-              <button onClick={kontakEkle} className="rounded-lg bg-blue-600 px-3 text-white hover:bg-blue-700" title="Kontak ekle">+</button>
-            </div>
-            <div className="mt-3 space-y-2">
-              {kontaklar.length === 0 ? <p className="rounded-lg bg-gray-50 py-5 text-center text-xs text-gray-400">Henüz kontak eklenmedi.</p> : kontaklar.map((kontak) => (
-                <div key={kontak.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
-                  <div><p className="text-xs font-semibold text-gray-700">{kontak.ad}</p><p className="text-xs text-gray-400">{kontak.no}</p></div>
-                  <button onClick={() => setKontaklar((prev) => prev.filter((kayit) => kayit.id !== kontak.id))} className="text-gray-300 hover:text-red-500">×</button>
+                {/* ── Kontaklar & Acenteler ── */}
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                  <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-gray-800">Kontaklar</h3>
+                      <span className="text-xs text-gray-400">{kontaklar.length} kontak</span>
+                    </div>
+                    <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                      <input value={kontakNo} onChange={(e) => setKontakNo(e.target.value)} placeholder="Kontak no" className={inputCls} />
+                      <input value={kontakAdi} onChange={(e) => setKontakAdi(e.target.value)} placeholder="Kontak adı" className={inputCls} />
+                      <button onClick={kontakEkle} className="rounded-lg bg-blue-600 px-3 text-white hover:bg-blue-700" title="Kontak ekle">+</button>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {kontaklar.length === 0 ? <p className="rounded-lg bg-gray-50 py-5 text-center text-xs text-gray-400">Henüz kontak eklenmedi.</p> : kontaklar.map((kontak) => (
+                        <div key={kontak.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                          <div><p className="text-xs font-semibold text-gray-700">{kontak.ad}</p><p className="text-xs text-gray-400">{kontak.no}</p></div>
+                          <button onClick={() => setKontaklar((prev) => prev.filter((kayit) => kayit.id !== kontak.id))} className="text-gray-300 hover:text-red-500">×</button>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-gray-800">Acenteler</h3>
+                      <span className="text-xs text-gray-400">{acenteler.length} acente</span>
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                      <input value={acenteKodu} onChange={(e) => setAcenteKodu(e.target.value)} placeholder="Acente koduyla ara" className={inputCls} />
+                      <button onClick={acenteEkle} className="rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700">Ara ve Ekle</button>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {acenteler.map((acente) => (
+                        <div key={acente.kod} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                          <div><p className="text-xs font-semibold text-gray-700">{acente.unvan}</p><p className="text-xs font-mono text-gray-400">{acente.kod}</p></div>
+                          {acente.anaAcente ? <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">Ana Acente</span> : (
+                            <button onClick={() => setAcenteler((prev) => prev.filter((kayit) => kayit.kod !== acente.kod))} className="text-gray-300 hover:text-red-500">×</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
                 </div>
-              ))}
-            </div>
-          </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-800">Acenteler</h3>
-              <span className="text-xs text-gray-400">{acenteler.length} acente</span>
-            </div>
-            <div className="grid grid-cols-[1fr_auto] gap-2">
-              <input value={acenteKodu} onChange={(e) => setAcenteKodu(e.target.value)} placeholder="Acente koduyla ara" className={inputCls} />
-              <button onClick={acenteEkle} className="rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700">Ara ve Ekle</button>
-            </div>
-            <div className="mt-3 space-y-2">
-              {acenteler.map((acente) => (
-                <div key={acente.kod} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
-                  <div><p className="text-xs font-semibold text-gray-700">{acente.unvan}</p><p className="text-xs font-mono text-gray-400">{acente.kod}</p></div>
-                  {acente.anaAcente ? <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">Ana Acente</span> : (
-                    <button onClick={() => setAcenteler((prev) => prev.filter((kayit) => kayit.kod !== acente.kod))} className="text-gray-300 hover:text-red-500">×</button>
+                {/* ── Sözleşme Parametreleri ── */}
+                <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <label className="flex cursor-pointer items-center gap-3 select-none">
+                    <input
+                      type="checkbox"
+                      checked={sozlesmeParametreleriAcik}
+                      onChange={(e) => setSozlesmeParametreleriAcik(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-800">Sözleşme Parametreleri</h3>
+                      <p className="text-xs text-gray-400">Poliçe bitiş tarihi parametresi tanımlamak için işaretleyiniz</p>
+                    </div>
+                  </label>
+                  {sozlesmeParametreleriAcik && (
+                    <div className="mt-4 max-w-sm border-t border-gray-100 pt-4">
+                      <label className={labelCls}>Poliçe Bitiş Tarihi <span className="text-red-500">*</span></label>
+                      <input
+                        type="date"
+                        value={policeBitisTarihi}
+                        min={baslangic}
+                        onChange={(e) => setPoliceBitisTarihi(e.target.value)}
+                        className={inputCls}
+                      />
+                      <p className="mt-1 text-xs text-gray-400">Sözleşme dahilindeki poliçelerin azami bitiş tarihi.</p>
+                    </div>
                   )}
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
+                </section>
+              </>
+            ) : (
+              <>
+                <AcenteTemelBilgiler deger={acenteEk} guncelle={acenteEkGuncelle} inputCls={inputCls} labelCls={labelCls} />
 
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <label className="flex cursor-pointer items-center gap-3">
-            <input
-              type="checkbox"
-              checked={sozlesmeParametreleriAcik}
-              onChange={(e) => setSozlesmeParametreleriAcik(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <div>
-              <h3 className="text-sm font-bold text-gray-800">Sözleşme Parametreleri</h3>
-              <p className="text-xs text-gray-400">Poliçe üretim parametrelerini kullanmak için seçiniz</p>
-            </div>
-          </label>
-          {sozlesmeParametreleriAcik && (
-            <div className="mt-4 max-w-sm border-t border-gray-100 pt-4">
-              <label className={labelCls}>Poliçe Bitiş Tarihi</label>
-              <input type="date" value={policeBitisTarihi} min={baslangic} onChange={(e) => setPoliceBitisTarihi(e.target.value)} className={inputCls} />
-            </div>
-          )}
-        </section>
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                  <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-gray-800">Kontaklar</h3>
+                      <span className="text-xs text-gray-400">{kontaklar.length} kontak</span>
+                    </div>
+                    <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                      <input value={kontakNo} onChange={(e) => setKontakNo(e.target.value)} placeholder="Kontak no" className={inputCls} />
+                      <input value={kontakAdi} onChange={(e) => setKontakAdi(e.target.value)} placeholder="Kontak adı" className={inputCls} />
+                      <button onClick={kontakEkle} className="rounded-lg bg-blue-600 px-3 text-white hover:bg-blue-700" title="Kontak ekle">+</button>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {kontaklar.length === 0 ? <p className="rounded-lg bg-gray-50 py-5 text-center text-xs text-gray-400">Henüz kontak eklenmedi.</p> : kontaklar.map((kontak) => (
+                        <div key={kontak.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                          <div><p className="text-xs font-semibold text-gray-700">{kontak.ad}</p><p className="text-xs text-gray-400">{kontak.no}</p></div>
+                          <button onClick={() => setKontaklar((prev) => prev.filter((kayit) => kayit.id !== kontak.id))} className="text-gray-300 hover:text-red-500">×</button>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-gray-800">Acenteler</h3>
+                      <span className="text-xs text-gray-400">{acenteler.length} acente</span>
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                      <input value={acenteKodu} onChange={(e) => setAcenteKodu(e.target.value)} placeholder="Acente koduyla ara" className={inputCls} />
+                      <button onClick={acenteEkle} className="rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white hover:bg-blue-700">Ara ve Ekle</button>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      {acenteler.map((acente) => (
+                        <div key={acente.kod} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                          <div><p className="text-xs font-semibold text-gray-700">{acente.unvan}</p><p className="text-xs font-mono text-gray-400">{acente.kod}</p></div>
+                          {acente.anaAcente ? <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">Ana Acente</span> : (
+                            <button onClick={() => setAcenteler((prev) => prev.filter((kayit) => kayit.kod !== acente.kod))} className="text-gray-300 hover:text-red-500">×</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+              </>
+            )}
           </>
         )}
 
         {aktifAdim === 2 && (
           <>
+        {!sozlesmeModu && (
+          <AcenteTeminatServis deger={acenteEk} guncelle={acenteEkGuncelle} inputCls={inputCls} labelCls={labelCls} />
+        )}
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-100 px-5 py-4">
             <h3 className="text-sm font-bold text-gray-800">Araç Bilgileri</h3>
-            <p className="mt-0.5 text-xs text-gray-400">Prim ve teknik detayları girerek araçları sözleşmeye ekleyin</p>
+            <p className="mt-0.5 text-xs text-gray-400">Prim, teknik ve teminat detaylarını belirleyerek araçları sözleşmeye ekleyin</p>
           </div>
 
           <div className="p-5">
+            {!acenteMi && (<>
             <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-500">Prim Detayları</h4>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
               <div>
                 <label className={labelCls}>Prim Tipi</label>
                 <select
@@ -3360,6 +4158,16 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
                   className={`${inputCls} ${aracFormu.primTipi !== "Özel Fiyat" ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
                 />
               </div>
+              <div>
+                <label className={labelCls}>Acente Komisyon %</label>
+                <input
+                  type="number"
+                  value={aracFormu.acenteKomisyonu}
+                  onChange={(e) => aracAlaniGuncelle("acenteKomisyonu", e.target.value)}
+                  placeholder="%"
+                  className={inputCls}
+                />
+              </div>
             </div>
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
               {secimKutulari.map(({ alan, label }) => (
@@ -3371,8 +4179,9 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
             </div>
 
             <div className="my-5 h-px bg-gray-100" />
+            </>)}
             <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-500">Araç Teknik Detayları</h4>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className={labelCls}>Kullanım Tipi</label>
                 <select value={aracFormu.kullanimTipi} onChange={(e) => aracAlaniGuncelle("kullanimTipi", e.target.value)} className={inputCls}>
@@ -3385,8 +4194,8 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
                   <option value="">Seçim</option><option>Hususi</option><option>Ticari</option><option>Resmi</option>
                 </select>
               </div>
-              <div><label className={labelCls}>Acente Komisyon %</label><input type="number" value={aracFormu.acenteKomisyonu} onChange={(e) => aracAlaniGuncelle("acenteKomisyonu", e.target.value)} className={inputCls} /></div>
             </div>
+            {!acenteMi && (
             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
               {teknikSecimler.map(({ alan, label }) => (
                 <label key={alan} className="flex items-center gap-2 text-xs font-medium text-gray-600">
@@ -3395,6 +4204,7 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
                 </label>
               ))}
             </div>
+            )}
 
             <div className="my-5 h-px bg-gray-100" />
             <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-500">Teminat Detayları</h4>
@@ -3525,20 +4335,34 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
               <div className="overflow-x-auto">
                 <table className="w-full min-w-max text-xs">
                   <thead><tr className="bg-gray-50 text-gray-600">
-                    {["#", "Kullanım Tipi", "Kullanım Şekli", "Prim Tipi", "Kilit Limiti", "AMS Limiti", "İndirim %", "Sabit Prim", "Özel Fiyat %", "Komisyon %", ""].map((baslik) => <th key={baslik} className="px-3 py-3 text-left font-semibold">{baslik}</th>)}
+                    {(sozlesmeModu
+                      ? ["#", "Kullanım Tipi", "Kullanım Şekli", "Kilit Limiti", "AMS Limiti", "Hukuksal Koruma", "Anadolu Hizmet", ""]
+                      : ["#", "Kullanım Tipi", "Kullanım Şekli", "Prim Tipi", "Kilit Limiti", "AMS Limiti", "İndirim %", "Sabit Prim", "Özel Fiyat %", "Komisyon %", ""]
+                    ).map((baslik) => <th key={baslik} className="px-3 py-3 text-left font-semibold">{baslik}</th>)}
                   </tr></thead>
                   <tbody>{araclar.map((arac, index) => (
                     <tr key={arac.id} className="border-t border-gray-100">
                       <td className="px-3 py-3 text-gray-400">{index + 1}</td>
                       <td className="px-3 py-3 font-semibold text-gray-700">{arac.kullanimTipi}</td>
                       <td className="px-3 py-3 text-gray-600">{arac.kullanimSekli || "—"}</td>
-                      <td className="px-3 py-3 text-gray-600">{arac.primTipi}</td>
-                      <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{arac.kilitMekanizmasiLimiti}</td>
-                      <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{Number(arac.artanMaliSorumlulukLimiti).toLocaleString("tr-TR")} TL</td>
-                      <td className="px-3 py-3 text-gray-600">{arac.indirimYuzdesi || "—"}</td>
-                      <td className="px-3 py-3 text-gray-600">{arac.sabitPrim || "—"}</td>
-                      <td className="px-3 py-3 text-gray-600">{arac.ozelFiyatOrani || "—"}</td>
-                      <td className="px-3 py-3 text-gray-600">{arac.acenteKomisyonu || "—"}</td>
+                      {sozlesmeModu ? (
+                        <>
+                          <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{arac.kilitMekanizmasiLimiti || "—"}</td>
+                          <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{arac.artanMaliSorumlulukLimiti ? `${Number(arac.artanMaliSorumlulukLimiti).toLocaleString("tr-TR")} TL` : "—"}</td>
+                          <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{arac.hukuksalKorumaLimiti ? `${Number(arac.hukuksalKorumaLimiti).toLocaleString("tr-TR")} TL` : "—"}</td>
+                          <td className="px-3 py-3 text-gray-600 truncate max-w-xs">{arac.anadoluHizmetPaketi || "—"}</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-3 py-3 text-gray-600">{arac.primTipi}</td>
+                          <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{arac.kilitMekanizmasiLimiti}</td>
+                          <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{Number(arac.artanMaliSorumlulukLimiti).toLocaleString("tr-TR")} TL</td>
+                          <td className="px-3 py-3 text-gray-600">{arac.indirimYuzdesi || "—"}</td>
+                          <td className="px-3 py-3 text-gray-600">{arac.sabitPrim || "—"}</td>
+                          <td className="px-3 py-3 text-gray-600">{arac.ozelFiyatOrani || "—"}</td>
+                          <td className="px-3 py-3 text-gray-600">{arac.acenteKomisyonu || "—"}</td>
+                        </>
+                      )}
                       <td className="px-3 py-3"><button onClick={() => setAraclar((prev) => prev.filter((kayit) => kayit.id !== arac.id))} className="text-gray-300 hover:text-red-500">Sil</button></td>
                     </tr>
                   ))}</tbody>
@@ -3552,6 +4376,12 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
 
         {aktifAdim === 3 && (
           <>
+        {acenteMi && (
+          <div className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            Bu alan acente kullanıcılarına kapalıdır. Özel şartlar ve notlar bölge/GM tarafından girilir.
+          </div>
+        )}
+        <fieldset disabled={acenteMi} className={`contents ${acenteMi ? "[&_*]:pointer-events-none [&>*]:opacity-60" : ""}`}>
         <FiloNotBolumu
           baslik="Özel Şartlar"
           aciklama="Sözleşmeye basılacak özel şart ve notları ekleyin"
@@ -3570,6 +4400,7 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
           notlar={asistanOzelNotlar}
           onChange={setAsistanOzelNotlar}
         />
+        </fieldset>
           </>
         )}
 
@@ -3611,6 +4442,52 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
               ))}
             </div>
           </div>
+          <div className="mt-5">
+            <label className={labelCls}>Ödeme & Süreç Notları</label>
+            <textarea
+              rows={3}
+              value={odemeNotu}
+              onChange={(e) => setOdemeNotu(e.target.value)}
+              placeholder="Ödeme koşullarına veya teklif sürecine dair notlarınızı buraya yazınız..."
+              className={inputCls}
+            />
+          </div>
+
+          <div className="mt-5">
+            <label className={labelCls}>Dosya Ekle</label>
+            <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50/60 p-5 text-center transition-colors hover:bg-gray-50">
+              <svg className="mb-2 h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p className="text-xs font-semibold text-gray-700">Dosyaları buraya sürükleyin veya tıklayıp seçin</p>
+              <p className="mt-1 text-[11px] text-gray-400">PDF, Excel, Word veya Görsel (Maks. 10 MB)</p>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => {
+                  if (e.target.files) {
+                    const yeni = Array.from(e.target.files).map((f) => f.name)
+                    setYuklenenDosyalar((prev) => [...prev, ...yeni])
+                  }
+                }}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              />
+            </div>
+            {yuklenenDosyalar.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {yuklenenDosyalar.map((dosya, idx) => (
+                  <span key={idx} className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs text-blue-700">
+                    📎 {dosya}
+                    <button
+                      type="button"
+                      onClick={() => setYuklenenDosyalar((prev) => prev.filter((_, i) => i !== idx))}
+                      className="font-bold text-blue-400 hover:text-red-500"
+                    >×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
           </>
         )}
@@ -3628,6 +4505,7 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
   const [aktifSekme, setAktifSekme] = useState<"sozlesme" | "arac" | "notlar" | "odeme" | "tarihce">("sozlesme")
   const [islemTipi, setIslemTipi] = useState<"ek" | "yenileme" | null>(null)
   const [secilenTarihce, setSecilenTarihce] = useState<FiloTarihceKaydi | null>(null)
+  const [excelModalAcik, setExcelModalAcik] = useState(false)
   const isoTarih = (tarih: Date) =>
     `${tarih.getFullYear()}-${String(tarih.getMonth() + 1).padStart(2, "0")}-${String(tarih.getDate()).padStart(2, "0")}`
   const sistemTarihi = isoTarih(new Date())
@@ -3639,9 +4517,10 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
   const policeKaydiMi = kayit.durum === "Sözleşme Poliçe"
   const tarihceKayitlari = (kayit.tarihce ?? []).filter((olay) =>
     policeKaydiMi
-      ? ["police", "ek", "yenileme"].includes(olay.tur ?? "")
-      : ["teklif", "revizyon"].includes(olay.tur ?? "")
+      ? ["police", "ek", "yenileme", "tramer"].includes(olay.tur ?? "")
+      : ["teklif", "revizyon", "tramer"].includes(olay.tur ?? "")
   )
+  const hasTramerEvent = (kayit.tarihce ?? []).some((o) => o.tur === "tramer" || (o.dosyalar ?? []).some((d) => d.includes("Tramer") || d.endsWith(".xlsx")))
   const bilgi = (label: string, value?: React.ReactNode) => (
     <div>
       <p className="mb-1 text-xs font-medium text-gray-400">{label}</p>
@@ -3868,6 +4747,26 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
                   ))}
                 </div>
               )}
+
+              {kayit.odemeNotu && (
+                <div className="mt-5 border-t border-gray-100 pt-4">
+                  <p className="text-xs font-semibold text-gray-600">Ödeme & Süreç Notu:</p>
+                  <p className="mt-1 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700 whitespace-pre-wrap">{kayit.odemeNotu}</p>
+                </div>
+              )}
+
+              {(kayit.odemeDosyalari ?? []).length > 0 && (
+                <div className="mt-4 border-t border-gray-100 pt-4">
+                  <p className="mb-2 text-xs font-semibold text-gray-600">Ekli Dosyalar:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {kayit.odemeDosyalari!.map((d, i) => (
+                      <span key={i} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700">
+                        📎 {d}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
           </div>
         )}
@@ -3899,44 +4798,186 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
             {tarihceKayitlari.length === 0 ? (
               <div className="py-10 text-center text-sm text-gray-400">Henüz tarihçe kaydı bulunmuyor.</div>
             ) : (
-              <div className="space-y-3">{[...tarihceKayitlari].reverse().map((olay) => (
-                <div key={olay.id} className="flex gap-3 rounded-xl border border-gray-200 p-4">
-                  <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-blue-600 ring-4 ring-blue-50" />
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">{olay.islem}</p>
-                        {olay.numara && (
-                          <button onClick={() => setSecilenTarihce(olay)} className="mt-1 font-mono text-xs font-semibold text-blue-700 hover:underline">
-                            {olay.numara}
-                          </button>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-400">{olay.tarih}</span>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-max text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-gray-50 text-gray-600">
+                      <th className="px-3 py-3 font-semibold">Tarih</th>
+                      <th className="px-3 py-3 font-semibold">İşlem</th>
+                      <th className="px-3 py-3 font-semibold">Kayıt No</th>
+                      <th className="px-3 py-3 font-semibold">Açıklama</th>
+                      <th className="px-3 py-3 font-semibold">Notlar</th>
+                      <th className="px-3 py-3 font-semibold">Dosyalar</th>
+                      <th className="px-3 py-3 font-semibold">Kullanıcı</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {[...tarihceKayitlari].reverse().map((olay) => (
+                      <tr key={olay.id} className="transition-colors hover:bg-gray-50/60">
+                        <td className="px-3 py-3 whitespace-nowrap text-gray-500">{olay.tarih}</td>
+                        <td className="px-3 py-3 whitespace-nowrap font-semibold text-gray-800">{olay.islem}</td>
+                        <td className="px-3 py-3 whitespace-nowrap font-mono font-medium text-blue-700">
+                          {olay.numara ? (
+                            <button onClick={() => setSecilenTarihce(olay)} className="hover:underline">{olay.numara}</button>
+                          ) : "—"}
+                        </td>
+                        <td className="px-3 py-3 text-gray-600 max-w-xs">{olay.aciklama}</td>
+                        <td className="px-3 py-3 text-gray-700 max-w-xs">{olay.odemeNotu || kayit.odemeNotu || "—"}</td>
+                        <td className="px-3 py-3 whitespace-nowrap text-gray-600">
+                          {olay.tur === "tramer" || (olay.dosyalar ?? []).some((d) => d.includes("Tramer") || d.endsWith(".xlsx")) ? (
+                            <button
+                              onClick={() => setExcelModalAcik(true)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition-colors shadow-xs"
+                              title="Excel tablosunu tam ekran incele"
+                            >
+                              <span className="text-emerald-700 font-bold">📊</span>
+                              Tramer_Verileri_Sistem_Tarama.xlsx
+                              <span className="text-[10px] bg-emerald-200 text-emerald-900 rounded px-1 font-bold">Excel Görünümü</span>
+                            </button>
+                          ) : (olay.dosyalar ?? kayit.odemeDosyalari ?? []).length > 0 ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">
+                              📎 {(olay.dosyalar ?? kayit.odemeDosyalari ?? []).length} dosya
+                            </span>
+                          ) : "—"}
+                        </td>
+                        <td className="px-3 py-3 whitespace-nowrap font-mono text-gray-500">{olay.kullanici}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Excel Dosyası Görünümü (Sistemi Tara Tramer Verileri) */}
+            {hasTramerEvent && (
+              <div className="mt-6 rounded-xl border border-emerald-700/30 overflow-hidden shadow-sm bg-white">
+                <div className="bg-[#107c41] px-4 py-2.5 flex items-center justify-between text-white">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded bg-emerald-800 border border-emerald-600 flex items-center justify-center font-bold text-xs shadow-inner">X</div>
+                    <div>
+                      <h4 className="text-xs font-bold tracking-wide">Tramer_Verileri_Sistem_Tarama.xlsx (E-Tablo Önizlemesi)</h4>
+                      <p className="text-[11px] text-emerald-100/80">Sistem otomatik tarama sonucu 13 aracın tramer ve hasar verileri</p>
                     </div>
-                    <p className="mt-1 text-xs text-gray-600">{olay.aciklama}</p>
-                    <p className="mt-2 text-xs text-gray-400">Kullanıcı: {olay.kullanici}</p>
                   </div>
+                  <button
+                    onClick={() => setExcelModalAcik(true)}
+                    className="inline-flex items-center gap-1.5 rounded bg-white text-[#107c41] hover:bg-emerald-50 text-xs font-bold px-3 py-1 shadow-xs transition-colors"
+                  >
+                    <span>⛶</span> Tam Ekran Excel E-Tablosunu Aç
+                  </button>
                 </div>
-              ))}</div>
+                {/* Embedded Mini Spreadsheet */}
+                <div className="overflow-x-auto max-h-72 border-b border-gray-200">
+                  <table className="w-full text-[11px] border-collapse">
+                    <thead className="bg-[#f3f4f6] text-gray-700 sticky top-0 border-b border-gray-300">
+                      <tr>
+                        <th className="w-8 border-r border-gray-300 py-1 text-center font-mono text-[10px] text-gray-400 bg-gray-200/70">#</th>
+                        <th className="border-r border-gray-300 px-2.5 py-1 text-left font-semibold">Plaka</th>
+                        <th className="border-r border-gray-300 px-2.5 py-1 text-left font-semibold min-w-[180px]">Müşteri</th>
+                        <th className="border-r border-gray-300 px-2.5 py-1 text-left font-semibold">Tür</th>
+                        <th className="border-r border-gray-300 px-2.5 py-1 text-center font-semibold">Yıl</th>
+                        <th className="border-r border-gray-300 px-2.5 py-1 text-right font-semibold">Kasko Bedeli</th>
+                        <th className="border-r border-gray-300 px-2.5 py-1 text-left font-semibold">Sigorta Şirketi</th>
+                        <th className="border-r border-gray-300 px-2.5 py-1 text-center font-semibold">Hasar</th>
+                        <th className="border-r border-gray-300 px-2.5 py-1 text-right font-semibold">Hasar Masrafı</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 font-sans">
+                      {tramerVerileri.slice(0, 6).map((r, i) => (
+                        <tr key={r.sira} className="hover:bg-blue-50/40">
+                          <td className="border-r border-gray-300 text-center font-mono text-[10px] text-gray-400 bg-gray-50">{i + 1}</td>
+                          <td className="border-r border-gray-200 px-2.5 py-1 font-mono font-bold text-blue-900">{r.plaka}</td>
+                          <td className="border-r border-gray-200 px-2.5 py-1 text-gray-700 truncate max-w-xs">{r.musteriAd}</td>
+                          <td className="border-r border-gray-200 px-2.5 py-1 text-gray-800">{r.aracTuru}</td>
+                          <td className="border-r border-gray-200 px-2.5 py-1 text-center font-mono">{r.modelYili}</td>
+                          <td className="border-r border-gray-200 px-2.5 py-1 text-right font-mono text-gray-700">₺{Number(r.kaskoBedeeli).toLocaleString("tr-TR")}</td>
+                          <td className="border-r border-gray-200 px-2.5 py-1 text-gray-600 truncate max-w-[140px]">{r.sirket}</td>
+                          <td className="border-r border-gray-200 px-2.5 py-1 text-center">
+                            {r.hasarDosyaNo ? (
+                              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-bold text-[10px]">Hasarlı</span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px]">Hasarsız</span>
+                            )}
+                          </td>
+                          <td className="border-r border-gray-200 px-2.5 py-1 text-right font-mono font-semibold text-red-700">
+                            {r.toplamMasraf ? `₺${Number(r.toplamMasraf).toLocaleString("tr-TR")}` : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="bg-[#f9fafb] px-4 py-2 flex items-center justify-between text-xs text-gray-500">
+                  <span>Toplam 13 aracın verisi sistem tarafından çekildi (Önizlemede ilk 6 gösteriliyor).</span>
+                  <button onClick={() => setExcelModalAcik(true)} className="text-emerald-700 hover:text-emerald-800 font-semibold underline">
+                    Tümünü Excel E-Tablosunda Gör (13 Araç) →
+                  </button>
+                </div>
+              </div>
             )}
           </section>
         )}
       </div>
+
+      {excelModalAcik && (
+        <TramerExcelViewerModal
+          onClose={() => setExcelModalAcik(false)}
+          baslik="Tramer_Verileri_Sistem_Tarama.xlsx"
+          sozlesmeAdi={kayit.sozlesmeAdi}
+        />
+      )}
     </main>
   )
 }
 
-function FiloUretimPage() {
+function FiloUretimPage({ acenteMi = false, bolgeMi = false, gmMi = false, kayitlar, setKayitlar }: {
+  acenteMi?: boolean
+  bolgeMi?: boolean
+  gmMi?: boolean
+  kayitlar: FiloUretimKaydi[]
+  setKayitlar: React.Dispatch<React.SetStateAction<FiloUretimKaydi[]>>
+}) {
   const [filtreAcik, setFiltreAcik] = useState(false)
-  const [kayitlar, setKayitlar] = useState<FiloUretimKaydi[]>(filoUretimBaslangicVerisi)
+  const BOLGE = "Bölge Değerlendirmesinde"
+  const GM = "Genel Müdürlük Değerlendirmesinde"
+  const TRAMER = "Tramer Verisi Geldi"
   const [yeniKayitAcik, setYeniKayitAcik] = useState(false)
   const [duzenlenenKayit, setDuzenlenenKayit] = useState<FiloUretimKaydi | null>(null)
   const [goruntulenenKayit, setGoruntulenenKayit] = useState<FiloUretimKaydi | null>(null)
+  const [excelViewerKayit, setExcelViewerKayit] = useState<FiloUretimKaydi | null>(null)
   const [kayitModu, setKayitModu] = useState<"normal" | "ek">("normal")
   const [filtreler, setFiltreler] = useState(bosFiloFiltreleri)
   const [uygulananFiltreler, setUygulananFiltreler] = useState(bosFiloFiltreleri)
   const [secilenler, setSecilenler] = useState<Set<number>>(new Set())
+  const secili = kayitlar.find((k) => secilenler.has(k.id))
+  const statuDegistir = (durum: string) => {
+    setKayitlar((prev) => prev.map((k) => secilenler.has(k.id) ? { ...k, durum } : k))
+    setSecilenler(new Set())
+  }
+
+  const sistemiTaraVeTramerGetir = (id: number) => {
+    const simdiStr = new Date().toLocaleString("tr-TR")
+    setKayitlar((prev) => prev.map((k) => {
+      if (k.id !== id) return k
+      const yeniTarihce: FiloTarihceKaydi = {
+        id: Date.now(),
+        tarih: simdiStr,
+        islem: "Sistemi Tara - Tramer Verileri Geldi",
+        aciklama: "Tramer sistemi otomatik tarandı. 13 adet araç için hasar ve poliçe verileri Excel formatında sisteme bağlandı.",
+        kullanici: "SİSTEM_ROBOT",
+        tur: "tramer",
+        numara: "TRM-2026-EXCEL",
+        dosyalar: ["Tramer_Verileri_Sistem_Tarama.xlsx"],
+        odemeNotu: "13 aracın tramer hasar dökümü e-tablo dosyası olarak eklendi.",
+      }
+      return {
+        ...k,
+        durum: TRAMER,
+        tarihce: [...(k.tarihce ?? []), yeniTarihce],
+      }
+    }))
+    setSecilenler(new Set([id]))
+  }
 
   const inputCls = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
   const labelCls = "mb-1.5 block text-xs font-semibold text-gray-600"
@@ -3999,7 +5040,7 @@ function FiloUretimPage() {
       kayit.policeTipi, kayit.baslangic, kayit.bitis, kayit.kullanici, kayit.durum,
       kayit.yaratan,
     ])
-    const csv = [basliklar, ...satirlar].map((satir) => satir.map((hucre) => `"${String(hucre).replaceAll("\"", "\"\"")}"`).join(",")).join("\n")
+    const csv = [basliklar, ...satirlar].map((satir) => satir.map((hucre) => `"${String(hucre).replace(/"/g, '""')}"`).join(",")).join("\n")
     const link = document.createElement("a")
     link.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }))
     link.download = "filo-uretim-listesi.csv"
@@ -4030,16 +5071,29 @@ function FiloUretimPage() {
       <FiloUretimOlusturPage
         initialKayit={duzenlenenKayit}
         kayitModu={kayitModu}
+        acenteMi={acenteMi}
+        bolgeMi={bolgeMi}
+        gmMi={gmMi}
         onBack={() => {
           setYeniKayitAcik(false)
           setDuzenlenenKayit(null)
           setKayitModu("normal")
         }}
         onSave={(kayit) => {
+          const gecerlilik = new Date(Date.now() + 15 * 86400000).toLocaleDateString("tr-TR")
+          const baslangicDurumu =
+            acenteMi ? "Bölge Değerlendirmesinde" :
+            bolgeMi ? "Genel Müdürlük Değerlendirmesinde" :
+            "Onaylandı"
+          const yeni = {
+            ...kayit,
+            teklifGecerlilikTarihi: kayit.teklifGecerlilikTarihi ?? gecerlilik,
+            ...(!duzenlenenKayit ? { durum: kayit.durum === "Sözleşme Poliçe" ? "Sözleşme Poliçe" : baslangicDurumu } : {}),
+          }
           setKayitlar((prev) =>
             duzenlenenKayit
-              ? prev.map((item) => item.id === kayit.id ? kayit : item)
-              : [kayit, ...prev]
+              ? prev.map((item) => item.id === yeni.id ? yeni : item)
+              : [yeni, ...prev]
           )
           setYeniKayitAcik(false)
           setDuzenlenenKayit(null)
@@ -4140,6 +5194,46 @@ function FiloUretimPage() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" /><circle cx="12" cy="12" r="2.5" /></svg>
               </button>
               <button onClick={secileniKopyala} disabled={secilenler.size !== 1} className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-30">Kopyala</button>
+              {bolgeMi && secili?.durum === BOLGE && (
+                <>
+                  <button onClick={() => statuDegistir(GM)} className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100">GM'ye Gönder</button>
+                  <button onClick={() => statuDegistir("Reddedildi")} className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">Reddet</button>
+                </>
+              )}
+              {secili?.durum === GM && (
+                <>
+                  <button
+                    onClick={() => sistemiTaraVeTramerGetir(secili.id)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300 bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700 transition-colors"
+                    title="Sistemi tara ve tramer verilerini ekle"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    Sistemi Tara (Tramer)
+                  </button>
+                  {gmMi && (
+                    <>
+                      <button onClick={() => statuDegistir("Onaylandı")} className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-100">Onayla</button>
+                      <button onClick={() => statuDegistir("Reddedildi")} className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">Reddet</button>
+                    </>
+                  )}
+                </>
+              )}
+              {secili?.durum === TRAMER && (
+                <>
+                  <button
+                    onClick={() => setExcelViewerKayit(secili)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-xs hover:bg-emerald-700 transition-colors"
+                  >
+                    <span className="font-bold">📊</span> Tramer Excel Verisini İncele
+                  </button>
+                  {gmMi && (
+                    <>
+                      <button onClick={() => statuDegistir("Onaylandı")} className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-100">Onayla</button>
+                      <button onClick={() => statuDegistir("Reddedildi")} className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">Reddet</button>
+                    </>
+                  )}
+                </>
+              )}
             </div>
             <button onClick={exceleAktar} className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-100">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" strokeLinecap="round" /></svg>
@@ -4151,14 +5245,14 @@ function FiloUretimPage() {
             <table className="min-w-max w-full text-xs">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 text-gray-600">
-                  {["Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "Başlangıç", "Bitiş", "Kullanıcı", "Durum", "Yaratan"].map((baslik) => (
+                  {["Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "Başlangıç", "Bitiş", "Teklif Geçerlilik", "Kullanıcı", "Durum", "Yaratan"].map((baslik) => (
                     <th key={baslik} className="px-3 py-3 text-left font-semibold whitespace-nowrap">{baslik}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtreliKayitlar.length === 0 ? (
-                  <tr><td colSpan={12} className="py-14 text-center text-sm text-gray-400">Filtrelere uygun kayıt bulunamadı.</td></tr>
+                  <tr><td colSpan={13} className="py-14 text-center text-sm text-gray-400">Filtrelere uygun kayıt bulunamadı.</td></tr>
                 ) : filtreliKayitlar.map((kayit) => (
                   <tr
                     key={kayit.id}
@@ -4174,13 +5268,38 @@ function FiloUretimPage() {
                     <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{kayit.policeTipi}</td>
                     <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{kayit.baslangic}</td>
                     <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{kayit.bitis}</td>
+                    <td className="px-3 py-3 whitespace-nowrap font-medium text-amber-700">
+                      {kayit.policeNo ? "—" : kayit.teklifGecerlilikTarihi ?? new Date(Date.now() + 15 * 86400000).toLocaleDateString("tr-TR")}
+                    </td>
                     <td className="px-3 py-3 font-mono text-gray-600">{kayit.kullanici}</td>
                     <td className="px-3 py-3">
-                      <span className={`inline-flex rounded-full border px-2 py-0.5 font-medium whitespace-nowrap ${
-                        kayit.durum === "Sözleşme Poliçe"
-                          ? "border-green-200 bg-green-50 text-green-700"
-                          : "border-blue-200 bg-blue-50 text-blue-700"
-                      }`}>{kayit.durum}</span>
+                      {kayit.durum === TRAMER ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSecilenler(new Set([kayit.id]))
+                            setExcelViewerKayit(kayit)
+                          }}
+                          className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition-colors whitespace-nowrap shadow-xs"
+                          title="Tramer Excel verisini incele"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Tramer Verisi Geldi
+                          <span className="text-[10px] bg-emerald-200 text-emerald-900 rounded px-1 ml-0.5 font-bold">📊 Excel</span>
+                        </button>
+                      ) : (
+                        <span className={`inline-flex rounded-full border px-2 py-0.5 font-medium whitespace-nowrap ${
+                          kayit.durum === "Sözleşme Poliçe" || kayit.durum === "Onaylandı"
+                            ? "border-green-200 bg-green-50 text-green-700"
+                            : kayit.durum === BOLGE
+                              ? "border-amber-200 bg-amber-50 text-amber-700"
+                              : kayit.durum === GM
+                                ? "border-purple-200 bg-purple-50 text-purple-700"
+                                : kayit.durum === "Reddedildi"
+                                ? "border-red-200 bg-red-50 text-red-700"
+                                : "border-blue-200 bg-blue-50 text-blue-700"
+                        }`}>{kayit.durum}</span>
+                      )}
                     </td>
                     <td className="px-3 py-3 font-mono text-gray-600">{kayit.yaratan}</td>
                   </tr>
@@ -4194,6 +5313,524 @@ function FiloUretimPage() {
           </div>
         </section>
       </div>
+
+      {excelViewerKayit && (
+        <TramerExcelViewerModal
+          onClose={() => setExcelViewerKayit(null)}
+          baslik="Tramer_Verileri_Sistem_Tarama.xlsx"
+          sozlesmeAdi={excelViewerKayit.sozlesmeAdi}
+        />
+      )}
+    </main>
+  )
+}
+
+interface SozlesmeKaydi {
+  id: number
+  sozlesmeNo: string
+  musteriUnvani: string
+  vknTckn: string
+  talepTipi: string
+  brans: string
+  aracAdedi: string | number
+  olusturulmaTarihi: string
+  durum: "Yürürlükte" | "Aktif" | "Yenileme Bekliyor"
+  eposta?: string
+  filoVerisi?: FiloUretimKaydi
+}
+
+function sozlesmeyiFiloKaydinaDonustur(s: SozlesmeKaydi): FiloUretimKaydi {
+  if (s.filoVerisi) return s.filoVerisi
+  return {
+    id: s.id,
+    sozlesmeAdi: s.musteriUnvani ? `${s.musteriUnvani} Sözleşmesi` : "Kurumsal Filo Çerçeve Sözleşmesi",
+    sozlesmeNo: s.sozlesmeNo,
+    policeNo: `${s.sozlesmeNo}/00`,
+    versiyon: 1,
+    yenileme: 0,
+    urunAdi: s.brans || "Kasko",
+    policeTipi: "Filo Sözleşmesi",
+    baslangic: s.olusturulmaTarihi,
+    bitis: "31.12.2026",
+    kullanici: "GM_UZMAN",
+    durum: "Sözleşme Poliçe",
+    onayStatusu: "Onaylandı",
+    onaylayan: "Genel Müdürlük",
+    onayTarihi: s.olusturulmaTarihi,
+    yaratan: "Genel Müdürlük",
+    atanan: "GM_UZMAN",
+    acenteAdi: "Emre Acentelik",
+    kontakNo: s.vknTckn || "3920194821",
+    kontakAdi: s.musteriUnvani,
+    kontaklar: [{ id: 1, no: s.vknTckn || "3920194821", ad: s.musteriUnvani }],
+    acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+    araclar: [{
+      ...bosFiloAraci,
+      id: 1,
+      kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+      primTipi: "Özel İndirim",
+      indirimYuzdesi: "15",
+    }],
+    odemeTipi: "Kredi Kartı",
+    odemeKosullari: ["Tek Çekim", "4 Taksit"],
+    tarihce: [
+      {
+        id: 1,
+        tarih: s.olusturulmaTarihi,
+        islem: "Sözleşme Oluşturuldu",
+        numara: s.sozlesmeNo,
+        aciklama: `${s.sozlesmeNo} numaralı kurumsal filo çerçeve sözleşmesi oluşturuldu.`,
+        kullanici: "GM_UZMAN",
+        tur: "police",
+      },
+    ],
+  }
+}
+
+const baslangicSozlesmeler: SozlesmeKaydi[] = [
+  {
+    id: 1,
+    sozlesmeNo: "SZL-2026-00412",
+    musteriUnvani: "Kuzey Lojistik ve Taşımacılık A.Ş.",
+    vknTckn: "4820194829",
+    talepTipi: "Yeni Teklif",
+    brans: "Kasko",
+    aracAdedi: "48",
+    olusturulmaTarihi: "12.03.2026",
+    durum: "Yürürlükte",
+    eposta: "operasyon@kuzeylojistik.com",
+  },
+  {
+    id: 2,
+    sozlesmeNo: "SZL-2026-00388",
+    musteriUnvani: "Atlas Araç Kiralama Filo Hizmetleri",
+    vknTckn: "1948201948",
+    talepTipi: "Yenileme Teklifi",
+    brans: "Kasko",
+    aracAdedi: "120",
+    olusturulmaTarihi: "04.02.2026",
+    durum: "Aktif",
+    eposta: "filo@atlaskiralama.com",
+  },
+  {
+    id: 3,
+    sozlesmeNo: "SZL-2026-00219",
+    musteriUnvani: "Ege Turizm ve Taşımacılık Ltd. Şti.",
+    vknTckn: "3920194821",
+    talepTipi: "Yeni Teklif",
+    brans: "Kasko",
+    aracAdedi: "18",
+    olusturulmaTarihi: "18.01.2026",
+    durum: "Yürürlükte",
+    eposta: "muhasebe@egeturizm.com",
+  },
+]
+
+const bosSozlesmeFiltreleri = {
+  sozlesmeNo: "",
+  musteriUnvani: "",
+  brans: "",
+  durum: "",
+}
+
+function SozlesmelerimPage({
+  kullaniciTuru,
+  sozlesmeler,
+  setSozlesmeler,
+}: {
+  kullaniciTuru: KullaniciTuru
+  sozlesmeler: SozlesmeKaydi[]
+  setSozlesmeler: React.Dispatch<React.SetStateAction<SozlesmeKaydi[]>>
+}) {
+  const [yeniAcik, setYeniAcik] = useState(false)
+  const [duzenlenenKayit, setDuzenlenenKayit] = useState<FiloUretimKaydi | null>(null)
+  const [goruntulenenKayit, setGoruntulenenKayit] = useState<FiloUretimKaydi | null>(null)
+  const [kayitModu, setKayitModu] = useState<"normal" | "ek">("normal")
+  const [secilenler, setSecilenler] = useState<Set<number>>(new Set())
+  const [filtreAcik, setFiltreAcik] = useState(true)
+  const [filtreler, setFiltreler] = useState(bosSozlesmeFiltreleri)
+  const [uygulananFiltreler, setUygulananFiltreler] = useState(bosSozlesmeFiltreleri)
+
+  const gmMi = kullaniciTuru === "gm"
+  const secili = sozlesmeler.find((s) => secilenler.has(s.id))
+
+  const duzenlemeyiAc = (hedef = secili) => {
+    if (!hedef) return
+    setDuzenlenenKayit(sozlesmeyiFiloKaydinaDonustur(hedef))
+    setKayitModu("normal")
+    setYeniAcik(true)
+  }
+
+  const goruntulemeyiAc = (hedef = secili) => {
+    if (!hedef) return
+    setGoruntulenenKayit(sozlesmeyiFiloKaydinaDonustur(hedef))
+  }
+
+  const sozlesmeEkiAc = (hedef = secili) => {
+    if (!hedef) return
+    setDuzenlenenKayit(sozlesmeyiFiloKaydinaDonustur(hedef))
+    setKayitModu("ek")
+    setYeniAcik(true)
+  }
+
+  if (goruntulenenKayit) {
+    return (
+      <FiloUretimGoruntulePage
+        kayit={goruntulenenKayit}
+        onBack={() => setGoruntulenenKayit(null)}
+        onUpdate={(guncel) => {
+          setSozlesmeler((prev) => prev.map((item) => item.id === guncel.id ? {
+            ...item,
+            sozlesmeNo: guncel.sozlesmeNo,
+            musteriUnvani: guncel.kontakAdi || guncel.sozlesmeAdi || item.musteriUnvani,
+            brans: guncel.urunAdi || item.brans,
+            aracAdedi: String(guncel.araclar?.length || item.aracAdedi),
+            filoVerisi: guncel,
+          } : item))
+          setGoruntulenenKayit(guncel)
+        }}
+        onSozlesmeEki={() => {
+          setDuzenlenenKayit(goruntulenenKayit)
+          setGoruntulenenKayit(null)
+          setKayitModu("ek")
+          setYeniAcik(true)
+        }}
+      />
+    )
+  }
+
+  if (yeniAcik && gmMi) {
+    return (
+      <FiloUretimOlusturPage
+        initialKayit={duzenlenenKayit}
+        kayitModu={kayitModu}
+        sozlesmeModu={true}
+        gmMi={true}
+        onBack={() => {
+          setYeniAcik(false)
+          setDuzenlenenKayit(null)
+          setKayitModu("normal")
+        }}
+        onSave={(kayit) => {
+          if (duzenlenenKayit && kayitModu === "normal") {
+            setSozlesmeler((prev) => prev.map((s) => s.id === duzenlenenKayit.id ? {
+              ...s,
+              sozlesmeNo: kayit.sozlesmeNo || s.sozlesmeNo,
+              musteriUnvani: kayit.kontakAdi || kayit.sozlesmeAdi || s.musteriUnvani,
+              brans: kayit.urunAdi || s.brans,
+              aracAdedi: String(kayit.araclar?.length || s.aracAdedi),
+              filoVerisi: kayit,
+            } : s))
+          } else if (duzenlenenKayit && kayitModu === "ek") {
+            const ekNo = kayit.policeNo || `${duzenlenenKayit.sozlesmeNo}/01`
+            const yeniEk: SozlesmeKaydi = {
+              id: Date.now(),
+              sozlesmeNo: ekNo,
+              musteriUnvani: `${kayit.kontakAdi || kayit.sozlesmeAdi || duzenlenenKayit.kontakAdi || "Sözleşme"} (Ek)`,
+              vknTckn: kayit.kontakNo || duzenlenenKayit.kontakNo || "—",
+              talepTipi: "Sözleşme Eki",
+              brans: kayit.urunAdi || "Kasko",
+              aracAdedi: String(kayit.araclar?.length || 1),
+              olusturulmaTarihi: new Date().toLocaleDateString("tr-TR"),
+              durum: "Yürürlükte",
+              eposta: "filo@anadolusigorta.com.tr",
+              filoVerisi: kayit,
+            }
+            setSozlesmeler((prev) => [yeniEk, ...prev])
+          } else {
+            const yeniNo = `SZL-2026-00${Math.floor(500 + Math.random() * 400)}`
+            const yeni: SozlesmeKaydi = {
+              id: Date.now(),
+              sozlesmeNo: kayit.sozlesmeNo || yeniNo,
+              musteriUnvani: kayit.kontakAdi || kayit.sozlesmeAdi || "Kurumsal Filo Müşterisi",
+              vknTckn: kayit.kontakNo || "3920194821",
+              talepTipi: "Yeni Sözleşme",
+              brans: kayit.urunAdi || "Kasko",
+              aracAdedi: String(kayit.araclar?.length || 1),
+              olusturulmaTarihi: new Date().toLocaleDateString("tr-TR"),
+              durum: "Yürürlükte",
+              eposta: "filo@anadolusigorta.com.tr",
+              filoVerisi: kayit,
+            }
+            setSozlesmeler((prev) => [yeni, ...prev])
+          }
+          setYeniAcik(false)
+          setDuzenlenenKayit(null)
+          setKayitModu("normal")
+          setSecilenler(new Set())
+        }}
+      />
+    )
+  }
+
+  const filtreli = sozlesmeler.filter((s) =>
+    (!uygulananFiltreler.sozlesmeNo || s.sozlesmeNo.toLowerCase().includes(uygulananFiltreler.sozlesmeNo.toLowerCase())) &&
+    (!uygulananFiltreler.musteriUnvani || s.musteriUnvani.toLowerCase().includes(uygulananFiltreler.musteriUnvani.toLowerCase())) &&
+    (!uygulananFiltreler.brans || s.brans === uygulananFiltreler.brans) &&
+    (!uygulananFiltreler.durum || s.durum === uygulananFiltreler.durum)
+  )
+
+  const inputCls = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 outline-none transition-colors focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+  const labelCls = "mb-1 block text-xs font-semibold text-gray-600"
+
+  return (
+    <main className="flex-1 overflow-y-auto bg-gray-50 px-6 py-5">
+      <div className="space-y-4">
+        {/* Filtre Paneli */}
+        <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
+          <button
+            onClick={() => setFiltreAcik((a) => !a)}
+            className="flex w-full items-center justify-between border-b border-gray-100 px-5 py-3 text-left"
+          >
+            <div>
+              <h2 className="text-sm font-bold text-gray-800">Filtre Seçimi</h2>
+              <p className="mt-0.5 text-xs text-gray-400">Sözleşme kayıtlarını filtreleyin</p>
+            </div>
+            <svg className={`text-gray-400 transition-transform ${filtreAcik ? "rotate-180" : ""}`} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {filtreAcik && (
+            <div className="p-5">
+              <div className="grid grid-cols-1 gap-x-5 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
+                <div>
+                  <label className={labelCls}>Sözleşme No</label>
+                  <input
+                    value={filtreler.sozlesmeNo}
+                    onChange={(e) => setFiltreler((prev) => ({ ...prev, sozlesmeNo: e.target.value }))}
+                    placeholder="Sözleşme no giriniz"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Müşteri Ünvanı</label>
+                  <input
+                    value={filtreler.musteriUnvani}
+                    onChange={(e) => setFiltreler((prev) => ({ ...prev, musteriUnvani: e.target.value }))}
+                    placeholder="Müşteri adı / ünvanı"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Branş</label>
+                  <select
+                    value={filtreler.brans}
+                    onChange={(e) => setFiltreler((prev) => ({ ...prev, brans: e.target.value }))}
+                    className={inputCls}
+                  >
+                    <option value="">Tümü</option>
+                    <option value="Kasko">Kasko</option>
+                    <option value="Trafik">Trafik</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Durum</label>
+                  <select
+                    value={filtreler.durum}
+                    onChange={(e) => setFiltreler((prev) => ({ ...prev, durum: e.target.value }))}
+                    className={inputCls}
+                  >
+                    <option value="">Tümü</option>
+                    <option value="Yürürlükte">Yürürlükte</option>
+                    <option value="Aktif">Aktif</option>
+                    <option value="Yenileme Bekliyor">Yenileme Bekliyor</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-2">
+                <button
+                  onClick={() => setUygulananFiltreler(filtreler)}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                >
+                  Filtrele
+                </button>
+                <button
+                  onClick={() => {
+                    setFiltreler(bosSozlesmeFiltreleri)
+                    setUygulananFiltreler(bosSozlesmeFiltreleri)
+                  }}
+                  className="rounded-lg border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                >
+                  Temizle
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Liste Tablosu */}
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {gmMi && (
+                <button
+                  onClick={() => { setDuzenlenenKayit(null); setKayitModu("normal"); setYeniAcik(true) }}
+                  title="Yeni Sözleşme Oluştur"
+                  className="flex items-center gap-1.5 rounded-lg bg-brand-red hover:bg-brand-red-dark px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                  </svg>
+                  Yeni Sözleşme Oluştur
+                </button>
+              )}
+              <button
+                onClick={() => duzenlemeyiAc()}
+                title="Sözleşmeyi Güncelle"
+                disabled={secilenler.size !== 1}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Güncelle
+              </button>
+              <button
+                onClick={() => goruntulemeyiAc()}
+                title="Sözleşmeyi Görüntüle"
+                disabled={secilenler.size !== 1}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" />
+                  <circle cx="12" cy="12" r="2.5" />
+                </svg>
+                Görüntüle
+              </button>
+              {gmMi && (
+                <button
+                  onClick={() => sozlesmeEkiAc()}
+                  title="Sözleşme Eki Oluştur"
+                  disabled={secilenler.size !== 1}
+                  className="flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="18" x2="12" y2="12" />
+                    <line x1="9" y1="15" x2="15" y2="15" />
+                  </svg>
+                  Sözleşme Eki
+                </button>
+              )}
+            </div>
+            <span className="text-xs text-gray-400">{filtreli.length} sözleşme</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50 text-gray-600">
+                  <th className="w-10 px-3 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={filtreli.length > 0 && secilenler.size === filtreli.length}
+                      onChange={(e) => {
+                        if (e.target.checked) setSecilenler(new Set(filtreli.map((s) => s.id)))
+                        else setSecilenler(new Set())
+                      }}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                  </th>
+                  <th className="px-4 py-3 font-semibold">Sözleşme No</th>
+                  <th className="px-4 py-3 font-semibold">Müşteri Ünvanı</th>
+                  <th className="px-4 py-3 font-semibold">Branş</th>
+                  <th className="px-4 py-3 font-semibold text-center">Araç Sayısı</th>
+                  <th className="px-4 py-3 font-semibold">Oluşturulma Tarihi</th>
+                  <th className="px-4 py-3 font-semibold text-center">Durum</th>
+                  <th className="px-4 py-3 font-semibold text-right">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtreli.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-sm text-gray-400">
+                      Filtreye uygun sözleşme bulunamadı.
+                    </td>
+                  </tr>
+                ) : (
+                  filtreli.map((s) => {
+                    const seciliMi = secilenler.has(s.id)
+                    return (
+                      <tr
+                        key={s.id}
+                        onClick={() => setSecilenler((prev) => prev.has(s.id) ? new Set() : new Set([s.id]))}
+                        onDoubleClick={() => goruntulemeyiAc(s)}
+                        className={`cursor-pointer transition-colors hover:bg-blue-50/40 ${
+                          seciliMi ? "bg-blue-50/80 ring-1 ring-inset ring-blue-200" : ""
+                        }`}
+                      >
+                        <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={seciliMi}
+                            onChange={() => setSecilenler((prev) => prev.has(s.id) ? new Set() : new Set([s.id]))}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                        </td>
+                        <td className="px-4 py-3 font-mono font-semibold text-blue-700 whitespace-nowrap">{s.sozlesmeNo}</td>
+                        <td className="px-4 py-3 font-medium text-gray-800">{s.musteriUnvani}</td>
+                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.brans}</td>
+                        <td className="px-4 py-3 text-center text-gray-600">{s.aracAdedi}</td>
+                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{s.olusturulmaTarihi}</td>
+                        <td className="px-4 py-3 text-center whitespace-nowrap">
+                          <span className="inline-flex rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                            {s.durum}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => goruntulemeyiAc(s)}
+                              title="Görüntüle"
+                              className="p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" />
+                                <circle cx="12" cy="12" r="2.5" />
+                              </svg>
+                            </button>
+                            {gmMi && (
+                              <>
+                                <button
+                                  onClick={() => duzenlemeyiAc(s)}
+                                  title="Güncelle"
+                                  className="p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4z" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => sozlesmeEkiAc(s)}
+                                  title="Sözleşme Eki"
+                                  className="p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="12" y1="18" x2="12" y2="12" />
+                                    <line x1="9" y1="15" x2="15" y2="15" />
+                                  </svg>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-xs text-gray-500">
+            <span>Toplam {filtreli.length} sözleşme listeleniyor.</span>
+            <span>{secilenler.size} sözleşme seçildi</span>
+          </div>
+        </div>
+      </div>
     </main>
   )
 }
@@ -4203,11 +5840,13 @@ export default function App() {
   const [girisYapildi, setGirisYapildi] = useState(false)
   const [kullaniciTuru, setKullaniciTuru] = useState<KullaniciTuru>(null)
   const [kullaniciAdi, setKullaniciAdiState] = useState("")
-  const [activeNav, setActiveNav] = useState<NavItem>("talepler")
+  const [activeNav, setActiveNav] = useState<NavItem>("filo-yonetim")
   const [activeTab, setActiveTab] = useState<Tab>("talepler")
   const [selectedTalep, setSelectedTalep] = useState<Talep | null>(null)
   const [view, setView] = useState<View>("list")
   const [onayHavuzu, setOnayHavuzu] = useState<OnayKaydi[]>([])
+  const [filoKayitlari, setFiloKayitlari] = useState<FiloUretimKaydi[]>(filoUretimBaslangicVerisi)
+  const [sozlesmeler, setSozlesmeler] = useState<SozlesmeKaydi[]>(baslangicSozlesmeler)
   const [nextId, setNextId] = useState(1)
   // Shared pools — survive user switches so acente→bölge flow works
   const [acenteIslemdekiTalepler, setAcenteIslemdekiTalepler] = useState<Talep[]>([])
@@ -4229,7 +5868,7 @@ export default function App() {
     setGirisYapildi(false)
     setKullaniciTuru(null)
     setKullaniciAdiState("")
-    setActiveNav("talepler")
+    setActiveNav("filo-yonetim")
     setActiveTab("talepler")
     setView("list")
     setSelectedTalep(null)
@@ -4242,17 +5881,7 @@ export default function App() {
           setKullaniciTuru(tur)
           setKullaniciAdiState(ad)
           setGirisYapildi(true)
-          // Bölge girişinde havuzdaki talepler sekmesini aç
-          if (tur === "bolge") {
-            setActiveNav("talepler")
-            setActiveTab("yeni-gelen")
-          } else if (tur === "acente") {
-            setActiveNav("talepler")
-            setActiveTab("islemdeki")
-          } else if (tur === "gm") {
-            setActiveNav("talepler")
-            setActiveTab("yeni-gelen")
-          }
+          setActiveNav("filo-yonetim")
         }}
       />
     )
@@ -4512,18 +6141,6 @@ export default function App() {
 
   const navItems: { id: NavItem; label: string; icon: React.ReactNode }[] = [
     {
-      id: "kontrol-paneli",
-      label: "Kontrol Paneli",
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
-      ),
-    },
-    {
       id: "filo-yonetim",
       label: "Filo Üretim Süreci",
       icon: (
@@ -4531,15 +6148,6 @@ export default function App() {
           <path d="M3 17h18M5 17l1.5-7h11L19 17M8 10l1-3h6l1 3" strokeLinecap="round" strokeLinejoin="round" />
           <circle cx="8" cy="18" r="2" />
           <circle cx="16" cy="18" r="2" />
-        </svg>
-      ),
-    },
-    {
-      id: "talepler",
-      label: "Filo Yönetim Süreci",
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ),
     },
@@ -4575,35 +6183,55 @@ export default function App() {
     []
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div className="flex h-screen bg-white overflow-hidden" style={{ fontFamily: "Inter, sans-serif" }}>
       {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-gray-200 flex flex-col shrink-0">
-        <div className="px-4 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-purple-600 flex items-center justify-center text-white font-bold text-lg">A</div>
-            <span className="text-blue-600 font-bold text-lg tracking-wide">AstraFilo</span>
+      <aside className="w-60 bg-[#f4f5f7] border-r border-gray-200 flex flex-col shrink-0">
+        <div className="h-[60px] px-4 flex items-center bg-white border-b border-gray-200">
+          <div className="leading-[1.05] font-extrabold text-brand-red text-[17px] tracking-tight">
+            ANADOLU<br />SİGORTA
           </div>
         </div>
-
-        <div className="px-3 py-3 border-b border-gray-100">
-          <button
-            onClick={() => setView("create")}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg px-3 py-2.5 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Filo Talebi Oluştur
-          </button>
+        <div className="px-4 py-4 flex items-center gap-3 border-b border-gray-200">
+          <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5C21 16.5 17 14 12 14z" /></svg>
+          </div>
+          <span className="text-xs font-semibold text-gray-700 uppercase">{kullaniciAdi}</span>
         </div>
 
-        <nav className="flex-1 py-3 px-2">
-          {navItems.map((item) => (
+        <nav className="flex-1 py-2">
+          {navItems.map((item) =>
+            item.id === "filo-yonetim" ? (
+              // Tüm roller için (Acente, Bölge, GM): Sözleşme Yönetimi grubu
+              <div key={item.id}>
+                <div className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold border-l-[3px] border-transparent ${
+                  (activeNav === "filo-yonetim" || activeNav === "sozlesmelerim") && view === "list" ? "text-gray-900" : "text-gray-700"
+                }`}>
+                  {item.icon}
+                  Sözleşme Yönetimi
+                  <svg className="ml-auto" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </div>
+                {([
+                  { id: "filo-yonetim", label: "Sözleşme Teklif" },
+                  { id: "sozlesmelerim", label: "Sözleşmelerim" },
+                ] as { id: NavItem; label: string }[]).map((alt) => (
+                  <button
+                    key={alt.id}
+                    onClick={() => { setActiveNav(alt.id); setView("list") }}
+                    className={`w-full flex items-center gap-2 pl-11 pr-4 py-2 text-xs border-l-[3px] transition-colors ${
+                      activeNav === alt.id && view === "list" ? "bg-[#e6e8ec] border-brand-red text-gray-900 font-semibold" : "border-transparent text-gray-600 hover:bg-[#eceef1]"
+                    }`}
+                  >
+                    <span className="w-1 h-1 rounded-full bg-current opacity-60" />
+                    {alt.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
             <button
               key={item.id}
               onClick={() => { setActiveNav(item.id); setView("list") }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 text-sm font-medium transition-colors ${
-                activeNav === item.id && view === "list" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium border-l-[3px] transition-colors ${
+                activeNav === item.id && view === "list" ? "bg-[#e6e8ec] border-brand-red text-gray-900 font-semibold" : "border-transparent text-gray-700 hover:bg-[#eceef1]"
               }`}
             >
               {item.icon}
@@ -4614,39 +6242,41 @@ export default function App() {
                 </span>
               )}
             </button>
-          ))}
+            )
+          )}
         </nav>
       </aside>
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0">
-          <h1 className="text-xl font-bold text-gray-900">
-            {view === "create"
-              ? "Yeni Filo Talebi"
-              : activeNav === "kontrol-paneli"
-                ? "Kontrol Paneli"
-                : activeNav === "filo-yonetim"
-                  ? "Filo Üretim Süreci"
-                  : "Filo Yönetim Süreci"}
-          </h1>
-          <div className="flex items-center gap-3">
-            <button className="text-xs font-semibold text-gray-600 border border-gray-200 rounded px-2.5 py-1 hover:bg-gray-50">TR</button>
-            <button className="text-gray-500 hover:text-gray-700">
+        <header className="h-[60px] bg-gradient-to-r from-[#1a2c5e] to-[#22397a] px-5 flex items-center justify-between shrink-0 text-white">
+          <button className="text-white/90 hover:text-white" aria-label="Menü">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" /></svg>
+          </button>
+          <div className="flex items-center gap-5">
+            <button className="text-[11px] font-semibold text-white/90 border border-white/30 rounded px-2 py-0.5 hover:bg-white/10">TR</button>
+            <button className="relative text-white/90 hover:text-white">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <span className="absolute -top-1.5 -right-2 min-w-[15px] h-[15px] px-1 rounded-full bg-green-500 text-[9px] font-bold flex items-center justify-center">2</span>
+            </button>
+            <button className="relative text-white/90 hover:text-white">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
+              {onayBekleyenSayi > 0 && (
+                <span className="absolute -top-1.5 -right-2 min-w-[15px] h-[15px] px-1 rounded-full bg-brand-red text-[9px] font-bold flex items-center justify-center">{onayBekleyenSayi}</span>
+              )}
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-sm font-bold">
                 {kullaniciAdi[0]?.toUpperCase()}
               </div>
-              <span className="text-sm font-medium text-gray-700">{kullaniciAdi}</span>
+              <span className="text-xs font-semibold uppercase text-white">{kullaniciAdi}</span>
               <button
                 onClick={handleCikis}
                 title="Çıkış Yap"
-                className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
+                className="ml-1 text-white/70 hover:text-white transition-colors"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" strokeLinecap="round" strokeLinejoin="round" />
@@ -4656,13 +6286,34 @@ export default function App() {
           </div>
         </header>
 
+        {/* Sayfa başlığı */}
+        <div className="px-6 pt-5 pb-2 bg-white shrink-0">
+          <h1 className="text-xl font-extrabold text-brand-red uppercase tracking-tight">
+            {view === "create"
+              ? "Yeni Filo Talebi"
+              : activeNav === "kontrol-paneli"
+                ? "Kontrol Paneli"
+                : activeNav === "filo-yonetim"
+                  ? (kullaniciTuru === "acente" || kullaniciTuru === "bolge") ? "Sözleşme Teklif" : "Filo Üretim Süreci"
+                  : activeNav === "sozlesmelerim"
+                    ? "Sözleşmelerim"
+                    : "Filo Yönetim Süreci"}
+          </h1>
+        </div>
+
         {/* Content */}
         {view === "create" ? (
           <TalepOlusturPage onBack={() => setView("list")} onSubmit={handleOnayGonder} />
         ) : activeNav === "kontrol-paneli" ? (
           <KontrolPaneli onayHavuzu={onayHavuzu} onDurumGuncelle={handleDurumGuncelle} />
         ) : activeNav === "filo-yonetim" ? (
-          <FiloUretimPage />
+          <FiloUretimPage key={kullaniciTuru} acenteMi={kullaniciTuru === "acente"} bolgeMi={kullaniciTuru === "bolge"} gmMi={kullaniciTuru === "gm"} kayitlar={filoKayitlari} setKayitlar={setFiloKayitlari} />
+        ) : activeNav === "sozlesmelerim" ? (
+          <SozlesmelerimPage
+            kullaniciTuru={kullaniciTuru}
+            sozlesmeler={sozlesmeler}
+            setSozlesmeler={setSozlesmeler}
+          />
         ) : (
           <main className="flex-1 overflow-y-auto px-6 py-4">
             <div className="flex justify-end gap-2 mb-4">
@@ -4693,18 +6344,18 @@ export default function App() {
                 İPTAL
               </button>
             </div>
-            <div className="flex gap-0 border-b border-gray-200 mb-4">
+            <div className="flex flex-wrap gap-1.5 border-b border-gray-200 pb-2 mb-4">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab.id ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                  className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-sm shadow-sm transition-colors ${
+                    activeTab === tab.id ? "bg-brand-red text-white" : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
                   {tab.label}
                   {tab.badge !== undefined && (
-                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-xs font-bold">
+                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-white/25 text-white text-[10px] font-bold">
                       {tab.badge}
                     </span>
                   )}
