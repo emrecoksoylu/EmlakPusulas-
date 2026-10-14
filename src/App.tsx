@@ -4764,12 +4764,582 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
   )
 }
 
-function FiloUretimPage({ acenteMi = false, bolgeMi = false, gmMi = false, kayitlar, setKayitlar }: {
+interface SozlesmeKaydi {
+  id: number
+  sozlesmeNo: string
+  musteriUnvani: string
+  vknTckn: string
+  talepTipi: string
+  brans: string
+  aracAdedi: string | number
+  olusturulmaTarihi: string
+  durum: "Yürürlükte" | "Aktif" | "Yenileme Bekliyor"
+  eposta?: string
+  telefon?: string
+  yetkiliKisi?: string
+  ozelFiyat?: string
+  ozelIndirim?: string
+  gmNotu?: string
+  odemePlani?: string
+  kaynakTeklifNo?: string
+  filoVerisi?: FiloUretimKaydi
+}
+
+function sozlesmeyiFiloKaydinaDonustur(s: SozlesmeKaydi): FiloUretimKaydi {
+  if (s.filoVerisi) return s.filoVerisi
+  return {
+    id: s.id,
+    sozlesmeAdi: s.musteriUnvani ? `${s.musteriUnvani} Sözleşmesi` : "Kurumsal Filo Çerçeve Sözleşmesi",
+    sozlesmeNo: s.sozlesmeNo,
+    policeNo: `${s.sozlesmeNo}/00`,
+    versiyon: 1,
+    yenileme: 0,
+    urunAdi: s.brans || "Kasko",
+    policeTipi: "Filo Sözleşmesi",
+    baslangic: s.olusturulmaTarihi,
+    bitis: "31.12.2026",
+    kullanici: "GM_UZMAN",
+    durum: "Sözleşme Poliçe",
+    onayStatusu: "Onaylandı",
+    onaylayan: "Genel Müdürlük",
+    onayTarihi: s.olusturulmaTarihi,
+    yaratan: "Genel Müdürlük",
+    atanan: "GM_UZMAN",
+    acenteAdi: "Emre Acentelik",
+    kontakNo: s.vknTckn || "3920194821",
+    kontakAdi: s.musteriUnvani,
+    kontaklar: [{ id: 1, no: s.vknTckn || "3920194821", ad: s.musteriUnvani }],
+    acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+    araclar: [{
+      ...bosFiloAraci,
+      id: 1,
+      kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+      primTipi: "Özel İndirim",
+      indirimYuzdesi: s.ozelIndirim || "15",
+    }],
+    odemeTipi: s.odemePlani || "Kredi Kartı",
+    odemeKosullari: ["Tek Çekim", "4 Taksit"],
+    tarihce: [
+      {
+        id: 1,
+        tarih: s.olusturulmaTarihi,
+        islem: "Sözleşme Oluşturuldu",
+        numara: s.sozlesmeNo,
+        aciklama: `${s.sozlesmeNo} numaralı kurumsal filo çerçeve sözleşmesi oluşturuldu.`,
+        kullanici: "GM_UZMAN",
+        tur: "police",
+      },
+    ],
+  }
+}
+
+function GmSozlesmeOlusturModal({
+  kayit,
+  onClose,
+  onSuccess,
+}: {
+  kayit: FiloUretimKaydi
+  onClose: () => void
+  onSuccess: (yeniSozlesme: SozlesmeKaydi, guncelTeklif: FiloUretimKaydi) => void
+}) {
+  const varsayilanNo = `SZL-2026-${kayit.sozlesmeNo ? kayit.sozlesmeNo.replace(/\D/g, "").slice(-5) : Math.floor(10000 + Math.random() * 90000)}`
+  const [ozelIndirim, setOzelIndirim] = useState("15")
+  const [ozelFiyat, setOzelFiyat] = useState("₺425.000")
+  const [sozlesmeNo, setSozlesmeNo] = useState(varsayilanNo)
+  const [musteriUnvani, setMusteriUnvani] = useState(kayit.kontakAdi || kayit.sozlesmeAdi || "Kurumsal Filo Müşterisi")
+  const [vknTckn, setVknTckn] = useState(kayit.kontakNo || "3920194821")
+  const [eposta, setEposta] = useState("operasyon@anadolusigorta.com.tr")
+  const [telefon, setTelefon] = useState("0850 724 0850")
+  const [yetkiliKisi, setYetkiliKisi] = useState(kayit.kontakAdi || "Filo Operasyon Direktörü")
+  const [odemePlani, setOdemePlani] = useState("4 Taksit (Peşinat + 3 Taksit)")
+  const [sozlesmeDurumu, setSozlesmeDurumu] = useState<"Yürürlükte" | "Aktif">("Yürürlükte")
+  const [ozelSartlar, setOzelSartlar] = useState(
+    `Genel Müdürlük Filo Özel Protokolü onaylanmıştır. %${ozelIndirim} filo indirimi tanımlanmış olup muafiyet klozları GM yetkisinde revize edilmiştir.`
+  )
+  const [gmOnayNotu, setGmOnayNotu] = useState(
+    "Teklif risk parametreleri ve tramer hasar geçmişi incelendi. Özel fiyatlandırma ile onaylanarak sözleşmeye aktarılmıştır."
+  )
+
+  const aracSayisi = kayit.araclar?.length || 1
+  const bazTarife = 500000
+  const yuzdeSayi = parseFloat(ozelIndirim) || 0
+  const indirimTutari = Math.round(bazTarife * (yuzdeSayi / 100))
+  const netHesaplanan = Math.max(0, bazTarife - indirimTutari)
+  const aracBasiNet = Math.round(netHesaplanan / aracSayisi)
+
+  const indirimSec = (oran: string) => {
+    setOzelIndirim(oran)
+    const o = parseFloat(oran) || 0
+    const net = Math.round(bazTarife * (1 - o / 100))
+    setOzelFiyat(`₺${net.toLocaleString("tr-TR")}`)
+    setOzelSartlar(
+      `Genel Müdürlük Filo Özel Protokolü onaylanmıştır. %${oran} filo indirimi tanımlanmış olup muafiyet klozları GM yetkisinde revize edilmiştir.`
+    )
+  }
+
+  const tramerVarMi = kayit.durum === "Tramer Verisi Geldi" || (kayit.tarihce && kayit.tarihce.some((t) => t.tur === "tramer"))
+
+  const handleOlustur = () => {
+    const simdi = new Date().toLocaleDateString("tr-TR")
+    const simdiSaat = new Date().toLocaleString("tr-TR")
+    const nihaiSozlesmeNo = sozlesmeNo.trim() || varsayilanNo
+
+    const yeniSozlesme: SozlesmeKaydi = {
+      id: Date.now(),
+      sozlesmeNo: nihaiSozlesmeNo,
+      musteriUnvani: musteriUnvani.trim(),
+      vknTckn: vknTckn.trim(),
+      talepTipi: "Sözleşme Teklifinden Üretildi",
+      brans: kayit.urunAdi || "Kasko",
+      aracAdedi: String(aracSayisi),
+      olusturulmaTarihi: simdi,
+      durum: sozlesmeDurumu,
+      eposta: eposta.trim(),
+      telefon: telefon.trim(),
+      yetkiliKisi: yetkiliKisi.trim(),
+      ozelFiyat: ozelFiyat.trim(),
+      ozelIndirim: ozelIndirim.trim(),
+      odemePlani,
+      gmNotu: gmOnayNotu.trim(),
+      kaynakTeklifNo: kayit.sozlesmeNo,
+      filoVerisi: {
+        ...kayit,
+        sozlesmeNo: nihaiSozlesmeNo,
+        policeNo: `${nihaiSozlesmeNo}/00`,
+        durum: "Sözleşme Poliçe",
+        onayStatusu: "Onaylandı",
+        onaylayan: "Genel Müdürlük",
+        onayTarihi: simdi,
+        kontakAdi: musteriUnvani.trim(),
+        kontakNo: vknTckn.trim(),
+        odemeTipi: odemePlani,
+        odemeNotu: gmOnayNotu.trim(),
+        araclar: (kayit.araclar || []).map((a) => ({
+          ...a,
+          primTipi: "Özel İndirim",
+          indirimYuzdesi: ozelIndirim,
+        })),
+        tarihce: [
+          ...(kayit.tarihce || []),
+          {
+            id: Date.now(),
+            tarih: simdiSaat,
+            islem: "Genel Müdürlük Sözleşme Oluşturdu",
+            aciklama: `${nihaiSozlesmeNo} nolu sözleşme %${ozelIndirim} GM özel indirimi ve ${ozelFiyat} özel fiyat ile onaylanıp Sözleşmelerim listesine aktarıldı. GM Notu: ${gmOnayNotu}`,
+            kullanici: "GM_UZMAN",
+            tur: "police",
+            numara: nihaiSozlesmeNo,
+          },
+        ],
+      },
+    }
+
+    const guncelTeklif: FiloUretimKaydi = {
+      ...kayit,
+      durum: "Sözleşme Oluşturuldu",
+      policeNo: nihaiSozlesmeNo,
+      onayStatusu: "Onaylandı",
+      tarihce: [
+        ...(kayit.tarihce || []),
+        {
+          id: Date.now() + 1,
+          tarih: simdiSaat,
+          islem: "Sözleşmeye Dönüştürüldü",
+          aciklama: `Teklif Genel Müdürlük yetkisiyle onaylandı ve ${nihaiSozlesmeNo} numaralı sözleşmeye dönüştürüldü (%${ozelIndirim} Özel İndirim, ${ozelFiyat}).`,
+          kullanici: "GM_UZMAN",
+          tur: "police",
+          numara: nihaiSozlesmeNo,
+        },
+      ],
+    }
+
+    onSuccess(yeniSozlesme, guncelTeklif)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 py-4 text-white flex items-center justify-between border-b border-indigo-800/40">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white font-bold text-base shadow-inner border border-emerald-400/40">
+              GM
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-white tracking-wide">Genel Müdürlük — Sözleşme Oluşturma & Fiyatlandırma Onayı</h3>
+                <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                  Özel Yetki
+                </span>
+              </div>
+              <p className="text-xs text-indigo-200/80 mt-0.5">
+                Teklif bilgileri aktarılır; GM özel fiyat, indirim ve eksik sözleşme parametrelerini tamamlar.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors text-sm font-bold"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="overflow-y-auto p-6 space-y-5 bg-slate-50/50">
+          {/* Card 1: Tekliften Aktarılan Bilgiler (Özet) */}
+          <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 shadow-2xs">
+            <div className="flex items-center justify-between mb-3 border-b border-blue-100 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">📋</span>
+                <h4 className="text-xs font-bold text-blue-950 uppercase tracking-wide">Tekliften Aktarılan Bilgiler (Otomatik)</h4>
+              </div>
+              <span className="text-[11px] text-blue-700 font-medium bg-blue-100/70 rounded-full px-2 py-0.5">
+                Kaynak Teklif: <strong className="font-mono">{kayit.sozlesmeNo}</strong>
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="bg-white rounded-lg p-2.5 border border-blue-100 shadow-2xs">
+                <div className="text-[10px] text-gray-400 font-semibold uppercase">Sözleşme / Teklif Adı</div>
+                <div className="font-bold text-gray-800 truncate mt-0.5" title={kayit.sozlesmeAdi}>{kayit.sozlesmeAdi}</div>
+              </div>
+              <div className="bg-white rounded-lg p-2.5 border border-blue-100 shadow-2xs">
+                <div className="text-[10px] text-gray-400 font-semibold uppercase">Müşteri & VKN</div>
+                <div className="font-bold text-gray-800 truncate mt-0.5">{kayit.kontakAdi || "Kurumsal Müşteri"}</div>
+                <div className="text-[10px] font-mono text-gray-500">VKN: {kayit.kontakNo || "—"}</div>
+              </div>
+              <div className="bg-white rounded-lg p-2.5 border border-blue-100 shadow-2xs">
+                <div className="text-[10px] text-gray-400 font-semibold uppercase">Branş & Poliçe Türü</div>
+                <div className="font-bold text-gray-800 mt-0.5">{kayit.urunAdi} - {kayit.policeTipi}</div>
+                <div className="text-[10px] text-blue-600 font-medium mt-0.5">{aracSayisi} Adet Araç</div>
+              </div>
+              <div className="bg-white rounded-lg p-2.5 border border-blue-100 shadow-2xs">
+                <div className="text-[10px] text-gray-400 font-semibold uppercase">Dönem & Acente</div>
+                <div className="font-medium text-gray-800 mt-0.5">{kayit.baslangic} — {kayit.bitis}</div>
+                <div className="text-[10px] text-gray-500 truncate">{kayit.acenteAdi || "Emre Acentelik"}</div>
+              </div>
+            </div>
+            {tramerVarMi && (
+              <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-800 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span><strong>Tramer Verileri Bağlandı:</strong> Sistem taramasıyla 13 aracın tramer hasar ve poliçe dökümü sözleşme ek tarihçesine aktarıldı.</span>
+              </div>
+            )}
+          </div>
+
+          {/* Card 2: GM Özel Fiyat ve Özel İndirim Alanları */}
+          <div className="rounded-xl border-2 border-amber-400/80 bg-amber-50/30 p-5 shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 border-b border-amber-200/80 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xs shadow-xs">
+                  ⚡
+                </span>
+                <div>
+                  <h4 className="text-sm font-bold text-amber-950">Genel Müdürlük Özel Fiyat ve İndirim Yetkisi</h4>
+                  <p className="text-[11px] text-amber-900/80">Sözleşmeye uygulanacak GM özel indirim oranını ve onaylanan nihai fiyatı belirleyiniz.</p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-3 py-0.5 text-xs font-bold text-amber-900">
+                ⭐ GM İndirim Onayı
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Sol: İndirim Oranı ve Fiyat Girişi */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                    Özel İndirim Oranı (%) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={ozelIndirim}
+                      onChange={(e) => indirimSec(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-bold text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none pr-8"
+                      placeholder="15"
+                    />
+                    <span className="absolute right-3 top-2.5 font-bold text-gray-400 text-sm">%</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span className="text-[10px] text-gray-500 font-semibold">Hızlı Seçim:</span>
+                    {["5", "10", "15", "18", "20", "25", "30"].map((oran) => (
+                      <button
+                        key={oran}
+                        type="button"
+                        onClick={() => indirimSec(oran)}
+                        className={`rounded px-2 py-0.5 text-[11px] font-bold transition-colors ${
+                          ozelIndirim === oran
+                            ? "bg-amber-500 text-white shadow-2xs"
+                            : "bg-white border border-gray-200 text-gray-700 hover:bg-amber-100"
+                        }`}
+                      >
+                        %{oran}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                    Özel Sözleşme Fiyatı / Toplam Prim (₺) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={ozelFiyat}
+                    onChange={(e) => setOzelFiyat(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-bold font-mono text-emerald-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none"
+                    placeholder="₺425.000"
+                  />
+                  <p className="text-[10px] text-gray-500 mt-1">İndirim oranına göre otomatik hesaplanır veya serbest tutar girilebilir.</p>
+                </div>
+              </div>
+
+              {/* Sağ: Prim Hesaplama & Canlı Dağılım Kartı */}
+              <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/60 p-4 shadow-2xs flex flex-col justify-between">
+                <div className="text-xs font-bold text-gray-700 border-b border-amber-100 pb-2 mb-3 flex items-center justify-between">
+                  <span>📊 Fiyatlandırma Hesap Özeti</span>
+                  <span className="text-[11px] text-amber-800 font-medium">{aracSayisi} Araçlık Filo</span>
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-gray-600">
+                    <span>Tarife / Liste Brüt Primi:</span>
+                    <span className="font-mono font-medium">₺{bazTarife.toLocaleString("tr-TR")}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-amber-800 font-medium">
+                    <span>GM Özel İndirimi (%{ozelIndirim}):</span>
+                    <span className="font-mono font-bold">-₺{indirimTutari.toLocaleString("tr-TR")}</span>
+                  </div>
+                  <div className="pt-2 border-t border-amber-200 flex items-center justify-between text-emerald-800">
+                    <span className="font-bold text-sm">Onaylanan Net Sözleşme Primi:</span>
+                    <span className="font-mono font-extrabold text-base">{ozelFiyat}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-gray-500 pt-1">
+                    <span>Araç Başı Ortalama Net:</span>
+                    <span className="font-mono font-semibold text-gray-700">~₺{aracBasiNet.toLocaleString("tr-TR")} / araç</span>
+                  </div>
+                </div>
+                <div className="mt-3 text-[10px] text-amber-900/80 bg-amber-100/70 rounded-md p-1.5 text-center font-medium">
+                  ✓ Belirlenen GM indirim oranı ve net prim, sözleşmedeki tüm araçların teminat detaylarına otomatik yansıtılır.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Eksik Bilgileri Tamamlama Alanları (Sadece GM) */}
+          <div className="rounded-xl border border-indigo-200 bg-white p-5 shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white text-xs font-bold shadow-xs">
+                  🔒
+                </span>
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900">Sözleşme Parametreleri & Eksik Bilgiler</h4>
+                  <p className="text-[11px] text-indigo-700 font-semibold">Bu alanlar yalnızca Genel Müdürlük kullanıcısı tarafından doldurulabilir ve sözleşmeye işlenir.</p>
+                </div>
+              </div>
+              <span className="rounded-md bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1">
+                Yalnızca GM Yetkisinde
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Sözleşme No <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={sozlesmeNo}
+                  onChange={(e) => setSozlesmeNo(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono font-bold text-blue-700 focus:border-indigo-500 outline-none bg-blue-50/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Müşteri Resmi Ünvanı <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={musteriUnvani}
+                  onChange={(e) => setMusteriUnvani(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  VKN / TCKN <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={vknTckn}
+                  onChange={(e) => setVknTckn(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-gray-800 focus:border-indigo-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Müşteri E-Posta (Eksikse Tamamla)
+                </label>
+                <input
+                  type="email"
+                  value={eposta}
+                  onChange={(e) => setEposta(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none"
+                  placeholder="operasyon@musteri.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  İletişim Telefonu
+                </label>
+                <input
+                  type="text"
+                  value={telefon}
+                  onChange={(e) => setTelefon(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none"
+                  placeholder="0212 555 0123"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Yetkili Kontak Kişi
+                </label>
+                <input
+                  type="text"
+                  value={yetkiliKisi}
+                  onChange={(e) => setYetkiliKisi(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none"
+                  placeholder="Ad Soyad"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Ödeme Planı & Vade <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={odemePlani}
+                  onChange={(e) => setOdemePlani(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none bg-white"
+                >
+                  <option value="Tek Çekim Peşin">Tek Çekim Peşin</option>
+                  <option value="3 Eşit Taksit (Peşinatsız)">3 Eşit Taksit (Peşinatsız)</option>
+                  <option value="4 Taksit (Peşinat + 3 Taksit)">4 Taksit (Peşinat + 3 Taksit)</option>
+                  <option value="6 Eşit Taksit">6 Eşit Taksit</option>
+                  <option value="9 Taksit (Kredi Kartı / DBS)">9 Taksit (Kredi Kartı / DBS)</option>
+                  <option value="12 Taksit (Teminat Mektuplu)">12 Taksit (Teminat Mektuplu)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Sözleşme Durumu <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={sozlesmeDurumu}
+                  onChange={(e) => setSozlesmeDurumu(e.target.value as "Yürürlükte" | "Aktif")}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none bg-white font-semibold text-green-700"
+                >
+                  <option value="Yürürlükte">Yürürlükte (Aktif Poliçe Üretilebilir)</option>
+                  <option value="Aktif">Aktif</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Onaylayan Yetkili
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value="Genel Müdürlük / GM_UZMAN"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-gray-500 font-medium cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Özel Sözleşme Klozları & Muafiyet Şartları (GM Yetkisinde)
+                </label>
+                <textarea
+                  rows={2}
+                  value={ozelSartlar}
+                  onChange={(e) => setOzelSartlar(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 p-2.5 text-xs text-gray-800 focus:border-indigo-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Genel Müdürlük Karar & Onay Notu (Tarihçeye Eklenecektir)
+                </label>
+                <textarea
+                  rows={2}
+                  value={gmOnayNotu}
+                  onChange={(e) => setGmOnayNotu(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 p-2.5 text-xs text-gray-800 focus:border-indigo-500 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Footer */}
+        <div className="bg-white px-6 py-4 border-t border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="text-xs text-gray-500 flex items-center gap-1.5">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <span>Onaylandığında teklif bilgileri aktarılır ve kayıt anında <strong>Sözleşmelerim</strong> alanına eklenir.</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-lg border border-gray-300 hover:bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 transition-colors"
+            >
+              Vazgeç
+            </button>
+            <button
+              onClick={handleOlustur}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 px-5 py-2 text-xs font-bold text-white shadow-md hover:shadow-lg transition-all"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Sözleşmeyi Oluştur ve Sözleşmelerim&apos;e Aktar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FiloUretimPage({
+  acenteMi = false,
+  bolgeMi = false,
+  gmMi = false,
+  kayitlar,
+  setKayitlar,
+  sozlesmeler,
+  setSozlesmeler,
+  onSozlesmelereGit,
+}: {
   acenteMi?: boolean
   bolgeMi?: boolean
   gmMi?: boolean
   kayitlar: FiloUretimKaydi[]
   setKayitlar: React.Dispatch<React.SetStateAction<FiloUretimKaydi[]>>
+  sozlesmeler?: SozlesmeKaydi[]
+  setSozlesmeler?: React.Dispatch<React.SetStateAction<SozlesmeKaydi[]>>
+  onSozlesmelereGit?: () => void
 }) {
   const [filtreAcik, setFiltreAcik] = useState(false)
   const BOLGE = "Bölge Değerlendirmesinde"
@@ -4779,6 +5349,8 @@ function FiloUretimPage({ acenteMi = false, bolgeMi = false, gmMi = false, kayit
   const [duzenlenenKayit, setDuzenlenenKayit] = useState<FiloUretimKaydi | null>(null)
   const [goruntulenenKayit, setGoruntulenenKayit] = useState<FiloUretimKaydi | null>(null)
   const [excelViewerKayit, setExcelViewerKayit] = useState<FiloUretimKaydi | null>(null)
+  const [sozlesmeModalKayit, setSozlesmeModalKayit] = useState<FiloUretimKaydi | null>(null)
+  const [basariBildirimi, setBasariBildirimi] = useState<{ sozlesmeNo: string; musteriUnvani: string } | null>(null)
   const [kayitModu, setKayitModu] = useState<"normal" | "ek">("normal")
   const [filtreler, setFiltreler] = useState(bosFiloFiltreleri)
   const [uygulananFiltreler, setUygulananFiltreler] = useState(bosFiloFiltreleri)
@@ -5068,6 +5640,19 @@ function FiloUretimPage({ acenteMi = false, bolgeMi = false, gmMi = false, kayit
                   )}
                 </>
               )}
+              {gmMi && (
+                <button
+                  onClick={() => secili && setSozlesmeModalKayit(secili)}
+                  disabled={!secili}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 px-3 py-2 text-xs font-semibold text-white shadow-xs disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Seçili tekliften sözleşme oluştur"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Sözleşme Oluştur
+                </button>
+              )}
             </div>
             <button onClick={exceleAktar} className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-100">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" strokeLinecap="round" /></svg>
@@ -5082,11 +5667,26 @@ function FiloUretimPage({ acenteMi = false, bolgeMi = false, gmMi = false, kayit
                   {["Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "Başlangıç", "Bitiş", "Teklif Geçerlilik", "Kullanıcı", "Durum", "Yaratan"].map((baslik) => (
                     <th key={baslik} className="px-3 py-3 text-left font-semibold whitespace-nowrap">{baslik}</th>
                   ))}
+                  {gmMi && <th className="px-3 py-3 text-right font-semibold whitespace-nowrap text-emerald-800">İşlem</th>}
                 </tr>
               </thead>
               <tbody>
                 {filtreliKayitlar.length === 0 ? (
-                  <tr><td colSpan={13} className="py-14 text-center text-sm text-gray-400">Filtrelere uygun kayıt bulunamadı.</td></tr>
+                  <tr>
+                    <td colSpan={gmMi ? 14 : 13} className="py-14 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-base font-bold">📄</div>
+                        <p className="text-sm font-medium text-gray-500">Listelenecek teklif kaydı bulunamadı.</p>
+                        <button
+                          onClick={() => { setDuzenlenenKayit(null); setKayitModu("normal"); setYeniKayitAcik(true) }}
+                          className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-brand-red hover:bg-brand-red-dark text-white px-3.5 py-1.5 text-xs font-semibold shadow-xs transition-colors"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" strokeLinecap="round" /></svg>
+                          Yeni Teklif Kaydı Oluştur
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ) : filtreliKayitlar.map((kayit) => (
                   <tr
                     key={kayit.id}
@@ -5123,19 +5723,35 @@ function FiloUretimPage({ acenteMi = false, bolgeMi = false, gmMi = false, kayit
                         </button>
                       ) : (
                         <span className={`inline-flex rounded-full border px-2 py-0.5 font-medium whitespace-nowrap ${
-                          kayit.durum === "Sözleşme Poliçe" || kayit.durum === "Onaylandı"
-                            ? "border-green-200 bg-green-50 text-green-700"
-                            : kayit.durum === BOLGE
-                              ? "border-amber-200 bg-amber-50 text-amber-700"
-                              : kayit.durum === GM
-                                ? "border-purple-200 bg-purple-50 text-purple-700"
-                                : kayit.durum === "Reddedildi"
-                                ? "border-red-200 bg-red-50 text-red-700"
-                                : "border-blue-200 bg-blue-50 text-blue-700"
+                          kayit.durum === "Sözleşme Oluşturuldu"
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-800 font-bold"
+                            : kayit.durum === "Sözleşme Poliçe" || kayit.durum === "Onaylandı"
+                              ? "border-green-200 bg-green-50 text-green-700"
+                              : kayit.durum === BOLGE
+                                ? "border-amber-200 bg-amber-50 text-amber-700"
+                                : kayit.durum === GM
+                                  ? "border-purple-200 bg-purple-50 text-purple-700"
+                                  : kayit.durum === "Reddedildi"
+                                  ? "border-red-200 bg-red-50 text-red-700"
+                                  : "border-blue-200 bg-blue-50 text-blue-700"
                         }`}>{kayit.durum}</span>
                       )}
                     </td>
                     <td className="px-3 py-3 font-mono text-gray-600">{kayit.yaratan}</td>
+                    {gmMi && (
+                      <td className="px-3 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => setSozlesmeModalKayit(kayit)}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3 py-1.5 text-xs font-semibold shadow-xs transition-all hover:shadow-sm"
+                          title="Genel Müdürlük: Teklif bilgilerini aktararak sözleşme oluştur"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                          </svg>
+                          Sözleşme Oluştur
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -5148,6 +5764,56 @@ function FiloUretimPage({ acenteMi = false, bolgeMi = false, gmMi = false, kayit
         </section>
       </div>
 
+      {sozlesmeModalKayit && (
+        <GmSozlesmeOlusturModal
+          kayit={sozlesmeModalKayit}
+          onClose={() => setSozlesmeModalKayit(null)}
+          onSuccess={(yeniSozlesme, guncelTeklif) => {
+            setSozlesmeler?.((prev) => [yeniSozlesme, ...prev])
+            setKayitlar((prev) => prev.map((k) => k.id === guncelTeklif.id ? guncelTeklif : k))
+            setSozlesmeModalKayit(null)
+            setSecilenler(new Set())
+            setBasariBildirimi({
+              sozlesmeNo: yeniSozlesme.sozlesmeNo,
+              musteriUnvani: yeniSozlesme.musteriUnvani,
+            })
+          }}
+        />
+      )}
+
+      {basariBildirimi && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl border border-emerald-300 bg-white p-4 shadow-xl ring-1 ring-emerald-500/20 animate-in slide-in-from-bottom-5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 font-bold text-lg">
+            ✓
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-gray-900">Sözleşme Başarıyla Oluşturuldu!</h4>
+            <p className="text-[11px] text-gray-600">
+              <span className="font-mono font-semibold text-emerald-700">{basariBildirimi.sozlesmeNo}</span> nolu sözleşme oluşturuldu ve <strong>Sözleşmelerim</strong> listesine aktarıldı.
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 ml-2">
+            {onSozlesmelereGit && (
+              <button
+                onClick={() => {
+                  setBasariBildirimi(null)
+                  onSozlesmelereGit()
+                }}
+                className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-semibold shadow-xs transition-colors whitespace-nowrap"
+              >
+                Sözleşmelerim&apos;e Git →
+              </button>
+            )}
+            <button
+              onClick={() => setBasariBildirimi(null)}
+              className="text-gray-400 hover:text-gray-600 p-1 text-sm font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {excelViewerKayit && (
         <TramerExcelViewerModal
           onClose={() => setExcelViewerKayit(null)}
@@ -5157,68 +5823,6 @@ function FiloUretimPage({ acenteMi = false, bolgeMi = false, gmMi = false, kayit
       )}
     </main>
   )
-}
-
-interface SozlesmeKaydi {
-  id: number
-  sozlesmeNo: string
-  musteriUnvani: string
-  vknTckn: string
-  talepTipi: string
-  brans: string
-  aracAdedi: string | number
-  olusturulmaTarihi: string
-  durum: "Yürürlükte" | "Aktif" | "Yenileme Bekliyor"
-  eposta?: string
-  filoVerisi?: FiloUretimKaydi
-}
-
-function sozlesmeyiFiloKaydinaDonustur(s: SozlesmeKaydi): FiloUretimKaydi {
-  if (s.filoVerisi) return s.filoVerisi
-  return {
-    id: s.id,
-    sozlesmeAdi: s.musteriUnvani ? `${s.musteriUnvani} Sözleşmesi` : "Kurumsal Filo Çerçeve Sözleşmesi",
-    sozlesmeNo: s.sozlesmeNo,
-    policeNo: `${s.sozlesmeNo}/00`,
-    versiyon: 1,
-    yenileme: 0,
-    urunAdi: s.brans || "Kasko",
-    policeTipi: "Filo Sözleşmesi",
-    baslangic: s.olusturulmaTarihi,
-    bitis: "31.12.2026",
-    kullanici: "GM_UZMAN",
-    durum: "Sözleşme Poliçe",
-    onayStatusu: "Onaylandı",
-    onaylayan: "Genel Müdürlük",
-    onayTarihi: s.olusturulmaTarihi,
-    yaratan: "Genel Müdürlük",
-    atanan: "GM_UZMAN",
-    acenteAdi: "Emre Acentelik",
-    kontakNo: s.vknTckn || "3920194821",
-    kontakAdi: s.musteriUnvani,
-    kontaklar: [{ id: 1, no: s.vknTckn || "3920194821", ad: s.musteriUnvani }],
-    acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
-    araclar: [{
-      ...bosFiloAraci,
-      id: 1,
-      kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
-      primTipi: "Özel İndirim",
-      indirimYuzdesi: "15",
-    }],
-    odemeTipi: "Kredi Kartı",
-    odemeKosullari: ["Tek Çekim", "4 Taksit"],
-    tarihce: [
-      {
-        id: 1,
-        tarih: s.olusturulmaTarihi,
-        islem: "Sözleşme Oluşturuldu",
-        numara: s.sozlesmeNo,
-        aciklama: `${s.sozlesmeNo} numaralı kurumsal filo çerçeve sözleşmesi oluşturuldu.`,
-        kullanici: "GM_UZMAN",
-        tur: "police",
-      },
-    ],
-  }
 }
 
 const baslangicSozlesmeler: SozlesmeKaydi[] = []
@@ -5566,7 +6170,28 @@ function SozlesmelerimPage({
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                           />
                         </td>
-                        <td className="px-4 py-3 font-mono font-semibold text-blue-700 whitespace-nowrap">{s.sozlesmeNo}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="font-mono font-semibold text-blue-700">{s.sozlesmeNo}</div>
+                          {(s.ozelIndirim || s.ozelFiyat) && (
+                            <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                              {s.ozelIndirim && (
+                                <span className="inline-flex items-center text-[10px] bg-amber-50 text-amber-800 border border-amber-200 rounded px-1.5 py-0.2 font-semibold">
+                                  GM İndirim %{s.ozelIndirim}
+                                </span>
+                              )}
+                              {s.ozelFiyat && (
+                                <span className="inline-flex items-center text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 rounded px-1.5 py-0.2 font-semibold">
+                                  {s.ozelFiyat}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {s.kaynakTeklifNo && (
+                            <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                              Teklif: {s.kaynakTeklifNo}
+                            </div>
+                          )}
+                        </td>
                         <td className="px-4 py-3 font-medium text-gray-800">{s.musteriUnvani}</td>
                         <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.brans}</td>
                         <td className="px-4 py-3 text-center text-gray-600">{s.aracAdedi}</td>
@@ -6104,7 +6729,17 @@ export default function App() {
         ) : activeNav === "kontrol-paneli" ? (
           <KontrolPaneli onayHavuzu={onayHavuzu} onDurumGuncelle={handleDurumGuncelle} />
         ) : activeNav === "filo-yonetim" ? (
-          <FiloUretimPage key={kullaniciTuru} acenteMi={kullaniciTuru === "acente"} bolgeMi={kullaniciTuru === "bolge"} gmMi={kullaniciTuru === "gm"} kayitlar={filoKayitlari} setKayitlar={setFiloKayitlari} />
+          <FiloUretimPage
+            key={kullaniciTuru}
+            acenteMi={kullaniciTuru === "acente"}
+            bolgeMi={kullaniciTuru === "bolge"}
+            gmMi={kullaniciTuru === "gm"}
+            kayitlar={filoKayitlari}
+            setKayitlar={setFiloKayitlari}
+            sozlesmeler={sozlesmeler}
+            setSozlesmeler={setSozlesmeler}
+            onSozlesmelereGit={() => setActiveNav("sozlesmelerim")}
+          />
         ) : activeNav === "sozlesmelerim" ? (
           <SozlesmelerimPage
             kullaniciTuru={kullaniciTuru}
