@@ -6975,121 +6975,96 @@ function FiloUretimPage({
       <div className="space-y-4">
         {/* SADECE GENEL MÜDÜRLÜK KULLANICILARI İÇİN 2 AYRI TEKLİF HAVUZU */}
         {gmMi && (
-          <div className="rounded-2xl border border-indigo-200/80 bg-white shadow-sm overflow-hidden">
-            {/* Üst Bar: Başlık */}
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-5 py-3.5 text-white flex items-center justify-between border-b border-indigo-800/40">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner border border-indigo-400/30">
-                  🏛️
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-bold text-white tracking-wide">
-                      Genel Müdürlük — Sözleşme Teklif Havuzları
-                    </h2>
-                    <span className="rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 text-[10px] font-bold">
-                      2 Ayrı Havuz
-                    </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* 1. Havuz: Yeni Teklifler Havuzu */}
+            <button
+              type="button"
+              onClick={() => setAktifHavuz("yeni")}
+              className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
+                aktifHavuz === "yeni"
+                  ? "border-blue-600 bg-blue-50/70 shadow-sm ring-1 ring-blue-500/20"
+                  : "border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/20"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs shadow-xs">
+                    ✨
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-900">1. Yeni Teklifler Havuzu</h3>
+                    <p className="text-[10px] text-gray-500">İlk kez gelen, henüz işlem görmemiş kayıtlar</p>
                   </div>
-                  <p className="text-[11px] text-indigo-200/80 mt-0.5">
-                    İlk kez gelen yeni teklifler ile daha önce GM revizyonu/mesajı görmüş teklifler otomatik ayrıştırılır.
-                  </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Alt Bar: 2 Havuz Arasında Geçiş Yapan Kart Butonları */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-slate-50 border-b border-gray-100">
-              {/* 1. Havuz: Yeni Teklifler Havuzu */}
-              <button
-                type="button"
-                onClick={() => setAktifHavuz("yeni")}
-                className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                   aktifHavuz === "yeni"
-                    ? "border-blue-600 bg-blue-50/70 shadow-sm ring-1 ring-blue-500/20"
-                    : "border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/20"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs shadow-xs">
-                      ✨
-                    </span>
-                    <div>
-                      <h3 className="text-xs font-bold text-gray-900">1. Yeni Teklifler Havuzu</h3>
-                      <p className="text-[10px] text-gray-500">İlk kez gelen, henüz işlem görmemiş kayıtlar</p>
-                    </div>
-                  </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    aktifHavuz === "yeni"
-                      ? "bg-blue-600 text-white"
-                      : "bg-blue-100 text-blue-800"
-                  }`}>
-                    {yeniTeklifler.length} Teklif
-                  </span>
-                </div>
-              </button>
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-100 text-blue-800"
+                }`}>
+                  {yeniTeklifler.length} Teklif
+                </span>
+              </div>
+            </button>
 
-              {/* 2. Havuz: Teklifler Havuzu (Revizyon Gören & Mesajlaşılan) */}
-              <button
-                type="button"
-                onClick={() => setAktifHavuz("teklifler")}
-                className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
+            {/* 2. Havuz: Teklifler Havuzu (Revizyon Gören & Mesajlaşılan) */}
+            <button
+              type="button"
+              onClick={() => setAktifHavuz("teklifler")}
+              className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
+                aktifHavuz === "teklifler"
+                  ? "border-amber-500 bg-amber-50/70 shadow-sm ring-1 ring-amber-500/20"
+                  : "border-gray-200 bg-white hover:border-amber-300 hover:bg-amber-50/20"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xs shadow-xs">
+                    🔄
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-900">2. Teklifler Havuzu</h3>
+                    <p className="text-[10px] text-gray-500">Revizyon gören &amp; mesajlaşılan kayıtlar</p>
+                  </div>
+                </div>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                   aktifHavuz === "teklifler"
-                    ? "border-amber-500 bg-amber-50/70 shadow-sm ring-1 ring-amber-500/20"
-                    : "border-gray-200 bg-white hover:border-amber-300 hover:bg-amber-50/20"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xs shadow-xs">
-                      🔄
-                    </span>
-                    <div>
-                      <h3 className="text-xs font-bold text-gray-900">2. Teklifler Havuzu</h3>
-                      <p className="text-[10px] text-gray-500">Revizyon gören &amp; mesajlaşılan kayıtlar</p>
-                    </div>
-                  </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    aktifHavuz === "teklifler"
-                      ? "bg-amber-500 text-white"
-                      : "bg-amber-100 text-amber-900"
-                  }`}>
-                    {islemGorenTeklifler.length} Teklif
-                  </span>
-                </div>
-              </button>
+                    ? "bg-amber-500 text-white"
+                    : "bg-amber-100 text-amber-900"
+                }`}>
+                  {islemGorenTeklifler.length} Teklif
+                </span>
+              </div>
+            </button>
 
-              {/* 3. Tümü (Hızlı Filtre) */}
-              <button
-                type="button"
-                onClick={() => setAktifHavuz("hepsi")}
-                className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
-                  aktifHavuz === "hepsi"
-                    ? "border-purple-600 bg-purple-50/70 shadow-sm ring-1 ring-purple-500/20"
-                    : "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/20"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-white font-bold text-xs shadow-xs">
-                      📋
-                    </span>
-                    <div>
-                      <h3 className="text-xs font-bold text-gray-900">Tüm Teklifler</h3>
-                      <p className="text-[10px] text-gray-500">Tüm havuz kayıtlarını bir arada görün</p>
-                    </div>
-                  </div>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    aktifHavuz === "hepsi"
-                      ? "bg-purple-600 text-white"
-                      : "bg-purple-100 text-purple-900"
-                  }`}>
-                    {kayitlar.length} Toplam
+            {/* 3. Tümü (Hızlı Filtre) */}
+            <button
+              type="button"
+              onClick={() => setAktifHavuz("hepsi")}
+              className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
+                aktifHavuz === "hepsi"
+                  ? "border-purple-600 bg-purple-50/70 shadow-sm ring-1 ring-purple-500/20"
+                  : "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/20"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-white font-bold text-xs shadow-xs">
+                    📋
                   </span>
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-900">Tüm Teklifler</h3>
+                    <p className="text-[10px] text-gray-500">Tüm havuz kayıtlarını bir arada görün</p>
+                  </div>
                 </div>
-              </button>
-            </div>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                  aktifHavuz === "hepsi"
+                    ? "bg-purple-600 text-white"
+                    : "bg-purple-100 text-purple-900"
+                }`}>
+                  {kayitlar.length} Toplam
+                </span>
+              </div>
+            </button>
           </div>
         )}
 
