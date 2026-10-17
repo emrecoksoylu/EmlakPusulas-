@@ -4235,9 +4235,6 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
 
         {aktifAdim === 2 && (
           <>
-        {!sozlesmeModu && (
-          <AcenteTeminatServis deger={acenteEk} guncelle={acenteEkGuncelle} inputCls={inputCls} labelCls={labelCls} />
-        )}
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-100 px-5 py-4">
             <h3 className="text-sm font-bold text-gray-800">Araç Bilgileri</h3>
