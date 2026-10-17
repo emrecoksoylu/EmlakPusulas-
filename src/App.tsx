@@ -3250,6 +3250,8 @@ export interface FiloMesajKaydi {
   tarih: string
   mesaj: string
   dosyalar?: string[]
+  atananHedef?: string
+  hedefRol?: "acente" | "bolge" | "gm"
 }
 
 // filoUretimBaslangicVerisi is declared below bosFiloAraci
@@ -3644,7 +3646,221 @@ const bosFiloAraci: Omit<FiloAracDetayi, "id"> = {
   teminatSatirlari: varsayilanTeminatSatirlari(),
 }
 
-const filoUretimBaslangicVerisi: FiloUretimKaydi[] = []
+const filoUretimBaslangicVerisi: FiloUretimKaydi[] = [
+  {
+    id: 1713340001,
+    sozlesmeAdi: "Borusan Otomotiv Filo Kasko Sözleşmesi",
+    sozlesmeNo: "2026040012/00",
+    versiyon: 1,
+    yenileme: 0,
+    urunAdi: "Kasko",
+    policeTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+    baslangic: "01/05/2026",
+    bitis: "01/05/2027",
+    teklifGecerlilikTarihi: "16/05/2026",
+    kullanici: "Bölge Uzmanı",
+    durum: "Bölge Değerlendirmesinde",
+    yaratan: "Emre Acentelik",
+    atanan: "Bölge Uzmanı",
+    acenteAdi: "Emre Acentelik",
+    kontakNo: "1234567890",
+    kontakAdi: "Borusan Otomotiv A.Ş.",
+    onayStatusu: "Onay Bekliyor",
+    onaylayan: "",
+    onayTarihi: "",
+    kontaklar: [{ id: 1, no: "1234567890", ad: "Borusan Otomotiv A.Ş." }],
+    acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+    araclar: [
+      {
+        ...bosFiloAraci,
+        id: 1,
+        kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+        kullanimSekli: "Filo",
+        primTipi: "Özel İndirim",
+        indirimYuzdesi: "15",
+        tumTeminatlarDahil: true,
+        ekDonanimlarDahil: false,
+        tasinanEmtiaDahil: false,
+        aracDetayBilgileri: true,
+        operasyonelKiralik: false,
+        kiralik: false,
+        kuryeKargo: false,
+        anadoluHizmetDahil: true,
+        teminatBilgileri: true,
+      },
+    ],
+    mesajlar: [
+      {
+        id: 1,
+        gonderen: "Emre Acentelik",
+        rol: "acente",
+        tarih: "16.10.2026 10:30",
+        mesaj: "25 araçlık kurumsal filo kasko teklifi bölge değerlendirmesine sunulmuştur.",
+        atananHedef: "Bölge Uzmanı",
+        hedefRol: "bolge",
+      },
+    ],
+    tarihce: [
+      {
+        id: 1,
+        tarih: "16.10.2026 10:30",
+        islem: "Teklif Oluşturuldu",
+        aciklama: "Acente tarafından 25 araçlık filo kasko teklifi oluşturuldu.",
+        kullanici: "Emre Acentelik",
+        tur: "teklif",
+        numara: "2026040012/00",
+      },
+    ],
+  },
+  {
+    id: 1713340002,
+    sozlesmeAdi: "Hedef Filo Yönetimi Çerçeve Sözleşmesi",
+    sozlesmeNo: "2026040015/00",
+    versiyon: 1,
+    yenileme: 0,
+    urunAdi: "Kasko",
+    policeTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+    baslangic: "10/05/2026",
+    bitis: "10/05/2027",
+    teklifGecerlilikTarihi: "25/05/2026",
+    kullanici: "GM_UZMAN",
+    durum: "Genel Müdürlük Değerlendirmesinde",
+    yaratan: "Emre Acentelik",
+    atanan: "Genel Müdürlük / GM_UZMAN",
+    acenteAdi: "Emre Acentelik",
+    kontakNo: "9876543210",
+    kontakAdi: "Hedef Filo Yönetimi",
+    onayStatusu: "Onay Bekliyor",
+    onaylayan: "",
+    onayTarihi: "",
+    kontaklar: [{ id: 1, no: "9876543210", ad: "Hedef Filo Yönetimi" }],
+    acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+    araclar: [
+      {
+        ...bosFiloAraci,
+        id: 1,
+        kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+        kullanimSekli: "Filo",
+        primTipi: "Özel Fiyat",
+        sabitPrim: "18500",
+        tumTeminatlarDahil: true,
+        ekDonanimlarDahil: true,
+        tasinanEmtiaDahil: false,
+        aracDetayBilgileri: true,
+        operasyonelKiralik: true,
+        kiralik: false,
+        kuryeKargo: false,
+        anadoluHizmetDahil: true,
+        teminatBilgileri: true,
+      },
+    ],
+    mesajlar: [
+      {
+        id: 1,
+        gonderen: "Emre Acentelik",
+        rol: "acente",
+        tarih: "15.10.2026 14:15",
+        mesaj: "40 araçlık operasyonel kiralık filo teklifimiz değerlendirmenize sunuldu.",
+        atananHedef: "Bölge Uzmanı",
+        hedefRol: "bolge",
+      },
+      {
+        id: 2,
+        gonderen: "Bölge Uzmanı",
+        rol: "bolge",
+        tarih: "16.10.2026 09:20",
+        mesaj: "Bölge değerlendirmesi tamamlandı, %20 özel indirim onayı için Genel Müdürlüğe yönlendirildi.",
+        atananHedef: "Genel Müdürlük / GM_UZMAN",
+        hedefRol: "gm",
+      },
+    ],
+    tarihce: [
+      {
+        id: 1,
+        tarih: "15.10.2026 14:15",
+        islem: "Teklif Oluşturuldu",
+        aciklama: "Acente tarafından oluşturuldu.",
+        kullanici: "Emre Acentelik",
+        tur: "teklif",
+        numara: "2026040015/00",
+      },
+      {
+        id: 2,
+        tarih: "16.10.2026 09:20",
+        islem: "Bölge GM Değerlendirmesine Gönderdi",
+        aciklama: "Genel Müdürlük değerlendirmesine iletildi.",
+        kullanici: "Bölge Uzmanı",
+        tur: "revizyon",
+        numara: "2026040015/00",
+      },
+    ],
+  },
+  {
+    id: 1713340003,
+    sozlesmeAdi: "Aras Kargo Dağıtım Filosu Sözleşmesi",
+    sozlesmeNo: "2026040018/01",
+    versiyon: 2,
+    yenileme: 0,
+    urunAdi: "Kasko",
+    policeTipi: "Kamyonet",
+    baslangic: "01/06/2026",
+    bitis: "01/06/2027",
+    teklifGecerlilikTarihi: "16/06/2026",
+    kullanici: "Emre Acentelik",
+    durum: "Acente Revizyonunda",
+    yaratan: "Emre Acentelik",
+    atanan: "Emre Acentelik",
+    acenteAdi: "Emre Acentelik",
+    kontakNo: "5554443322",
+    kontakAdi: "Aras Kargo Dağıtım",
+    onayStatusu: "Onay Bekliyor",
+    onaylayan: "",
+    onayTarihi: "",
+    kontaklar: [{ id: 1, no: "5554443322", ad: "Aras Kargo Dağıtım" }],
+    acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+    araclar: [
+      {
+        ...bosFiloAraci,
+        id: 1,
+        kullanimTipi: "Kamyonet",
+        kullanimSekli: "Kargo",
+        primTipi: "Özel İndirim",
+        indirimYuzdesi: "10",
+        tumTeminatlarDahil: true,
+        ekDonanimlarDahil: false,
+        tasinanEmtiaDahil: true,
+        aracDetayBilgileri: true,
+        operasyonelKiralik: false,
+        kiralik: false,
+        kuryeKargo: true,
+        anadoluHizmetDahil: true,
+        teminatBilgileri: true,
+      },
+    ],
+    mesajlar: [
+      {
+        id: 1,
+        gonderen: "Genel Müdürlük / GM_UZMAN",
+        rol: "gm",
+        tarih: "17.10.2026 11:00",
+        mesaj: "Kurye ve kargo araçlarının muafiyet oranı ve kasko rayiç bedelleri güncellenmelidir. Acente revizyonuna gönderildi.",
+        atananHedef: "Emre Acentelik",
+        hedefRol: "acente",
+      },
+    ],
+    tarihce: [
+      {
+        id: 1,
+        tarih: "17.10.2026 11:00",
+        islem: "GM Acenteye Revizyona Gönderdi",
+        aciklama: "Kargo araçları muafiyet oranı güncellemesi için acenteye gönderildi.",
+        kullanici: "Genel Müdürlük / GM_UZMAN",
+        tur: "revizyon",
+        numara: "2026040018/01",
+      },
+    ],
+  },
+]
 
 // ── Acente: Temel Bilgiler + Teminat & Servis (Sözleşme Talebi için) ─────
 interface AcenteSozlesmeEk {
@@ -3825,16 +4041,36 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
     ]
   )
   const [yeniMesajMetni, setYeniMesajMetni] = useState("")
+  const varsayilanHedef = bolgeMi ? "acente" : gmMi ? "bolge" : "bolge"
+  const [yonlendirmeHedefi, setYonlendirmeHedefi] = useState<string>(varsayilanHedef)
 
   const mesajGonder = () => {
     if (!yeniMesajMetni.trim() && yuklenenDosyalar.length === 0) return
+    const gonderenRol = acenteMi ? "acente" : bolgeMi ? "bolge" : gmMi ? "gm" : "bolge"
+    const gonderenAd =
+      acenteMi ? (acenteler[0]?.unvan || "Emre Acentelik") :
+      bolgeMi ? "Bölge Uzmanı" :
+      gmMi ? "Genel Müdürlük / GM_UZMAN" :
+      "Sözleşme Yetkilisi"
+
+    let hedefAd = ""
+    if (bolgeMi) {
+      hedefAd = yonlendirmeHedefi === "acente" ? (acenteler[0]?.unvan || "Emre Acentelik") : "Genel Müdürlük / GM_UZMAN"
+    } else if (gmMi) {
+      hedefAd = yonlendirmeHedefi === "bolge" ? "Bölge Uzmanı" : (acenteler[0]?.unvan || "Emre Acentelik")
+    } else if (acenteMi) {
+      hedefAd = "Bölge Uzmanı"
+    }
+
     const yeni: FiloMesajKaydi = {
       id: Date.now(),
-      gonderen: acenteMi ? "Emre Acentelik" : bolgeMi ? "Bölge Müdürlüğü" : gmMi ? "Genel Müdürlük / GM_UZMAN" : "Sözleşme Yetkilisi",
-      rol: acenteMi ? "acente" : bolgeMi ? "bolge" : gmMi ? "gm" : "acente",
+      gonderen: gonderenAd,
+      rol: gonderenRol,
       tarih: new Date().toLocaleDateString("tr-TR") + " " + new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }),
       mesaj: yeniMesajMetni.trim(),
       dosyalar: [...yuklenenDosyalar],
+      atananHedef: hedefAd || undefined,
+      hedefRol: yonlendirmeHedefi as any,
     }
     setMesajlar((prev) => [...prev, yeni])
     setYeniMesajMetni("")
@@ -3951,22 +4187,56 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
     } else if (kayitTipi === "police") {
       policeNo = `${sozlesmeNo}/00`
     }
+    let durum = kayitModu === "ek" || kayitTipi === "police" ? "Sözleşme Poliçe" : "Sözleşme Teklifi"
+    let atanan = initialKayit?.atanan ?? ""
+
+    if (kayitTipi === "teklif" && !sozlesmeModu && kayitModu !== "ek") {
+      if (bolgeMi) {
+        if (yonlendirmeHedefi === "acente") {
+          durum = "Acente Revizyonunda"
+          atanan = acenteler[0]?.unvan || "Emre Acentelik"
+        } else if (yonlendirmeHedefi === "gm") {
+          durum = "Genel Müdürlük Değerlendirmesinde"
+          atanan = "Genel Müdürlük / GM_UZMAN"
+        }
+      } else if (gmMi) {
+        if (yonlendirmeHedefi === "bolge") {
+          durum = "Bölge Değerlendirmesinde"
+          atanan = "Bölge Uzmanı"
+        } else if (yonlendirmeHedefi === "acente") {
+          durum = "Acente Revizyonunda"
+          atanan = acenteler[0]?.unvan || "Emre Acentelik"
+        }
+      } else if (acenteMi) {
+        durum = "Bölge Değerlendirmesinde"
+        atanan = "Bölge Uzmanı"
+      }
+    }
+
+    const islemMetni = kayitModu === "ek"
+      ? "Sözleşme eki oluşturuldu"
+      : initialKayit
+      ? (gmMi
+          ? (yonlendirmeHedefi === "bolge" ? "GM Bölgeye Revizyona Gönderdi" : "GM Acenteye Revizyona Gönderdi")
+          : bolgeMi
+          ? (yonlendirmeHedefi === "acente" ? "Bölge Acenteye Revizyona Atadı" : "Bölge GM Değerlendirmesine Gönderdi")
+          : "Acente Revizyonu Gönderildi")
+      : kayitTipi === "police" ? "Poliçe oluşturuldu" : "Teklif oluşturuldu"
+
+    const aciklamaMetni = kayitModu === "ek"
+      ? `${policeNo} numaralı sözleşme eki oluşturuldu.`
+      : initialKayit
+      ? `${initialKayit.sozlesmeNo} numaralı teklif revize edildi (${durum} - ${atanan || "Atandı"}).`
+      : `${sozlesmeNo} numaralı ${kayitTipi === "police" ? "poliçe" : "teklif"} kaydı oluşturuldu.`
+
     const tarihce: FiloTarihceKaydi[] = [
       ...(initialKayit?.tarihce ?? []),
       {
         id: Date.now(),
         tarih: new Date().toLocaleString("tr-TR"),
-        islem: kayitModu === "ek"
-          ? "Sözleşme eki oluşturuldu"
-          : initialKayit
-          ? "Revizyon oluşturuldu"
-          : kayitTipi === "police" ? "Poliçe oluşturuldu" : "Teklif oluşturuldu",
-        aciklama: kayitModu === "ek"
-          ? `${policeNo} numaralı sözleşme eki oluşturuldu.`
-          : initialKayit
-          ? `${initialKayit.sozlesmeNo} numaralı kayıt ${sozlesmeNo} olarak revize edildi.`
-          : `${sozlesmeNo} numaralı ${kayitTipi === "police" ? "poliçe" : "teklif"} kaydı oluşturuldu.`,
-        kullanici: "MS4329",
+        islem: islemMetni,
+        aciklama: aciklamaMetni,
+        kullanici: gmMi ? "GM_UZMAN" : bolgeMi ? "Bölge Uzmanı" : "MS4329",
         tur: kayitModu === "ek" ? "ek" : initialKayit ? "revizyon" : kayitTipi,
         numara: kayitModu === "ek" || kayitTipi === "police" ? policeNo : sozlesmeNo,
         baslangic: tarihFormatla(baslangic),
@@ -3988,9 +4258,9 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
       bitis: tarihFormatla(bitis),
       policeBitisTarihi: sozlesmeParametreleriAcik ? tarihFormatla(policeBitisTarihi) : undefined,
       kullanici: "MS4329",
-      durum: kayitModu === "ek" || kayitTipi === "police" ? "Sözleşme Poliçe" : "Sözleşme Teklifi",
-      yaratan: "MS4329",
-      atanan: "",
+      durum,
+      yaratan: initialKayit?.yaratan || (acenteMi ? "Emre Acentelik" : bolgeMi ? "Bölge Uzmanı" : "MS4329"),
+      atanan,
       acenteAdi: acenteler[0]?.unvan ?? "",
       kontakNo: kontaklar[0].no,
       kontakAdi: kontaklar[0].ad,
@@ -4558,12 +4828,17 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
 
                   return (
                     <div key={m.id} className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="text-xs font-bold text-gray-800">{m.gonderen}</span>
                           <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold border ${rolBadge}`}>
                             {rolLabel}
                           </span>
+                          {m.atananHedef && (
+                            <span className="rounded bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-0.5 text-[10px] font-bold inline-flex items-center gap-1">
+                              🎯 Atanan: {m.atananHedef}
+                            </span>
+                          )}
                         </div>
                         <span className="text-[11px] font-mono text-gray-400">{m.tarih}</span>
                       </div>
@@ -4613,6 +4888,139 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
                 placeholder="Mesajınızı buraya yazınız..."
                 className={inputCls}
               />
+
+              {/* Yönlendirme / Atama Hedefi */}
+              <div className="space-y-2 pt-1">
+                <span className="block text-xs font-bold text-gray-700">Teklifin Atanacağı / Gönderileceği Birim:</span>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {bolgeMi ? (
+                    <>
+                      <label
+                        onClick={() => setYonlendirmeHedefi("acente")}
+                        className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                          yonlendirmeHedefi === "acente"
+                            ? "border-orange-500 bg-orange-50/70 ring-1 ring-orange-500 shadow-2xs"
+                            : "border-gray-200 bg-white hover:bg-gray-50/80"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-orange-900 flex items-center gap-1.5">
+                            🏢 Acenteye Ata (Revizyon İste)
+                          </span>
+                          <input
+                            type="radio"
+                            name="adimHedefSecim"
+                            checked={yonlendirmeHedefi === "acente"}
+                            onChange={() => setYonlendirmeHedefi("acente")}
+                            className="text-orange-600 focus:ring-orange-500"
+                          />
+                        </div>
+                        <p className="mt-1 text-[11px] text-gray-600">
+                          Teklif <strong>Acente Revizyonunda</strong> statüsünde acenteye iletilir.
+                        </p>
+                      </label>
+
+                      <label
+                        onClick={() => setYonlendirmeHedefi("gm")}
+                        className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                          yonlendirmeHedefi === "gm"
+                            ? "border-purple-500 bg-purple-50/70 ring-1 ring-purple-500 shadow-2xs"
+                            : "border-gray-200 bg-white hover:bg-gray-50/80"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                            🏛️ Genel Müdürlüğe Gönder (GM Onayı)
+                          </span>
+                          <input
+                            type="radio"
+                            name="adimHedefSecim"
+                            checked={yonlendirmeHedefi === "gm"}
+                            onChange={() => setYonlendirmeHedefi("gm")}
+                            className="text-purple-600 focus:ring-purple-500"
+                          />
+                        </div>
+                        <p className="mt-1 text-[11px] text-gray-600">
+                          Teklif <strong>Genel Müdürlük Değerlendirmesinde</strong> statüsünde GM'ye atanır.
+                        </p>
+                      </label>
+                    </>
+                  ) : gmMi ? (
+                    <>
+                      <label
+                        onClick={() => setYonlendirmeHedefi("bolge")}
+                        className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                          yonlendirmeHedefi === "bolge"
+                            ? "border-amber-500 bg-amber-50/70 ring-1 ring-amber-500 shadow-2xs"
+                            : "border-gray-200 bg-white hover:bg-gray-50/80"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                            📍 Bölgeye Gönder (Revizyon / Değerlendirme)
+                          </span>
+                          <input
+                            type="radio"
+                            name="adimHedefSecim"
+                            checked={yonlendirmeHedefi === "bolge"}
+                            onChange={() => setYonlendirmeHedefi("bolge")}
+                            className="text-amber-600 focus:ring-amber-500"
+                          />
+                        </div>
+                        <p className="mt-1 text-[11px] text-gray-600">
+                          Teklif <strong>Bölge Değerlendirmesinde</strong> statüsünde Bölgeye gönderilir.
+                        </p>
+                      </label>
+
+                      <label
+                        onClick={() => setYonlendirmeHedefi("acente")}
+                        className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                          yonlendirmeHedefi === "acente"
+                            ? "border-orange-500 bg-orange-50/70 ring-1 ring-orange-500 shadow-2xs"
+                            : "border-gray-200 bg-white hover:bg-gray-50/80"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-orange-900 flex items-center gap-1.5">
+                            🏢 Acenteye Gönder (Acente Revizyonu)
+                          </span>
+                          <input
+                            type="radio"
+                            name="adimHedefSecim"
+                            checked={yonlendirmeHedefi === "acente"}
+                            onChange={() => setYonlendirmeHedefi("acente")}
+                            className="text-orange-600 focus:ring-orange-500"
+                          />
+                        </div>
+                        <p className="mt-1 text-[11px] text-gray-600">
+                          Teklif <strong>Acente Revizyonunda</strong> statüsünde doğrudan acenteye iletilir.
+                        </p>
+                      </label>
+                    </>
+                  ) : (
+                    <label
+                      onClick={() => setYonlendirmeHedefi("bolge")}
+                      className="cursor-pointer rounded-xl border border-blue-500 bg-blue-50/70 ring-1 ring-blue-500 shadow-2xs p-3 transition-all flex flex-col justify-between sm:col-span-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                          📍 Bölgeye Gönder (Değerlendirmeye Sun)
+                        </span>
+                        <input
+                          type="radio"
+                          name="adimHedefSecim"
+                          checked={true}
+                          readOnly
+                          className="text-blue-600 focus:ring-blue-500"
+                        />
+                      </div>
+                      <p className="mt-1 text-[11px] text-gray-600">
+                        Teklif <strong>Bölge Değerlendirmesinde</strong> statüsünde Bölge Müdürlüğüne gönderilir.
+                      </p>
+                    </label>
+                  )}
+                </div>
+              </div>
 
               {/* Dosya Ekleme & Gönder Butonu */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
@@ -4666,16 +5074,41 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
   )
 }
 
-function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
+function FiloUretimGoruntulePage({
+  kayit,
+  onBack,
+  onUpdate,
+  onSozlesmeEki,
+  onRevizyon,
+  acenteMi = false,
+  bolgeMi = false,
+  gmMi = false,
+  varsayilanSekme = "sozlesme",
+}: {
   kayit: FiloUretimKaydi
   onBack: () => void
   onUpdate: (kayit: FiloUretimKaydi) => void
   onSozlesmeEki: () => void
+  onRevizyon?: () => void
+  acenteMi?: boolean
+  bolgeMi?: boolean
+  gmMi?: boolean
+  varsayilanSekme?: "sozlesme" | "arac" | "notlar" | "mesajlasma" | "tarihce"
 }) {
-  const [aktifSekme, setAktifSekme] = useState<"sozlesme" | "arac" | "notlar" | "mesajlasma" | "tarihce">("sozlesme")
+  const [aktifSekme, setAktifSekme] = useState<"sozlesme" | "arac" | "notlar" | "mesajlasma" | "tarihce">(varsayilanSekme)
   const [islemTipi, setIslemTipi] = useState<"ek" | "yenileme" | null>(null)
   const [secilenTarihce, setSecilenTarihce] = useState<FiloTarihceKaydi | null>(null)
   const [excelModalAcik, setExcelModalAcik] = useState(false)
+  const [yeniMesajMetni, setYeniMesajMetni] = useState("")
+  const [yuklenenDosyalar, setYuklenenDosyalar] = useState<string[]>([])
+  const [islemBildirimi, setIslemBildirimi] = useState<string | null>(null)
+
+  const varsayilanRol: "bolge" | "gm" | "acente" = gmMi ? "gm" : bolgeMi ? "bolge" : acenteMi ? "acente" : "bolge"
+  const [simuleRol, setSimuleRol] = useState<"bolge" | "gm" | "acente">(varsayilanRol)
+  const [yonlendirmeHedefi, setYonlendirmeHedefi] = useState<string>(
+    varsayilanRol === "gm" ? "bolge" : varsayilanRol === "bolge" ? "acente" : "bolge"
+  )
+
   const isoTarih = (tarih: Date) =>
     `${tarih.getFullYear()}-${String(tarih.getMonth() + 1).padStart(2, "0")}-${String(tarih.getDate()).padStart(2, "0")}`
   const sistemTarihi = isoTarih(new Date())
@@ -4697,6 +5130,99 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
       <div className="min-h-10 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">{value || "—"}</div>
     </div>
   )
+
+  const handleMesajVeAtama = () => {
+    if (!yeniMesajMetni.trim() && yuklenenDosyalar.length === 0) return
+
+    const simdi = new Date().toLocaleString("tr-TR")
+    const saat = new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
+    const tarihSaat = `${new Date().toLocaleDateString("tr-TR")} ${saat}`
+
+    const gonderenAdi =
+      simuleRol === "gm"
+        ? "Genel Müdürlük / GM_UZMAN"
+        : simuleRol === "bolge"
+        ? "Bölge Uzmanı"
+        : kayit.acenteAdi || "Emre Acentelik"
+
+    let yeniDurum = kayit.durum
+    let yeniAtanan = kayit.atanan || ""
+    let islemBasligi = "Mesaj İletildi"
+    let tarihceAciklama = yeniMesajMetni.trim()
+
+    if (simuleRol === "bolge") {
+      if (yonlendirmeHedefi === "acente") {
+        yeniDurum = "Acente Revizyonunda"
+        yeniAtanan = kayit.acenteAdi || "Emre Acentelik"
+        islemBasligi = "Bölge Acenteye Revizyona Atadı"
+        tarihceAciklama = `Bölge kullanıcısı teklifi revizyon için acenteye (${yeniAtanan}) atadı. Mesaj: ${yeniMesajMetni.trim()}`
+      } else if (yonlendirmeHedefi === "gm") {
+        yeniDurum = "Genel Müdürlük Değerlendirmesinde"
+        yeniAtanan = "Genel Müdürlük / GM_UZMAN"
+        islemBasligi = "Bölge GM Değerlendirmesine Gönderdi"
+        tarihceAciklama = `Bölge kullanıcısı teklifi Genel Müdürlük değerlendirmesine gönderdi. Mesaj: ${yeniMesajMetni.trim()}`
+      }
+    } else if (simuleRol === "gm") {
+      if (yonlendirmeHedefi === "bolge") {
+        yeniDurum = "Bölge Değerlendirmesinde"
+        yeniAtanan = "Bölge Uzmanı"
+        islemBasligi = "GM Bölgeye Revizyona Gönderdi"
+        tarihceAciklama = `Genel Müdürlük teklifi revizyon talebiyle Bölgeye (${yeniAtanan}) yönlendirdi. Mesaj: ${yeniMesajMetni.trim()}`
+      } else if (yonlendirmeHedefi === "acente") {
+        yeniDurum = "Acente Revizyonunda"
+        yeniAtanan = kayit.acenteAdi || "Emre Acentelik"
+        islemBasligi = "GM Acenteye Revizyona Gönderdi"
+        tarihceAciklama = `Genel Müdürlük teklifi doğrudan acenteye (${yeniAtanan}) revizyon için yönlendirdi. Mesaj: ${yeniMesajMetni.trim()}`
+      }
+    } else if (simuleRol === "acente") {
+      if (yonlendirmeHedefi === "bolge") {
+        yeniDurum = "Bölge Değerlendirmesinde"
+        yeniAtanan = "Bölge Uzmanı"
+        islemBasligi = "Acente Bölgeye Gönderdi"
+        tarihceAciklama = `Acente revize teklifi Bölge Müdürlüğüne sundu. Mesaj: ${yeniMesajMetni.trim()}`
+      }
+    }
+
+    const yeniMesaj: FiloMesajKaydi = {
+      id: Date.now(),
+      gonderen: gonderenAdi,
+      rol: simuleRol,
+      tarih: tarihSaat,
+      mesaj: yeniMesajMetni.trim(),
+      dosyalar: [...yuklenenDosyalar],
+      atananHedef: yeniAtanan || undefined,
+      hedefRol: (yonlendirmeHedefi === "not" ? undefined : (yonlendirmeHedefi as "acente" | "bolge" | "gm")),
+    }
+
+    const yeniTarihce: FiloTarihceKaydi = {
+      id: Date.now(),
+      tarih: simdi,
+      islem: islemBasligi,
+      aciklama: tarihceAciklama,
+      kullanici: gonderenAdi,
+      tur: "revizyon",
+      numara: kayit.sozlesmeNo,
+      dosyalar: yuklenenDosyalar.length > 0 ? [...yuklenenDosyalar] : undefined,
+    }
+
+    const guncelKayit: FiloUretimKaydi = {
+      ...kayit,
+      durum: yeniDurum,
+      atanan: yeniAtanan,
+      mesajlar: [...(kayit.mesajlar || []), yeniMesaj],
+      tarihce: [...(kayit.tarihce || []), yeniTarihce],
+    }
+
+    onUpdate(guncelKayit)
+    setYeniMesajMetni("")
+    setYuklenenDosyalar([])
+    setIslemBildirimi(
+      yonlendirmeHedefi === "not"
+        ? "Mesaj başarıyla kaydedildi."
+        : `Teklif başarıyla "${yeniDurum}" statüsünde (${yeniAtanan}) atandı ve mesaj iletildi!`
+    )
+    setTimeout(() => setIslemBildirimi(null), 4500)
+  }
 
   const islemiKaydet = () => {
     if (!islemTipi) return
@@ -4749,10 +5275,21 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
           </button>
           <div>
             <h2 className="text-base font-bold text-gray-900">Filo Üretim Kaydı</h2>
-            <p className="text-xs text-gray-400">{kayit.sozlesmeNo} · Salt okunur görüntüleme</p>
+            <p className="text-xs text-gray-400">{kayit.sozlesmeNo} · {kayit.durum} · Atanan: {kayit.atanan || "—"}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {onRevizyon && (
+            <button
+              onClick={onRevizyon}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100 transition-colors shadow-2xs"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Revizyon Yap
+            </button>
+          )}
           <button onClick={onSozlesmeEki} className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100">Sözleşme Eki</button>
           <button onClick={() => setIslemTipi("yenileme")} className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-100">Sözleşme Yenileme</button>
           <button onClick={onBack} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">Kapat</button>
@@ -4902,6 +5439,70 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
 
         {aktifSekme === "mesajlasma" && (
           <div className="space-y-4">
+            {/* Durum & Rol Bilgi Çubuğu */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs font-semibold text-gray-500">Mevcut Durum:</span>
+                <span className={`rounded-full border px-3 py-1 text-xs font-bold ${
+                  kayit.durum === "Genel Müdürlük Değerlendirmesinde"
+                    ? "border-purple-200 bg-purple-50 text-purple-700"
+                    : kayit.durum === "Bölge Değerlendirmesinde"
+                    ? "border-amber-200 bg-amber-50 text-amber-700"
+                    : kayit.durum === "Acente Revizyonunda"
+                    ? "border-orange-300 bg-orange-50 text-orange-800"
+                    : "border-blue-200 bg-blue-50 text-blue-700"
+                }`}>
+                  {kayit.durum}
+                </span>
+
+                <span className="text-xs font-semibold text-gray-500">Atanan:</span>
+                <span className="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                  {kayit.atanan || "Henüz Atanmadı"}
+                </span>
+              </div>
+
+              {/* Kullanıcı Rolü Değiştirici / Canlı Simülasyon */}
+              <div className="flex items-center gap-1.5 bg-gray-100/80 p-1 rounded-lg border border-gray-200 text-xs">
+                <span className="text-[11px] font-bold text-gray-500 px-1.5">Görünüm Rolü:</span>
+                {(["bolge", "gm", "acente"] as const).map((r) => {
+                  const secili = simuleRol === r
+                  const label = r === "bolge" ? "📍 Bölge" : r === "gm" ? "🏛️ GM" : "🏢 Acente"
+                  return (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => {
+                        setSimuleRol(r)
+                        setYonlendirmeHedefi(r === "gm" ? "bolge" : r === "bolge" ? "acente" : "bolge")
+                      }}
+                      className={`rounded-md px-2.5 py-1 text-xs font-bold transition-all ${
+                        secili
+                          ? r === "gm"
+                            ? "bg-purple-600 text-white shadow-xs"
+                            : r === "bolge"
+                            ? "bg-amber-600 text-white shadow-xs"
+                            : "bg-blue-600 text-white shadow-xs"
+                          : "text-gray-600 hover:bg-white/60"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Bildirim Mesajı */}
+            {islemBildirimi && (
+              <div className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800 shadow-xs animate-in fade-in">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {islemBildirimi}
+              </div>
+            )}
+
+            {/* Mesajlaşma Akışı */}
             <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
                 <div>
@@ -4917,9 +5518,9 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
               </div>
 
               {/* Mesaj Listesi */}
-              <div className="max-h-[400px] overflow-y-auto space-y-3 rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+              <div className="max-h-[380px] overflow-y-auto space-y-3 rounded-xl border border-gray-200 bg-gray-50/60 p-4">
                 {(kayit.mesajlar || []).length === 0 ? (
-                  <p className="py-8 text-center text-xs text-gray-400">Bu kayıtta henüz mesaj bulunmuyor.</p>
+                  <p className="py-8 text-center text-xs text-gray-400">Bu kayıtta henüz mesaj bulunmuyor. İlk mesajı aşağıdaki formdan girebilirsiniz.</p>
                 ) : (
                   (kayit.mesajlar || []).map((m) => {
                     const rolBadge =
@@ -4933,12 +5534,17 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
 
                     return (
                       <div key={m.id} className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="text-xs font-bold text-gray-800">{m.gonderen}</span>
                             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold border ${rolBadge}`}>
                               {rolLabel}
                             </span>
+                            {m.atananHedef && (
+                              <span className="rounded bg-indigo-50 border border-indigo-200 text-indigo-700 px-2 py-0.5 text-[10px] font-bold inline-flex items-center gap-1">
+                                🎯 Hedef / Atanan: {m.atananHedef}
+                              </span>
+                            )}
                           </div>
                           <span className="text-[11px] font-mono text-gray-400">{m.tarih}</span>
                         </div>
@@ -4956,6 +5562,327 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
                     )
                   })
                 )}
+              </div>
+
+              {/* Hızlı Şablonlar */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[11px] font-bold text-gray-500">Hızlı Şablon:</span>
+                {(simuleRol === "bolge" ? [
+                  "Acente revizyon talebi iletilmiştir, lütfen araç ve muafiyet bilgilerini güncelleyiniz.",
+                  "Bölge incelemesi tamamlandı, GM onay ve özel indirim değerlendirmesine sunulmuştur.",
+                  "Tramer hasar kayıtları kontrol edildi, GM değerlendirmesine aktarılmıştır.",
+                ] : simuleRol === "gm" ? [
+                  "Risk parametreleri ve kasko muafiyet oranı revize edilmek üzere Bölgeye iletildi.",
+                  "Acente tarafından araç rayiç bedellerinin ve teminatların güncellenmesi gerekmektedir.",
+                  "GM şartları ve özel indirim onaylandı, acenteye revizyon için iletildi.",
+                ] : [
+                  "Talep edilen revizyonlar yapıldı, bölge değerlendirmesine sunulmuştur.",
+                  "Araç listesi ve muafiyetler revize edildi, onayınızı rica ederiz.",
+                ]).map((sablon) => (
+                  <button
+                    key={sablon}
+                    type="button"
+                    onClick={() => setYeniMesajMetni(sablon)}
+                    className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] text-gray-600 hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700 transition-colors"
+                  >
+                    {sablon}
+                  </button>
+                ))}
+              </div>
+
+              {/* Yeni Mesaj & Yönlendirme Alanı */}
+              <div className="space-y-3 rounded-xl border border-gray-200 bg-gray-50/80 p-4 pt-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                    <span>✍️</span> Yeni Mesaj &amp; Revizyon Notu
+                  </label>
+                  <span className="text-[11px] text-gray-500">
+                    Gönderen: <strong className="text-gray-700">{simuleRol === "gm" ? "Genel Müdürlük" : simuleRol === "bolge" ? "Bölge Uzmanı" : "Acente"}</strong>
+                  </span>
+                </div>
+
+                <textarea
+                  rows={3}
+                  value={yeniMesajMetni}
+                  onChange={(e) => setYeniMesajMetni(e.target.value)}
+                  placeholder={
+                    simuleRol === "bolge"
+                      ? "Acenteye revizyon talebinizi veya Genel Müdürlüğe onay notunuzu buraya giriniz..."
+                      : simuleRol === "gm"
+                      ? "Bölgeye veya acenteye yönelik revizyon koşullarını ve geri bildirimlerinizi buraya giriniz..."
+                      : "Revizyon açıklamalarınızı ve eklemek istediğiniz bilgileri buraya giriniz..."
+                  }
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                />
+
+                {/* Yönlendirme / Atama Hedefi Seçimi */}
+                <div className="space-y-2 pt-1">
+                  <span className="block text-xs font-bold text-gray-700">Teklifi Kime Yönlendirmek / Atamak İstiyorsunuz?</span>
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {simuleRol === "bolge" && (
+                      <>
+                        <label
+                          onClick={() => setYonlendirmeHedefi("acente")}
+                          className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                            yonlendirmeHedefi === "acente"
+                              ? "border-orange-500 bg-orange-50/70 ring-1 ring-orange-500 shadow-2xs"
+                              : "border-gray-200 bg-white hover:bg-gray-50/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-orange-900 flex items-center gap-1.5">
+                              🏢 Acenteye Ata (Revizyon İste)
+                            </span>
+                            <input
+                              type="radio"
+                              name="hedefSecim"
+                              checked={yonlendirmeHedefi === "acente"}
+                              onChange={() => setYonlendirmeHedefi("acente")}
+                              className="text-orange-600 focus:ring-orange-500"
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            Durum <strong>Acente Revizyonunda</strong> olarak güncellenir ve teklif acenteye atanır.
+                          </p>
+                        </label>
+
+                        <label
+                          onClick={() => setYonlendirmeHedefi("gm")}
+                          className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                            yonlendirmeHedefi === "gm"
+                              ? "border-purple-500 bg-purple-50/70 ring-1 ring-purple-500 shadow-2xs"
+                              : "border-gray-200 bg-white hover:bg-gray-50/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                              🏛️ Genel Müdürlüğe Ata (GM Onayı)
+                            </span>
+                            <input
+                              type="radio"
+                              name="hedefSecim"
+                              checked={yonlendirmeHedefi === "gm"}
+                              onChange={() => setYonlendirmeHedefi("gm")}
+                              className="text-purple-600 focus:ring-purple-500"
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            Durum <strong>Genel Müdürlük Değerlendirmesinde</strong> olarak güncellenir ve GM uzmanına atanır.
+                          </p>
+                        </label>
+
+                        <label
+                          onClick={() => setYonlendirmeHedefi("not")}
+                          className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                            yonlendirmeHedefi === "not"
+                              ? "border-blue-500 bg-blue-50/70 ring-1 ring-blue-500 shadow-2xs"
+                              : "border-gray-200 bg-white hover:bg-gray-50/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                              💬 Sadece Not / Mesaj Ekle
+                            </span>
+                            <input
+                              type="radio"
+                              name="hedefSecim"
+                              checked={yonlendirmeHedefi === "not"}
+                              onChange={() => setYonlendirmeHedefi("not")}
+                              className="text-blue-600 focus:ring-blue-500"
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            Teklifin mevcut durumu ve atanan kullanıcısı değiştirilmez.
+                          </p>
+                        </label>
+                      </>
+                    )}
+
+                    {simuleRol === "gm" && (
+                      <>
+                        <label
+                          onClick={() => setYonlendirmeHedefi("bolge")}
+                          className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                            yonlendirmeHedefi === "bolge"
+                              ? "border-amber-500 bg-amber-50/70 ring-1 ring-amber-500 shadow-2xs"
+                              : "border-gray-200 bg-white hover:bg-gray-50/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                              📍 Bölgeye Gönder (Revizyon / Değerlendirme)
+                            </span>
+                            <input
+                              type="radio"
+                              name="hedefSecim"
+                              checked={yonlendirmeHedefi === "bolge"}
+                              onChange={() => setYonlendirmeHedefi("bolge")}
+                              className="text-amber-600 focus:ring-amber-500"
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            Durum <strong>Bölge Değerlendirmesinde</strong> yapılır ve Bölge Uzmanına geri gönderilir.
+                          </p>
+                        </label>
+
+                        <label
+                          onClick={() => setYonlendirmeHedefi("acente")}
+                          className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                            yonlendirmeHedefi === "acente"
+                              ? "border-orange-500 bg-orange-50/70 ring-1 ring-orange-500 shadow-2xs"
+                              : "border-gray-200 bg-white hover:bg-gray-50/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-orange-900 flex items-center gap-1.5">
+                              🏢 Acenteye Gönder (Acente Revizyonu)
+                            </span>
+                            <input
+                              type="radio"
+                              name="hedefSecim"
+                              checked={yonlendirmeHedefi === "acente"}
+                              onChange={() => setYonlendirmeHedefi("acente")}
+                              className="text-orange-600 focus:ring-orange-500"
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            Durum <strong>Acente Revizyonunda</strong> yapılır ve doğrudan acenteye revizyon için yönlendirilir.
+                          </p>
+                        </label>
+
+                        <label
+                          onClick={() => setYonlendirmeHedefi("not")}
+                          className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                            yonlendirmeHedefi === "not"
+                              ? "border-blue-500 bg-blue-50/70 ring-1 ring-blue-500 shadow-2xs"
+                              : "border-gray-200 bg-white hover:bg-gray-50/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                              💬 Sadece Not / Mesaj Ekle
+                            </span>
+                            <input
+                              type="radio"
+                              name="hedefSecim"
+                              checked={yonlendirmeHedefi === "not"}
+                              onChange={() => setYonlendirmeHedefi("not")}
+                              className="text-blue-600 focus:ring-blue-500"
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            Teklifin mevcut durumu ve atanan kullanıcısı değiştirilmez.
+                          </p>
+                        </label>
+                      </>
+                    )}
+
+                    {simuleRol === "acente" && (
+                      <>
+                        <label
+                          onClick={() => setYonlendirmeHedefi("bolge")}
+                          className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                            yonlendirmeHedefi === "bolge"
+                              ? "border-blue-500 bg-blue-50/70 ring-1 ring-blue-500 shadow-2xs"
+                              : "border-gray-200 bg-white hover:bg-gray-50/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                              📍 Bölgeye Gönder (Değerlendirmeye Sun)
+                            </span>
+                            <input
+                              type="radio"
+                              name="hedefSecim"
+                              checked={yonlendirmeHedefi === "bolge"}
+                              onChange={() => setYonlendirmeHedefi("bolge")}
+                              className="text-blue-600 focus:ring-blue-500"
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            Durum <strong>Bölge Değerlendirmesinde</strong> yapılır ve Bölge Uzmanına sunulur.
+                          </p>
+                        </label>
+
+                        <label
+                          onClick={() => setYonlendirmeHedefi("not")}
+                          className={`cursor-pointer rounded-xl border p-3 transition-all flex flex-col justify-between ${
+                            yonlendirmeHedefi === "not"
+                              ? "border-blue-500 bg-blue-50/70 ring-1 ring-blue-500 shadow-2xs"
+                              : "border-gray-200 bg-white hover:bg-gray-50/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                              💬 Sadece Not / Mesaj Ekle
+                            </span>
+                            <input
+                              type="radio"
+                              name="hedefSecim"
+                              checked={yonlendirmeHedefi === "not"}
+                              onChange={() => setYonlendirmeHedefi("not")}
+                              className="text-blue-600 focus:ring-blue-500"
+                            />
+                          </div>
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            Teklifin mevcut durumu ve atanan kullanıcısı korunur.
+                          </p>
+                        </label>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Dosya Ekleme & Gönder & Ata Butonu */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-200/80">
+                  <div className="flex items-center gap-2">
+                    <label className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 cursor-pointer transition-colors shadow-2xs">
+                      📎 Dosya Ekle
+                      <input
+                        type="file"
+                        multiple
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            const yeni = Array.from(e.target.files).map((f) => f.name)
+                            setYuklenenDosyalar((prev) => [...prev, ...yeni])
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    {yuklenenDosyalar.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {yuklenenDosyalar.map((dosya, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs text-blue-700">
+                            {dosya}
+                            <button
+                              type="button"
+                              onClick={() => setYuklenenDosyalar((prev) => prev.filter((_, i) => i !== idx))}
+                              className="font-bold text-blue-400 hover:text-red-500"
+                            >×</button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleMesajVeAtama}
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:shadow transition-all"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {yonlendirmeHedefi === "acente"
+                      ? "Mesajı İlet & Acenteye Ata (Revizyon)"
+                      : yonlendirmeHedefi === "gm"
+                      ? "Mesajı İlet & Genel Müdürlüğe Gönder"
+                      : yonlendirmeHedefi === "bolge"
+                      ? "Mesajı İlet & Bölgeye Gönder"
+                      : "Mesajı Kaydet"}
+                  </button>
+                </div>
               </div>
             </section>
           </div>
@@ -5733,6 +6660,7 @@ function FiloUretimPage({
   const [yeniKayitAcik, setYeniKayitAcik] = useState(false)
   const [duzenlenenKayit, setDuzenlenenKayit] = useState<FiloUretimKaydi | null>(null)
   const [goruntulenenKayit, setGoruntulenenKayit] = useState<FiloUretimKaydi | null>(null)
+  const [varsayilanGoruntulemeSekmesi, setVarsayilanGoruntulemeSekmesi] = useState<"sozlesme" | "arac" | "notlar" | "mesajlasma" | "tarihce">("sozlesme")
   const [excelViewerKayit, setExcelViewerKayit] = useState<FiloUretimKaydi | null>(null)
   const [sozlesmeModalKayit, setSozlesmeModalKayit] = useState<FiloUretimKaydi | null>(null)
   const [basariBildirimi, setBasariBildirimi] = useState<{ sozlesmeNo: string; musteriUnvani: string } | null>(null)
@@ -5818,17 +6746,20 @@ function FiloUretimPage({
     setYeniKayitAcik(true)
   }
 
-  const goruntulemeyiAc = () => {
+  const goruntulemeyiAc = (sekme: "sozlesme" | "arac" | "notlar" | "mesajlasma" | "tarihce" = "sozlesme") => {
     if (secilenler.size !== 1) return
     const kayit = kayitlar.find((item) => secilenler.has(item.id))
-    if (kayit) setGoruntulenenKayit(kayit)
+    if (kayit) {
+      setVarsayilanGoruntulemeSekmesi(sekme)
+      setGoruntulenenKayit(kayit)
+    }
   }
 
   const exceleAktar = () => {
-    const basliklar = ["Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "Başlangıç", "Bitiş", "Kullanıcı", "Durum", "Yaratan"]
+    const basliklar = ["Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "Başlangıç", "Bitiş", "Kullanıcı", "Durum", "Atanan", "Yaratan"]
     const satirlar = filtreliKayitlar.map((kayit) => [
       kayit.sozlesmeAdi, kayit.sozlesmeNo, kayit.policeNo ?? "", kayit.versiyon, kayit.yenileme, kayit.urunAdi,
-      kayit.policeTipi, kayit.baslangic, kayit.bitis, kayit.kullanici, kayit.durum,
+      kayit.policeTipi, kayit.baslangic, kayit.bitis, kayit.kullanici, kayit.durum, kayit.atanan || "—",
       kayit.yaratan,
     ])
     const csv = [basliklar, ...satirlar].map((satir) => satir.map((hucre) => `"${String(hucre).replace(/"/g, '""')}"`).join(",")).join("\n")
@@ -5853,6 +6784,16 @@ function FiloUretimPage({
           setKayitModu("ek")
           setYeniKayitAcik(true)
         }}
+        onRevizyon={() => {
+          setDuzenlenenKayit(goruntulenenKayit)
+          setGoruntulenenKayit(null)
+          setKayitModu("normal")
+          setYeniKayitAcik(true)
+        }}
+        acenteMi={acenteMi}
+        bolgeMi={bolgeMi}
+        gmMi={gmMi}
+        varsayilanSekme={varsayilanGoruntulemeSekmesi}
       />
     )
   }
@@ -5879,7 +6820,8 @@ function FiloUretimPage({
           const yeni = {
             ...kayit,
             teklifGecerlilikTarihi: kayit.teklifGecerlilikTarihi ?? gecerlilik,
-            ...(!duzenlenenKayit ? { durum: kayit.durum === "Sözleşme Poliçe" ? "Sözleşme Poliçe" : baslangicDurumu } : {}),
+            durum: kayit.durum || (kayitModu === "ek" ? "Sözleşme Poliçe" : baslangicDurumu),
+            atanan: kayit.atanan || (acenteMi ? "Bölge Uzmanı" : bolgeMi ? "Genel Müdürlük / GM_UZMAN" : ""),
           }
           setKayitlar((prev) =>
             duzenlenenKayit
@@ -5981,8 +6923,16 @@ function FiloUretimPage({
               <button onClick={duzenlemeyiAc} title="Kaydı güncelle" disabled={secilenler.size !== 1} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4z" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </button>
-              <button onClick={goruntulemeyiAc} title="Görüntüle" disabled={secilenler.size !== 1} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30">
+              <button onClick={() => goruntulemeyiAc("sozlesme")} title="Görüntüle" disabled={secilenler.size !== 1} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" /><circle cx="12" cy="12" r="2.5" /></svg>
+              </button>
+              <button
+                onClick={() => goruntulemeyiAc("mesajlasma")}
+                title="Mesajlaşma ve teklif atama ekranını aç"
+                disabled={secilenler.size !== 1}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50/80 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              >
+                <span className="text-xs">💬</span> Mesajlaşma &amp; Atama
               </button>
               <button onClick={secileniKopyala} disabled={secilenler.size !== 1} className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-30">Kopyala</button>
               {bolgeMi && secili?.durum === BOLGE && (
@@ -6049,7 +6999,7 @@ function FiloUretimPage({
             <table className="min-w-max w-full text-xs">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 text-gray-600">
-                  {["Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "Başlangıç", "Bitiş", "Teklif Geçerlilik", "Kullanıcı", "Durum", "Yaratan"].map((baslik) => (
+                  {["Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "Başlangıç", "Bitiş", "Teklif Geçerlilik", "Kullanıcı", "Durum", "Atanan", "Yaratan"].map((baslik) => (
                     <th key={baslik} className="px-3 py-3 text-left font-semibold whitespace-nowrap">{baslik}</th>
                   ))}
                   {gmMi && <th className="px-3 py-3 text-right font-semibold whitespace-nowrap text-emerald-800">İşlem</th>}
@@ -6058,7 +7008,7 @@ function FiloUretimPage({
               <tbody>
                 {filtreliKayitlar.length === 0 ? (
                   <tr>
-                    <td colSpan={gmMi ? 14 : 13} className="py-14 text-center">
+                    <td colSpan={gmMi ? 15 : 14} className="py-14 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-base font-bold">📄</div>
                         <p className="text-sm font-medium text-gray-500">Listelenecek teklif kaydı bulunamadı.</p>
@@ -6116,10 +7066,21 @@ function FiloUretimPage({
                                 ? "border-amber-200 bg-amber-50 text-amber-700"
                                 : kayit.durum === GM
                                   ? "border-purple-200 bg-purple-50 text-purple-700"
+                                  : kayit.durum === "Acente Revizyonunda"
+                                  ? "border-orange-300 bg-orange-50 text-orange-800 font-bold"
                                   : kayit.durum === "Reddedildi"
                                   ? "border-red-200 bg-red-50 text-red-700"
                                   : "border-blue-200 bg-blue-50 text-blue-700"
                         }`}>{kayit.durum}</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      {kayit.atanan ? (
+                        <span className="inline-flex items-center gap-1 rounded bg-gray-100 border border-gray-200 px-2 py-0.5 font-semibold text-gray-700 text-[11px]">
+                          {kayit.atanan}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
                       )}
                     </td>
                     <td className="px-3 py-3 font-mono text-gray-600">{kayit.yaratan}</td>
@@ -6281,6 +7242,15 @@ function SozlesmelerimPage({
           setKayitModu("ek")
           setYeniAcik(true)
         }}
+        onRevizyon={() => {
+          setDuzenlenenKayit(goruntulenenKayit)
+          setGoruntulenenKayit(null)
+          setKayitModu("normal")
+          setYeniAcik(true)
+        }}
+        acenteMi={kullaniciTuru === "acente"}
+        bolgeMi={kullaniciTuru === "bolge"}
+        gmMi={kullaniciTuru === "gm"}
       />
     )
   }
