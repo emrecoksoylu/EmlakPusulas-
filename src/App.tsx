@@ -3240,6 +3240,16 @@ interface FiloUretimKaydi {
   odemeKosullari?: string[]
   odemeNotu?: string
   odemeDosyalari?: string[]
+  mesajlar?: FiloMesajKaydi[]
+}
+
+export interface FiloMesajKaydi {
+  id: number
+  gonderen: string
+  rol: "acente" | "bolge" | "gm" | "sistem"
+  tarih: string
+  mesaj: string
+  dosyalar?: string[]
 }
 
 // filoUretimBaslangicVerisi is declared below bosFiloAraci
@@ -3803,6 +3813,33 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
   const [odemeKosullari, setOdemeKosullari] = useState<string[]>(initialKayit?.odemeKosullari ?? [])
   const [odemeNotu, setOdemeNotu] = useState(initialKayit?.odemeNotu ?? "")
   const [yuklenenDosyalar, setYuklenenDosyalar] = useState<string[]>(initialKayit?.odemeDosyalari ?? [])
+  const [mesajlar, setMesajlar] = useState<FiloMesajKaydi[]>(
+    initialKayit?.mesajlar ?? [
+      {
+        id: 1,
+        gonderen: acenteMi ? "Emre Acentelik" : bolgeMi ? "Bölge Uzmanı" : gmMi ? "Genel Müdürlük" : "Kullanıcı",
+        rol: acenteMi ? "acente" : bolgeMi ? "bolge" : gmMi ? "gm" : "acente",
+        tarih: new Date().toLocaleDateString("tr-TR") + " " + new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }),
+        mesaj: "Teklif süreci başlatıldı. Birimler arası mesajlaşma, soru ve dosya paylaşımları bu alandan yürütülmektedir.",
+      },
+    ]
+  )
+  const [yeniMesajMetni, setYeniMesajMetni] = useState("")
+
+  const mesajGonder = () => {
+    if (!yeniMesajMetni.trim() && yuklenenDosyalar.length === 0) return
+    const yeni: FiloMesajKaydi = {
+      id: Date.now(),
+      gonderen: acenteMi ? "Emre Acentelik" : bolgeMi ? "Bölge Müdürlüğü" : gmMi ? "Genel Müdürlük / GM_UZMAN" : "Sözleşme Yetkilisi",
+      rol: acenteMi ? "acente" : bolgeMi ? "bolge" : gmMi ? "gm" : "acente",
+      tarih: new Date().toLocaleDateString("tr-TR") + " " + new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }),
+      mesaj: yeniMesajMetni.trim(),
+      dosyalar: [...yuklenenDosyalar],
+    }
+    setMesajlar((prev) => [...prev, yeni])
+    setYeniMesajMetni("")
+    setYuklenenDosyalar([])
+  }
   const [hata, setHata] = useState("")
   const [aktifAdim, setAktifAdim] = useState<1 | 2 | 3 | 4>(1)
   const [acenteEk, setAcenteEk] = useState<AcenteSozlesmeEk>(bosAcenteSozlesmeEk)
@@ -3971,6 +4008,7 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
       odemeKosullari,
       odemeNotu,
       odemeDosyalari: yuklenenDosyalar,
+      mesajlar,
     })
   }
 
@@ -4046,7 +4084,7 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
             [1, "Sözleşme ve Paydaşlar"],
             [2, "Araç Bilgileri"],
             [3, "Özel Şartlar ve Notlar"],
-            [4, "Ödeme Koşulları"],
+            [4, "Mesajlaşma"],
           ] as const).map(([adim, label]) => (
             <button
               key={adim}
@@ -4489,91 +4527,139 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
         )}
 
         {aktifAdim === 4 && (
-          <>
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h3 className="text-sm font-bold text-gray-800">Ödeme Koşulları</h3>
-          <p className="mt-0.5 text-xs text-gray-400">Ödeme tipini seçerek kullanılabilecek taksit seçeneklerini belirleyin</p>
-          <div className="mt-4 max-w-sm">
-            <label className={labelCls}>Ödeme Tipi</label>
-            <select
-              value={odemeTipi}
-              onChange={(e) => {
-                setOdemeTipi(e.target.value)
-                setOdemeKosullari([])
-              }}
-              className={inputCls}
-            >
-              {Object.keys(odemeSecenekleri).map((tip) => <option key={tip}>{tip}</option>)}
-            </select>
-          </div>
-          <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
-            <div className="grid grid-cols-[64px_1fr] border-b border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-600">
-              <span>Dahil</span><span>Ödeme Koşulu</span>
+          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+              <div>
+                <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white text-xs">💬</span>
+                  Mesajlaşma
+                </h3>
+                <p className="mt-0.5 text-xs text-gray-400">Teklif ve sözleşme sürecine dair Acente, Bölge ve Genel Müdürlük arası mesajlaşma ve dosya paylaşımı</p>
+              </div>
+              <span className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                {mesajlar.length} Mesaj
+              </span>
             </div>
-            <div className="divide-y divide-gray-100">
-              {odemeSecenekleri[odemeTipi].map((kosul) => (
-                <label key={kosul} className="grid cursor-pointer grid-cols-[64px_1fr] items-center px-3 py-2.5 text-sm text-gray-700 hover:bg-blue-50/40">
-                  <input
-                    type="checkbox"
-                    checked={odemeKosullari.includes(kosul)}
-                    onChange={(e) => setOdemeKosullari((prev) =>
-                      e.target.checked ? [...prev, kosul] : prev.filter((secili) => secili !== kosul)
-                    )}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  <span>{kosul}</span>
-                </label>
+
+            {/* Mesaj Listesi / Akış */}
+            <div className="max-h-[360px] overflow-y-auto space-y-3 rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+              {mesajlar.length === 0 ? (
+                <div className="py-8 text-center text-xs text-gray-400">Henüz mesaj bulunmuyor. İlk mesajı aşağıdan gönderebilirsiniz.</div>
+              ) : (
+                mesajlar.map((m) => {
+                  const rolBadge =
+                    m.rol === "gm"
+                      ? "bg-purple-100 text-purple-700 border-purple-200"
+                      : m.rol === "bolge"
+                      ? "bg-amber-100 text-amber-700 border-amber-200"
+                      : "bg-blue-100 text-blue-700 border-blue-200"
+                  const rolLabel =
+                    m.rol === "gm" ? "Genel Müdürlük" : m.rol === "bolge" ? "Bölge" : "Acente"
+
+                  return (
+                    <div key={m.id} className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-gray-800">{m.gonderen}</span>
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold border ${rolBadge}`}>
+                            {rolLabel}
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-mono text-gray-400">{m.tarih}</span>
+                      </div>
+                      <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">{m.mesaj}</p>
+                      {m.dosyalar && m.dosyalar.length > 0 && (
+                        <div className="mt-2.5 flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
+                          {m.dosyalar.map((dosya, dIdx) => (
+                            <span key={dIdx} className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                              📎 {dosya}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+
+            {/* Hızlı Şablonlar */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-bold text-gray-500">Hızlı Şablon:</span>
+              {[
+                "Teklif risk parametreleri onayınıza sunulmuştur.",
+                "Özel fiyat ve GM ek indirim talebimiz bulunmaktadır.",
+                "Tramer hasar dökümü ve araç listesi eklenmiştir.",
+                "Müşteri revize teklifi kabul etti, sözleşme oluşturulabilir.",
+              ].map((sablon) => (
+                <button
+                  key={sablon}
+                  type="button"
+                  onClick={() => setYeniMesajMetni(sablon)}
+                  className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] text-gray-600 hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700 transition-colors"
+                >
+                  {sablon}
+                </button>
               ))}
             </div>
-          </div>
-          <div className="mt-5">
-            <label className={labelCls}>Ödeme & Süreç Notları</label>
-            <textarea
-              rows={3}
-              value={odemeNotu}
-              onChange={(e) => setOdemeNotu(e.target.value)}
-              placeholder="Ödeme koşullarına veya teklif sürecine dair notlarınızı buraya yazınız..."
-              className={inputCls}
-            />
-          </div>
 
-          <div className="mt-5">
-            <label className={labelCls}>Dosya Ekle</label>
-            <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50/60 p-5 text-center transition-colors hover:bg-gray-50">
-              <svg className="mb-2 h-7 w-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <p className="text-xs font-semibold text-gray-700">Dosyaları buraya sürükleyin veya tıklayıp seçin</p>
-              <p className="mt-1 text-[11px] text-gray-400">PDF, Excel, Word veya Görsel (Maks. 10 MB)</p>
-              <input
-                type="file"
-                multiple
-                onChange={(e) => {
-                  if (e.target.files) {
-                    const yeni = Array.from(e.target.files).map((f) => f.name)
-                    setYuklenenDosyalar((prev) => [...prev, ...yeni])
-                  }
-                }}
-                className="absolute inset-0 cursor-pointer opacity-0"
+            {/* Yeni Mesaj Yazma Alanı */}
+            <div className="space-y-3 pt-2">
+              <label className={labelCls}>Yeni Mesaj Yaz</label>
+              <textarea
+                rows={3}
+                value={yeniMesajMetni}
+                onChange={(e) => setYeniMesajMetni(e.target.value)}
+                placeholder="Mesajınızı buraya yazınız..."
+                className={inputCls}
               />
-            </div>
-            {yuklenenDosyalar.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {yuklenenDosyalar.map((dosya, idx) => (
-                  <span key={idx} className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs text-blue-700">
-                    📎 {dosya}
-                    <button
-                      type="button"
-                      onClick={() => setYuklenenDosyalar((prev) => prev.filter((_, i) => i !== idx))}
-                      className="font-bold text-blue-400 hover:text-red-500"
-                    >×</button>
-                  </span>
-                ))}
+
+              {/* Dosya Ekleme & Gönder Butonu */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <div className="flex items-center gap-2">
+                  <label className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700 cursor-pointer transition-colors shadow-2xs">
+                    📎 Dosya Ekle
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          const yeni = Array.from(e.target.files).map((f) => f.name)
+                          setYuklenenDosyalar((prev) => [...prev, ...yeni])
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                  {yuklenenDosyalar.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {yuklenenDosyalar.map((dosya, idx) => (
+                        <span key={idx} className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200 px-2 py-0.5 text-xs text-blue-700">
+                          {dosya}
+                          <button
+                            type="button"
+                            onClick={() => setYuklenenDosyalar((prev) => prev.filter((_, i) => i !== idx))}
+                            className="font-bold text-blue-400 hover:text-red-500"
+                          >×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={mesajGonder}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Mesaj Gönder
+                </button>
               </div>
-            )}
-          </div>
-        </section>
-          </>
+            </div>
+          </section>
         )}
       </div>
     </main>
@@ -4586,7 +4672,7 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
   onUpdate: (kayit: FiloUretimKaydi) => void
   onSozlesmeEki: () => void
 }) {
-  const [aktifSekme, setAktifSekme] = useState<"sozlesme" | "arac" | "notlar" | "odeme" | "tarihce">("sozlesme")
+  const [aktifSekme, setAktifSekme] = useState<"sozlesme" | "arac" | "notlar" | "mesajlasma" | "tarihce">("sozlesme")
   const [islemTipi, setIslemTipi] = useState<"ek" | "yenileme" | null>(null)
   const [secilenTarihce, setSecilenTarihce] = useState<FiloTarihceKaydi | null>(null)
   const [excelModalAcik, setExcelModalAcik] = useState(false)
@@ -4679,7 +4765,7 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
             ["sozlesme", "Sözleşme ve Paydaşlar"],
             ["arac", "Araç Bilgileri"],
             ["notlar", "Özel Şartlar ve Notlar"],
-            ["odeme", "Ödeme Koşulları"],
+            ["mesajlasma", "Mesajlaşma"],
             ["tarihce", "Ek Tarihçe"],
           ] as const).map(([id, label]) => (
             <button key={id} onClick={() => setAktifSekme(id)} className={`px-4 py-3 text-sm font-semibold ${aktifSekme === id ? "bg-blue-600 text-white" : "text-gray-500 hover:bg-gray-50"}`}>{label}</button>
@@ -4814,43 +4900,63 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
           </div>
         )}
 
-        {aktifSekme === "odeme" && (
+        {aktifSekme === "mesajlasma" && (
           <div className="space-y-4">
-            <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h3 className="mb-1 text-sm font-bold text-gray-800">Ödeme Koşulları</h3>
-              <p className="mb-4 text-xs text-gray-400">Ödeme tipi: {kayit.odemeTipi || "—"}</p>
-              {(kayit.odemeKosullari ?? []).length === 0 ? (
-                <p className="py-5 text-center text-sm text-gray-400">Ödeme koşulu seçilmemiş.</p>
-              ) : (
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                  {(kayit.odemeKosullari ?? []).map((kosul) => (
-                    <div key={kosul} className="flex items-center gap-2 rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-sm text-green-800">
-                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-xs text-white">✓</span>
-                      {kosul}
-                    </div>
-                  ))}
+            <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white text-xs">💬</span>
+                    Mesajlaşma &amp; İletişim Akışı
+                  </h3>
+                  <p className="mt-0.5 text-xs text-gray-400">Teklif kaydına ilişkin birimler arası tüm mesajlar ve ekli belgeler</p>
                 </div>
-              )}
+                <span className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                  {(kayit.mesajlar || []).length} Mesaj
+                </span>
+              </div>
 
-              {kayit.odemeNotu && (
-                <div className="mt-5 border-t border-gray-100 pt-4">
-                  <p className="text-xs font-semibold text-gray-600">Ödeme & Süreç Notu:</p>
-                  <p className="mt-1 rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700 whitespace-pre-wrap">{kayit.odemeNotu}</p>
-                </div>
-              )}
+              {/* Mesaj Listesi */}
+              <div className="max-h-[400px] overflow-y-auto space-y-3 rounded-xl border border-gray-200 bg-gray-50/60 p-4">
+                {(kayit.mesajlar || []).length === 0 ? (
+                  <p className="py-8 text-center text-xs text-gray-400">Bu kayıtta henüz mesaj bulunmuyor.</p>
+                ) : (
+                  (kayit.mesajlar || []).map((m) => {
+                    const rolBadge =
+                      m.rol === "gm"
+                        ? "bg-purple-100 text-purple-700 border-purple-200"
+                        : m.rol === "bolge"
+                        ? "bg-amber-100 text-amber-700 border-amber-200"
+                        : "bg-blue-100 text-blue-700 border-blue-200"
+                    const rolLabel =
+                      m.rol === "gm" ? "Genel Müdürlük" : m.rol === "bolge" ? "Bölge" : "Acente"
 
-              {(kayit.odemeDosyalari ?? []).length > 0 && (
-                <div className="mt-4 border-t border-gray-100 pt-4">
-                  <p className="mb-2 text-xs font-semibold text-gray-600">Ekli Dosyalar:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {kayit.odemeDosyalari!.map((d, i) => (
-                      <span key={i} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700">
-                        📎 {d}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+                    return (
+                      <div key={m.id} className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-gray-800">{m.gonderen}</span>
+                            <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold border ${rolBadge}`}>
+                              {rolLabel}
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-mono text-gray-400">{m.tarih}</span>
+                        </div>
+                        <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">{m.mesaj}</p>
+                        {m.dosyalar && m.dosyalar.length > 0 && (
+                          <div className="mt-2.5 flex flex-wrap gap-1.5 pt-2 border-t border-gray-100">
+                            {m.dosyalar.map((dosya, dIdx) => (
+                              <span key={dIdx} className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                                📎 {dosya}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })
+                )}
+              </div>
             </section>
           </div>
         )}
