@@ -3241,6 +3241,9 @@ interface FiloUretimKaydi {
   odemeNotu?: string
   odemeDosyalari?: string[]
   mesajlar?: FiloMesajKaydi[]
+  ozelFiyat?: string
+  ozelIndirim?: string
+  sabitFiyat?: string
 }
 
 export interface FiloMesajKaydi {
@@ -6050,18 +6053,22 @@ function FiloUretimGoruntulePage({
 interface SozlesmeKaydi {
   id: number
   sozlesmeNo: string
+  sozlesmeAdi?: string
   musteriUnvani: string
   vknTckn: string
   talepTipi: string
   brans: string
   aracAdedi: string | number
   olusturulmaTarihi: string
+  baslangic?: string
+  bitis?: string
   durum: "Yürürlükte" | "Aktif" | "Yenileme Bekliyor"
   eposta?: string
   telefon?: string
   yetkiliKisi?: string
   ozelFiyat?: string
   ozelIndirim?: string
+  sabitFiyat?: string
   gmNotu?: string
   odemePlani?: string
   kaynakTeklifNo?: string
@@ -6126,88 +6133,88 @@ function GmSozlesmeOlusturModal({
   onSuccess: (yeniSozlesme: SozlesmeKaydi, guncelTeklif: FiloUretimKaydi) => void
 }) {
   const varsayilanNo = `SZL-2026-${kayit.sozlesmeNo ? kayit.sozlesmeNo.replace(/\D/g, "").slice(-5) : Math.floor(10000 + Math.random() * 90000)}`
-  const [ozelIndirim, setOzelIndirim] = useState("15")
-  const [ozelFiyat, setOzelFiyat] = useState("₺425.000")
-  const [sozlesmeNo, setSozlesmeNo] = useState(varsayilanNo)
-  const [musteriUnvani, setMusteriUnvani] = useState(kayit.kontakAdi || kayit.sozlesmeAdi || "Kurumsal Filo Müşterisi")
-  const [vknTckn, setVknTckn] = useState(kayit.kontakNo || "3920194821")
-  const [eposta, setEposta] = useState("operasyon@anadolusigorta.com.tr")
-  const [telefon, setTelefon] = useState("0850 724 0850")
-  const [yetkiliKisi, setYetkiliKisi] = useState(kayit.kontakAdi || "Filo Operasyon Direktörü")
-  const [odemePlani, setOdemePlani] = useState("4 Taksit (Peşinat + 3 Taksit)")
-  const [sozlesmeDurumu, setSozlesmeDurumu] = useState<"Yürürlükte" | "Aktif">("Yürürlükte")
-  const [ozelSartlar, setOzelSartlar] = useState(
-    `Genel Müdürlük Filo Özel Protokolü onaylanmıştır. %${ozelIndirim} filo indirimi tanımlanmış olup muafiyet klozları GM yetkisinde revize edilmiştir.`
-  )
-  const [gmOnayNotu, setGmOnayNotu] = useState(
-    "Teklif risk parametreleri ve tramer hasar geçmişi incelendi. Özel fiyatlandırma ile onaylanarak sözleşmeye aktarılmıştır."
-  )
-  const [teminatlar, setTeminatlar] = useState<TeminatSatiri[]>(
-    kayit.araclar && kayit.araclar.length > 0 && kayit.araclar[0].teminatSatirlari && kayit.araclar[0].teminatSatirlari.length > 0
-      ? kayit.araclar[0].teminatSatirlari
-      : varsayilanTeminatSatirlari()
-  )
 
-  const aracSayisi = kayit.araclar?.length || 1
-  const bazTarife = 500000
-  const yuzdeSayi = parseFloat(ozelIndirim) || 0
-  const indirimTutari = Math.round(bazTarife * (yuzdeSayi / 100))
-  const netHesaplanan = Math.max(0, bazTarife - indirimTutari)
-  const aracBasiNet = Math.round(netHesaplanan / aracSayisi)
+  const isoTarih = (t: Date) =>
+    `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`
+  const parseTarihInput = (t?: string) => {
+    if (!t) return ""
+    const parts = t.split("/")
+    return parts.length === 3 ? parts.reverse().join("-") : t
+  }
+  const toDisplayTarih = (t: string) => (t ? t.split("-").reverse().join("/") : "")
 
-  const indirimSec = (oran: string) => {
-    setOzelIndirim(oran)
-    const o = parseFloat(oran) || 0
-    const net = Math.round(bazTarife * (1 - o / 100))
-    setOzelFiyat(`₺${net.toLocaleString("tr-TR")}`)
-    setOzelSartlar(
-      `Genel Müdürlük Filo Özel Protokolü onaylanmıştır. %${oran} filo indirimi tanımlanmış olup muafiyet klozları GM yetkisinde revize edilmiştir.`
-    )
+  const sistemTarihi = isoTarih(new Date())
+  const altiAySonra = () => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() + 1)
+    return isoTarih(d)
   }
 
-  const tramerVarMi = kayit.durum === "Tramer Verisi Geldi" || (kayit.tarihce && kayit.tarihce.some((t) => t.tur === "tramer"))
+  // SADECE İSTENEN ALANLAR:
+  // 1. Sözleşme Adı
+  const [sozlesmeAdi, setSozlesmeAdi] = useState(
+    kayit.sozlesmeAdi || `${kayit.kontakAdi || "Kurumsal Filo"} Çerçeve Sözleşmesi`
+  )
+  // 2. Sözleşme Başlangıç Tarihi
+  const [baslangic, setBaslangic] = useState(
+    parseTarihInput(kayit.baslangic) || sistemTarihi
+  )
+  // 3. Sözleşme Bitiş Tarihi
+  const [bitis, setBitis] = useState(
+    parseTarihInput(kayit.bitis) || altiAySonra()
+  )
+  // 4. Özel Fiyat
+  const [ozelFiyat, setOzelFiyat] = useState(kayit.ozelFiyat || "₺425.000")
+  // 5. Özel İndirim
+  const [ozelIndirim, setOzelIndirim] = useState(kayit.ozelIndirim || "15")
+  // 6. Sabit Fiyat
+  const [sabitFiyat, setSabitFiyat] = useState(kayit.sabitFiyat || "")
 
   const handleOlustur = () => {
-    const simdi = new Date().toLocaleDateString("tr-TR")
     const simdiSaat = new Date().toLocaleString("tr-TR")
-    const nihaiSozlesmeNo = sozlesmeNo.trim() || varsayilanNo
+    const formatliBaslangic = toDisplayTarih(baslangic) || kayit.baslangic || new Date().toLocaleDateString("tr-TR")
+    const formatliBitis = toDisplayTarih(bitis) || kayit.bitis || "31/12/2026"
+    const nihaiSozlesmeNo = kayit.sozlesmeNo?.startsWith("SZL")
+      ? kayit.sozlesmeNo
+      : varsayilanNo
 
     const yeniSozlesme: SozlesmeKaydi = {
       id: Date.now(),
       sozlesmeNo: nihaiSozlesmeNo,
-      musteriUnvani: musteriUnvani.trim(),
-      vknTckn: vknTckn.trim(),
+      sozlesmeAdi: sozlesmeAdi.trim() || kayit.sozlesmeAdi || "Kurumsal Filo Sözleşmesi",
+      musteriUnvani: kayit.kontakAdi || sozlesmeAdi.trim() || "Kurumsal Filo Müşterisi",
+      vknTckn: kayit.kontakNo || "3920194821",
       talepTipi: "Sözleşme Teklifinden Üretildi",
       brans: kayit.urunAdi || "Kasko",
-      aracAdedi: String(aracSayisi),
-      olusturulmaTarihi: simdi,
-      durum: sozlesmeDurumu,
-      eposta: eposta.trim(),
-      telefon: telefon.trim(),
-      yetkiliKisi: yetkiliKisi.trim(),
+      aracAdedi: kayit.araclar?.length || 1,
+      olusturulmaTarihi: formatliBaslangic,
+      baslangic: formatliBaslangic,
+      bitis: formatliBitis,
+      durum: "Yürürlükte",
       ozelFiyat: ozelFiyat.trim(),
       ozelIndirim: ozelIndirim.trim(),
-      odemePlani,
-      gmNotu: gmOnayNotu.trim(),
+      sabitFiyat: sabitFiyat.trim(),
       kaynakTeklifNo: kayit.sozlesmeNo,
       filoVerisi: {
         ...kayit,
+        sozlesmeAdi: sozlesmeAdi.trim() || kayit.sozlesmeAdi,
         sozlesmeNo: nihaiSozlesmeNo,
         policeNo: `${nihaiSozlesmeNo}/00`,
+        baslangic: formatliBaslangic,
+        bitis: formatliBitis,
         durum: "Sözleşme Poliçe",
         onayStatusu: "Onaylandı",
         onaylayan: "Genel Müdürlük",
-        onayTarihi: simdi,
-        kontakAdi: musteriUnvani.trim(),
-        kontakNo: vknTckn.trim(),
-        odemeTipi: odemePlani,
-        odemeNotu: gmOnayNotu.trim(),
+        onayTarihi: formatliBaslangic,
+        ozelFiyat: ozelFiyat.trim(),
+        ozelIndirim: ozelIndirim.trim(),
+        sabitFiyat: sabitFiyat.trim(),
         araclar: (kayit.araclar && kayit.araclar.length > 0 ? kayit.araclar : [{ ...bosFiloAraci, id: 1 }]).map((a, i) => ({
           ...a,
           id: a.id || i + 1,
-          primTipi: "Özel İndirim",
-          indirimYuzdesi: ozelIndirim,
-          teminatSatirlari: teminatlar,
+          primTipi: ozelIndirim.trim() ? "Özel İndirim" : a.primTipi,
+          indirimYuzdesi: ozelIndirim.trim() || a.indirimYuzdesi,
+          ozelFiyatOrani: ozelFiyat.trim() || a.ozelFiyatOrani,
         })),
         tarihce: [
           ...(kayit.tarihce || []),
@@ -6215,7 +6222,7 @@ function GmSozlesmeOlusturModal({
             id: Date.now(),
             tarih: simdiSaat,
             islem: "Genel Müdürlük Sözleşme Oluşturdu",
-            aciklama: `${nihaiSozlesmeNo} nolu sözleşme %${ozelIndirim} GM özel indirimi ve ${ozelFiyat} özel fiyat ile onaylanıp Sözleşmelerim listesine aktarıldı. GM Notu: ${gmOnayNotu}`,
+            aciklama: `${nihaiSozlesmeNo} nolu sözleşme (${sozlesmeAdi}) oluşturuldu. ${ozelIndirim ? `Özel İndirim: %${ozelIndirim}. ` : ""}${ozelFiyat ? `Özel Fiyat: ${ozelFiyat}. ` : ""}${sabitFiyat ? `Sabit Fiyat: ${sabitFiyat}.` : ""}`,
             kullanici: "GM_UZMAN",
             tur: "police",
             numara: nihaiSozlesmeNo,
@@ -6226,16 +6233,22 @@ function GmSozlesmeOlusturModal({
 
     const guncelTeklif: FiloUretimKaydi = {
       ...kayit,
+      sozlesmeAdi: sozlesmeAdi.trim() || kayit.sozlesmeAdi,
+      baslangic: formatliBaslangic,
+      bitis: formatliBitis,
       durum: "Sözleşme Oluşturuldu",
       policeNo: nihaiSozlesmeNo,
       onayStatusu: "Onaylandı",
+      ozelFiyat: ozelFiyat.trim(),
+      ozelIndirim: ozelIndirim.trim(),
+      sabitFiyat: sabitFiyat.trim(),
       tarihce: [
         ...(kayit.tarihce || []),
         {
           id: Date.now() + 1,
           tarih: simdiSaat,
           islem: "Sözleşmeye Dönüştürüldü",
-          aciklama: `Teklif Genel Müdürlük yetkisiyle onaylandı ve ${nihaiSozlesmeNo} numaralı sözleşmeye dönüştürüldü (%${ozelIndirim} Özel İndirim, ${ozelFiyat}).`,
+          aciklama: `Teklif onaylanarak ${nihaiSozlesmeNo} numaralı sözleşmeye dönüştürüldü.`,
           kullanici: "GM_UZMAN",
           tur: "police",
           numara: nihaiSozlesmeNo,
@@ -6248,386 +6261,163 @@ function GmSozlesmeOlusturModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95">
+      <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col animate-in fade-in zoom-in-95">
         {/* Header */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 py-4 text-white flex items-center justify-between border-b border-indigo-800/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white font-bold text-base shadow-inner border border-emerald-400/40">
-              GM
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points="14 2 14 8 20 8" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="16" y1="13" x2="8" y2="13" strokeLinecap="round" />
+                <line x1="16" y1="17" x2="8" y2="17" strokeLinecap="round" />
+                <line x1="10" y1="9" x2="8" y2="9" strokeLinecap="round" />
+              </svg>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white tracking-wide">Genel Müdürlük — Sözleşme Oluşturma & Fiyatlandırma Onayı</h3>
-                <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
-                  Özel Yetki
+                <h3 className="text-base font-bold text-white tracking-wide">Sözleşme Oluştur</h3>
+                <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                  {kayit.sozlesmeNo}
                 </span>
               </div>
               <p className="text-xs text-indigo-200/80 mt-0.5">
-                Teklif bilgileri aktarılır; GM özel fiyat, indirim ve eksik sözleşme parametrelerini tamamlar.
+                Sözleşme bilgilerini ve fiyatlandırma şartlarını belirleyiniz.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors text-sm font-bold"
+            className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors text-sm font-bold cursor-pointer"
           >
             ✕
           </button>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="overflow-y-auto p-6 space-y-5 bg-slate-50/50">
-          {/* Card 1: Tekliften Aktarılan Bilgiler (Özet) */}
-          <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 shadow-2xs">
-            <div className="flex items-center justify-between mb-3 border-b border-blue-100 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">📋</span>
-                <h4 className="text-xs font-bold text-blue-950 uppercase tracking-wide">Tekliften Aktarılan Bilgiler (Otomatik)</h4>
-              </div>
-              <span className="text-[11px] text-blue-700 font-medium bg-blue-100/70 rounded-full px-2 py-0.5">
-                Kaynak Teklif: <strong className="font-mono">{kayit.sozlesmeNo}</strong>
-              </span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="bg-white rounded-lg p-2.5 border border-blue-100 shadow-2xs">
-                <div className="text-[10px] text-gray-400 font-semibold uppercase">Sözleşme / Teklif Adı</div>
-                <div className="font-bold text-gray-800 truncate mt-0.5" title={kayit.sozlesmeAdi}>{kayit.sozlesmeAdi}</div>
-              </div>
-              <div className="bg-white rounded-lg p-2.5 border border-blue-100 shadow-2xs">
-                <div className="text-[10px] text-gray-400 font-semibold uppercase">Müşteri & VKN</div>
-                <div className="font-bold text-gray-800 truncate mt-0.5">{kayit.kontakAdi || "Kurumsal Müşteri"}</div>
-                <div className="text-[10px] font-mono text-gray-500">VKN: {kayit.kontakNo || "—"}</div>
-              </div>
-              <div className="bg-white rounded-lg p-2.5 border border-blue-100 shadow-2xs">
-                <div className="text-[10px] text-gray-400 font-semibold uppercase">Branş & Poliçe Türü</div>
-                <div className="font-bold text-gray-800 mt-0.5">{kayit.urunAdi} - {kayit.policeTipi}</div>
-                <div className="text-[10px] text-blue-600 font-medium mt-0.5">{aracSayisi} Adet Araç</div>
-              </div>
-              <div className="bg-white rounded-lg p-2.5 border border-blue-100 shadow-2xs">
-                <div className="text-[10px] text-gray-400 font-semibold uppercase">Dönem & Acente</div>
-                <div className="font-medium text-gray-800 mt-0.5">{kayit.baslangic} — {kayit.bitis}</div>
-                <div className="text-[10px] text-gray-500 truncate">{kayit.acenteAdi || "Emre Acentelik"}</div>
-              </div>
-            </div>
-            {tramerVarMi && (
-              <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-800 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span><strong>Tramer Verileri Bağlandı:</strong> Sistem taramasıyla 13 aracın tramer hasar ve poliçe dökümü sözleşme ek tarihçesine aktarıldı.</span>
-              </div>
-            )}
+        {/* Body - SADECE İSTENEN 6 ALAN */}
+        <div className="p-6 space-y-4 bg-slate-50/50">
+          {/* 1. Sözleşme Adı */}
+          <div>
+            <label className="block text-xs font-bold text-gray-800 mb-1.5">
+              Sözleşme Adı <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={sozlesmeAdi}
+              onChange={(e) => setSozlesmeAdi(e.target.value)}
+              placeholder="Sözleşme Adını Giriniz"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all shadow-2xs"
+            />
           </div>
 
-          {/* Card 2: GM Özel Fiyat ve Özel İndirim Alanları */}
-          <div className="rounded-xl border-2 border-amber-400/80 bg-amber-50/30 p-5 shadow-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 border-b border-amber-200/80 pb-3">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xs shadow-xs">
-                  ⚡
-                </span>
-                <div>
-                  <h4 className="text-sm font-bold text-amber-950">Genel Müdürlük Özel Fiyat ve İndirim Yetkisi</h4>
-                  <p className="text-[11px] text-amber-900/80">Sözleşmeye uygulanacak GM özel indirim oranını ve onaylanan nihai fiyatı belirleyiniz.</p>
-                </div>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-3 py-0.5 text-xs font-bold text-amber-900">
-                ⭐ GM İndirim Onayı
-              </span>
+          {/* 2 & 3. Sözleşme Başlangıç ve Bitiş Alanı */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                Sözleşme Başlangıç Tarihi <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={baslangic}
+                onChange={(e) => setBaslangic(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all shadow-2xs"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                Sözleşme Bitiş Tarihi <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={bitis}
+                min={baslangic}
+                onChange={(e) => setBitis(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all shadow-2xs"
+              />
+            </div>
+          </div>
+
+          {/* 4, 5, 6. Özel Fiyat, Özel İndirim, Sabit Fiyat Alanı */}
+          <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 space-y-3.5">
+            <div className="flex items-center gap-2 border-b border-amber-200/70 pb-2">
+              <span className="text-amber-600 text-sm font-bold">⚡</span>
+              <span className="text-xs font-bold text-amber-950 uppercase tracking-wide">Fiyatlandırma & İndirim Koşulları</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Sol: İndirim Oranı ve Fiyat Girişi */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    Özel İndirim Oranı (%) <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={ozelIndirim}
-                      onChange={(e) => indirimSec(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-bold text-gray-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none pr-8"
-                      placeholder="15"
-                    />
-                    <span className="absolute right-3 top-2.5 font-bold text-gray-400 text-sm">%</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                    <span className="text-[10px] text-gray-500 font-semibold">Hızlı Seçim:</span>
-                    {["5", "10", "15", "18", "20", "25", "30"].map((oran) => (
-                      <button
-                        key={oran}
-                        type="button"
-                        onClick={() => indirimSec(oran)}
-                        className={`rounded px-2 py-0.5 text-[11px] font-bold transition-colors ${
-                          ozelIndirim === oran
-                            ? "bg-amber-500 text-white shadow-2xs"
-                            : "bg-white border border-gray-200 text-gray-700 hover:bg-amber-100"
-                        }`}
-                      >
-                        %{oran}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    Özel Sözleşme Fiyatı / Toplam Prim (₺) <span className="text-red-500">*</span>
-                  </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Özel Fiyat */}
+              <div>
+                <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                  Özel Fiyat
+                </label>
+                <div className="relative">
                   <input
                     type="text"
                     value={ozelFiyat}
                     onChange={(e) => setOzelFiyat(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-bold font-mono text-emerald-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none"
                     placeholder="₺425.000"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold font-mono text-emerald-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none shadow-2xs"
                   />
-                  <p className="text-[10px] text-gray-500 mt-1">İndirim oranına göre otomatik hesaplanır veya serbest tutar girilebilir.</p>
                 </div>
               </div>
 
-              {/* Sağ: Prim Hesaplama & Canlı Dağılım Kartı */}
-              <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-white to-amber-50/60 p-4 shadow-2xs flex flex-col justify-between">
-                <div className="text-xs font-bold text-gray-700 border-b border-amber-100 pb-2 mb-3 flex items-center justify-between">
-                  <span>📊 Fiyatlandırma Hesap Özeti</span>
-                  <span className="text-[11px] text-amber-800 font-medium">{aracSayisi} Araçlık Filo</span>
+              {/* Özel İndirim */}
+              <div>
+                <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                  Özel İndirim (%)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={ozelIndirim}
+                    onChange={(e) => setOzelIndirim(e.target.value)}
+                    placeholder="15"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold font-mono text-amber-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none pr-7 shadow-2xs"
+                  />
+                  <span className="absolute right-2.5 top-2 font-bold text-gray-400 text-xs">%</span>
                 </div>
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center justify-between text-gray-600">
-                    <span>Tarife / Liste Brüt Primi:</span>
-                    <span className="font-mono font-medium">₺{bazTarife.toLocaleString("tr-TR")}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-amber-800 font-medium">
-                    <span>GM Özel İndirimi (%{ozelIndirim}):</span>
-                    <span className="font-mono font-bold">-₺{indirimTutari.toLocaleString("tr-TR")}</span>
-                  </div>
-                  <div className="pt-2 border-t border-amber-200 flex items-center justify-between text-emerald-800">
-                    <span className="font-bold text-sm">Onaylanan Net Sözleşme Primi:</span>
-                    <span className="font-mono font-extrabold text-base">{ozelFiyat}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-gray-500 pt-1">
-                    <span>Araç Başı Ortalama Net:</span>
-                    <span className="font-mono font-semibold text-gray-700">~₺{aracBasiNet.toLocaleString("tr-TR")} / araç</span>
-                  </div>
-                </div>
-                <div className="mt-3 text-[10px] text-amber-900/80 bg-amber-100/70 rounded-md p-1.5 text-center font-medium">
-                  ✓ Belirlenen GM indirim oranı ve net prim, sözleşmedeki tüm araçların teminat detaylarına otomatik yansıtılır.
+              </div>
+
+              {/* Sabit Fiyat */}
+              <div>
+                <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                  Sabit Fiyat
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={sabitFiyat}
+                    onChange={(e) => setSabitFiyat(e.target.value)}
+                    placeholder="₺500.000"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold font-mono text-blue-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none shadow-2xs"
+                  />
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Card 3: Eksik Bilgileri Tamamlama Alanları (Sadece GM) */}
-          <div className="rounded-xl border border-indigo-200 bg-white p-5 shadow-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 border-b border-gray-100 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white text-xs font-bold shadow-xs">
-                  🔒
-                </span>
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900">Sözleşme Parametreleri & Eksik Bilgiler</h4>
-                  <p className="text-[11px] text-indigo-700 font-semibold">Bu alanlar yalnızca Genel Müdürlük kullanıcısı tarafından doldurulabilir ve sözleşmeye işlenir.</p>
-                </div>
-              </div>
-              <span className="rounded-md bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1">
-                Yalnızca GM Yetkisinde
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Sözleşme No <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={sozlesmeNo}
-                  onChange={(e) => setSozlesmeNo(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono font-bold text-blue-700 focus:border-indigo-500 outline-none bg-blue-50/20"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Müşteri Resmi Ünvanı <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={musteriUnvani}
-                  onChange={(e) => setMusteriUnvani(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  VKN / TCKN <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={vknTckn}
-                  onChange={(e) => setVknTckn(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-gray-800 focus:border-indigo-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Müşteri E-Posta (Eksikse Tamamla)
-                </label>
-                <input
-                  type="email"
-                  value={eposta}
-                  onChange={(e) => setEposta(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none"
-                  placeholder="operasyon@musteri.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  İletişim Telefonu
-                </label>
-                <input
-                  type="text"
-                  value={telefon}
-                  onChange={(e) => setTelefon(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none"
-                  placeholder="0212 555 0123"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Yetkili Kontak Kişi
-                </label>
-                <input
-                  type="text"
-                  value={yetkiliKisi}
-                  onChange={(e) => setYetkiliKisi(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none"
-                  placeholder="Ad Soyad"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Ödeme Planı & Vade <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={odemePlani}
-                  onChange={(e) => setOdemePlani(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none bg-white"
-                >
-                  <option value="Tek Çekim Peşin">Tek Çekim Peşin</option>
-                  <option value="3 Eşit Taksit (Peşinatsız)">3 Eşit Taksit (Peşinatsız)</option>
-                  <option value="4 Taksit (Peşinat + 3 Taksit)">4 Taksit (Peşinat + 3 Taksit)</option>
-                  <option value="6 Eşit Taksit">6 Eşit Taksit</option>
-                  <option value="9 Taksit (Kredi Kartı / DBS)">9 Taksit (Kredi Kartı / DBS)</option>
-                  <option value="12 Taksit (Teminat Mektuplu)">12 Taksit (Teminat Mektuplu)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Sözleşme Durumu <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={sozlesmeDurumu}
-                  onChange={(e) => setSozlesmeDurumu(e.target.value as "Yürürlükte" | "Aktif")}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-800 focus:border-indigo-500 outline-none bg-white font-semibold text-green-700"
-                >
-                  <option value="Yürürlükte">Yürürlükte (Aktif Poliçe Üretilebilir)</option>
-                  <option value="Aktif">Aktif</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Onaylayan Yetkili
-                </label>
-                <input
-                  type="text"
-                  disabled
-                  value="Genel Müdürlük / GM_UZMAN"
-                  className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-gray-500 font-medium cursor-not-allowed"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Özel Sözleşme Klozları & Muafiyet Şartları (GM Yetkisinde)
-                </label>
-                <textarea
-                  rows={2}
-                  value={ozelSartlar}
-                  onChange={(e) => setOzelSartlar(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 p-2.5 text-xs text-gray-800 focus:border-indigo-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Genel Müdürlük Karar & Onay Notu (Tarihçeye Eklenecektir)
-                </label>
-                <textarea
-                  rows={2}
-                  value={gmOnayNotu}
-                  onChange={(e) => setGmOnayNotu(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 p-2.5 text-xs text-gray-800 focus:border-indigo-500 outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: Teminat Detayları */}
-          <div className="rounded-xl border border-gray-300 bg-white p-5 shadow-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-gray-100 pb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white text-xs font-bold shadow-xs">
-                  🛡️
-                </span>
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900">Teminat Detayları</h4>
-                  <p className="text-[11px] text-gray-500">Sözleşmeye aktarılacak 15 teminatın limit ve muafiyet parametreleri</p>
-                </div>
-              </div>
-              <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">
-                15 Teminat Tanımlı
-              </span>
-            </div>
-            <TeminatDetaylariTablosu
-              satirlar={teminatlar}
-              onChange={setTeminatlar}
-            />
           </div>
         </div>
 
         {/* Modal Footer */}
-        <div className="bg-white px-6 py-4 border-t border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="text-xs text-gray-500 flex items-center gap-1.5">
-            <span className="text-emerald-600 font-bold">✓</span>
-            <span>Onaylandığında teklif bilgileri aktarılır ve kayıt anında <strong>Sözleşmelerim</strong> alanına eklenir.</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onClose}
-              className="rounded-lg border border-gray-300 hover:bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 transition-colors"
-            >
-              Vazgeç
-            </button>
-            <button
-              onClick={handleOlustur}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 px-5 py-2 text-xs font-bold text-white shadow-md hover:shadow-lg transition-all"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Sözleşmeyi Oluştur ve Sözleşmelerim&apos;e Aktar
-            </button>
-          </div>
+        <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-gray-300 hover:bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 transition-colors cursor-pointer"
+          >
+            Vazgeç
+          </button>
+          <button
+            type="button"
+            onClick={handleOlustur}
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 px-5 py-2 text-xs font-bold text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Sözleşmeyi Oluştur
+          </button>
         </div>
       </div>
     </div>
@@ -7527,16 +7317,21 @@ function SozlesmelerimPage({
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="font-mono font-semibold text-blue-700">{s.sozlesmeNo}</div>
-                          {(s.ozelIndirim || s.ozelFiyat) && (
+                          {(s.ozelIndirim || s.ozelFiyat || s.sabitFiyat) && (
                             <div className="flex flex-wrap items-center gap-1 mt-0.5">
                               {s.ozelIndirim && (
                                 <span className="inline-flex items-center text-[10px] bg-amber-50 text-amber-800 border border-amber-200 rounded px-1.5 py-0.2 font-semibold">
-                                  GM İndirim %{s.ozelIndirim}
+                                  İndirim %{s.ozelIndirim}
                                 </span>
                               )}
                               {s.ozelFiyat && (
                                 <span className="inline-flex items-center text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 rounded px-1.5 py-0.2 font-semibold">
                                   {s.ozelFiyat}
+                                </span>
+                              )}
+                              {s.sabitFiyat && (
+                                <span className="inline-flex items-center text-[10px] bg-blue-50 text-blue-800 border border-blue-200 rounded px-1.5 py-0.2 font-semibold">
+                                  Sabit: {s.sabitFiyat}
                                 </span>
                               )}
                             </div>
