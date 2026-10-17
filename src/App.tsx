@@ -8105,34 +8105,6 @@ function SozlesmelerimPage({
                 </svg>
                 Görüntüle
               </button>
-              <button
-                onClick={() => secili && goruntulemeyiAc(secili, "tarihce")}
-                title="Seçili Sözleşmenin Ek Tarihçesini Görüntüle"
-                disabled={secilenler.size !== 1}
-                className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                Ek Tarihçesi
-              </button>
-              {gmMi && (
-                <button
-                  onClick={() => sozlesmeEkiAc()}
-                  title="Sözleşme Eki Oluştur"
-                  disabled={secilenler.size !== 1}
-                  className="flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="12" y1="18" x2="12" y2="12" />
-                    <line x1="9" y1="15" x2="15" y2="15" />
-                  </svg>
-                  Sözleşme Eki
-                </button>
-              )}
             </div>
             <span className="text-xs text-gray-400">{filtreli.length} sözleşme</span>
           </div>
@@ -8152,7 +8124,7 @@ function SozlesmelerimPage({
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
                   </th>
-                  <th className="px-4 py-3 font-semibold">Sözleşme No / Ek</th>
+                  <th className="px-4 py-3 font-semibold">Sözleşme No</th>
                   <th className="px-4 py-3 font-semibold">Müşteri Ünvanı</th>
                   <th className="px-4 py-3 font-semibold">Branş</th>
                   <th className="px-4 py-3 font-semibold text-center">Araç Sayısı</th>
@@ -8171,8 +8143,6 @@ function SozlesmelerimPage({
                 ) : (
                   filtreli.map((s) => {
                     const seciliMi = secilenler.has(s.id)
-                    const ekler = (s.filoVerisi?.tarihce ?? []).filter((t) => t.tur === "ek" || (t.ekNo && t.ekNo !== "0"))
-                    const ekSayisi = ekler.length
 
                     return (
                       <tr
@@ -8192,18 +8162,7 @@ function SozlesmelerimPage({
                           />
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-semibold text-blue-700">{s.sozlesmeNo}</span>
-                            {ekSayisi > 0 ? (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 text-[10px] font-bold">
-                                📄 {ekSayisi}. Ek
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold">
-                                🏷️ Ek 0
-                              </span>
-                            )}
-                          </div>
+                          <div className="font-mono font-semibold text-blue-700">{s.sozlesmeNo}</div>
                           {(s.ozelIndirim || s.ozelFiyat || s.sabitFiyat) && (
                             <div className="flex flex-wrap items-center gap-1 mt-0.5">
                               {s.ozelIndirim && (
@@ -8243,13 +8202,6 @@ function SozlesmelerimPage({
                         <td className="px-4 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1.5">
                             <button
-                              onClick={() => goruntulemeyiAc(s, "tarihce")}
-                              title="Ek Tarihçesini Görüntüle"
-                              className="inline-flex items-center gap-1 rounded border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors"
-                            >
-                              <span className="text-[11px]">🕒</span> Ek Tarihçesi
-                            </button>
-                            <button
                               onClick={() => goruntulemeyiAc(s, "sozlesme")}
                               title="Görüntüle"
                               className="p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -8260,29 +8212,15 @@ function SozlesmelerimPage({
                               </svg>
                             </button>
                             {gmMi && (
-                              <>
-                                <button
-                                  onClick={() => duzenlemeyiAc(s)}
-                                  title="Güncelle"
-                                  className="p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4z" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() => sozlesmeEkiAc(s)}
-                                  title="Sözleşme Eki"
-                                  className="p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                                    <polyline points="14 2 14 8 20 8" />
-                                    <line x1="12" y1="18" x2="12" y2="12" />
-                                    <line x1="9" y1="15" x2="15" y2="15" />
-                                  </svg>
-                                </button>
-                              </>
+                              <button
+                                onClick={() => duzenlemeyiAc(s)}
+                                title="Güncelle"
+                                className="p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L8 18l-4 1 1-4z" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </button>
                             )}
                           </div>
                         </td>
