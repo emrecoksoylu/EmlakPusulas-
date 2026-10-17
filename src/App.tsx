@@ -3493,7 +3493,6 @@ function TeminatDetaylariTablosu({
                   <span>CheckBox</span>
                 </div>
               </th>
-              <th className="w-32 border-r border-gray-200 px-3 py-2.5 font-bold text-gray-700">Tür</th>
               <th className="border-r border-gray-200 px-3 py-2.5 font-bold text-gray-800">Teminat adı</th>
               <th className="w-60 border-r border-gray-200 px-3 py-2.5 font-bold text-gray-800">Olaybaşı limit</th>
               <th className="w-60 px-3 py-2.5 font-bold text-gray-800">Muafiyet</th>
@@ -3533,22 +3532,9 @@ function TeminatDetaylariTablosu({
                     )}
                   </td>
 
-                  {/* Tür */}
-                  <td className="border-r border-gray-200 px-3 py-2 align-middle whitespace-nowrap">
-                    {isAna ? (
-                      <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200">
-                        Ana Teminat
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium text-gray-600 bg-gray-100 border border-gray-200">
-                        Alt Teminat
-                      </span>
-                    )}
-                  </td>
-
                   {/* Teminat Adı */}
                   <td className="border-r border-gray-200 px-3 py-2 align-middle">
-                    <span className={`text-xs ${isAna ? "font-bold text-gray-900" : "font-medium text-gray-700 pl-2"}`}>
+                    <span className={`text-xs ${isAna ? "font-bold text-gray-900" : "font-medium text-gray-700 pl-3"}`}>
                       {!isAna && <span className="text-gray-400 mr-1.5 font-normal">↳</span>}
                       {satir.ad}
                     </span>
@@ -4395,6 +4381,9 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
                   }
                   return guncel
                 })
+                if (sozlesmeModu) {
+                  setAraclar((prev) => prev.map((a, i) => i === 0 ? { ...a, teminatSatirlari: yeniSatirlar } : a))
+                }
               }}
             />
 
@@ -5101,6 +5090,11 @@ function GmSozlesmeOlusturModal({
   const [gmOnayNotu, setGmOnayNotu] = useState(
     "Teklif risk parametreleri ve tramer hasar geçmişi incelendi. Özel fiyatlandırma ile onaylanarak sözleşmeye aktarılmıştır."
   )
+  const [teminatlar, setTeminatlar] = useState<TeminatSatiri[]>(
+    kayit.araclar && kayit.araclar.length > 0 && kayit.araclar[0].teminatSatirlari && kayit.araclar[0].teminatSatirlari.length > 0
+      ? kayit.araclar[0].teminatSatirlari
+      : varsayilanTeminatSatirlari()
+  )
 
   const aracSayisi = kayit.araclar?.length || 1
   const bazTarife = 500000
@@ -5156,10 +5150,12 @@ function GmSozlesmeOlusturModal({
         kontakNo: vknTckn.trim(),
         odemeTipi: odemePlani,
         odemeNotu: gmOnayNotu.trim(),
-        araclar: (kayit.araclar || []).map((a) => ({
+        araclar: (kayit.araclar && kayit.araclar.length > 0 ? kayit.araclar : [{ ...bosFiloAraci, id: 1 }]).map((a, i) => ({
           ...a,
+          id: a.id || i + 1,
           primTipi: "Özel İndirim",
           indirimYuzdesi: ozelIndirim,
+          teminatSatirlari: teminatlar,
         })),
         tarihce: [
           ...(kayit.tarihce || []),
@@ -5532,6 +5528,28 @@ function GmSozlesmeOlusturModal({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Card 4: Teminat Detayları */}
+          <div className="rounded-xl border border-gray-300 bg-white p-5 shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-gray-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white text-xs font-bold shadow-xs">
+                  🛡️
+                </span>
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900">Teminat Detayları</h4>
+                  <p className="text-[11px] text-gray-500">Sözleşmeye aktarılacak 15 teminatın limit ve muafiyet parametreleri</p>
+                </div>
+              </div>
+              <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">
+                15 Teminat Tanımlı
+              </span>
+            </div>
+            <TeminatDetaylariTablosu
+              satirlar={teminatlar}
+              onChange={setTeminatlar}
+            />
           </div>
         </div>
 
