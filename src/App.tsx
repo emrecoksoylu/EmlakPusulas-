@@ -5566,24 +5566,17 @@ function FiloUretimGoruntulePage({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-bold text-gray-900">Filo Üretim Kaydı</h2>
-              {isTeklifYeniHavuzda(kayit) ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200 px-2.5 py-0.5 text-[11px] font-bold">
-                  ✨ 1. Yeni Teklifler Havuzu
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 text-[11px] font-bold">
-                  🔄 2. Teklifler Havuzu (Revizyonlu / Mesajlı)
-                </span>
-              )}
-              {(() => {
-                const sla = hesaplaSlaBilgisi(kayit)
-                return (
-                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${sla.bgRenk} ${sla.borderRenk} ${sla.renk}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${sla.durum === "asildi" ? "bg-red-500 animate-ping" : sla.durum === "kritik" ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
-                    SLA: {sla.metin} (Hedef: {sla.hedefSaat}s)
+              {gmMi && (
+                isTeklifYeniHavuzda(kayit) ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200 px-2.5 py-0.5 text-[11px] font-bold">
+                    ✨ 1. Yeni Teklifler Havuzu
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 text-[11px] font-bold">
+                    🔄 2. Teklifler Havuzu (Revizyonlu / Mesajlı)
                   </span>
                 )
-              })()}
+              )}
             </div>
             <p className="text-xs text-gray-400 mt-0.5">{kayit.sozlesmeNo} · {kayit.durum} · Atanan: {kayit.atanan || "—"}</p>
           </div>
@@ -6766,23 +6759,10 @@ function FiloUretimPage({
   const [uygulananFiltreler, setUygulananFiltreler] = useState(bosFiloFiltreleri)
   const [secilenler, setSecilenler] = useState<Set<number>>(new Set())
   const [aktifHavuz, setAktifHavuz] = useState<"yeni" | "teklifler" | "hepsi">("yeni")
-  const [slaFiltresi, setSlaFiltresi] = useState<"hepsi" | "uygun" | "kritik" | "asildi">("hepsi")
 
-  // Havuzlara göre dinamik liste
+  // Genel Müdürlük için Havuzlara göre dinamik liste
   const yeniTeklifler = kayitlar.filter((k) => isTeklifYeniHavuzda(k))
   const islemGorenTeklifler = kayitlar.filter((k) => !isTeklifYeniHavuzda(k))
-
-  // SLA İstatistikleri
-  const slaIstatistik = kayitlar.reduce(
-    (acc, k) => {
-      const sla = hesaplaSlaBilgisi(k)
-      if (sla.durum === "uygun") acc.uygun++
-      else if (sla.durum === "kritik") acc.kritik++
-      else if (sla.durum === "asildi") acc.asildi++
-      return acc
-    },
-    { uygun: 0, kritik: 0, asildi: 0 }
-  )
 
   const secili = kayitlar.find((k) => secilenler.has(k.id))
   const statuDegistir = (durum: string) => {
@@ -6818,17 +6798,13 @@ function FiloUretimPage({
   const labelCls = "mb-1.5 block text-xs font-semibold text-gray-600"
 
   const filtreliKayitlar = kayitlar.filter((kayit) => {
-    // 1. Havuz Ayrımı Filtresi
-    if (aktifHavuz === "yeni" && !isTeklifYeniHavuzda(kayit)) return false
-    if (aktifHavuz === "teklifler" && isTeklifYeniHavuzda(kayit)) return false
-
-    // 2. SLA Filtresi
-    if (slaFiltresi !== "hepsi") {
-      const sla = hesaplaSlaBilgisi(kayit)
-      if (sla.durum !== slaFiltresi) return false
+    // 1. Sadece Genel Müdürlük kullanıcıları için Havuz Ayrımı Filtresi
+    if (gmMi) {
+      if (aktifHavuz === "yeni" && !isTeklifYeniHavuzda(kayit)) return false
+      if (aktifHavuz === "teklifler" && isTeklifYeniHavuzda(kayit)) return false
     }
 
-    // 3. Form Filtreleri
+    // 2. Form Filtreleri
     return (
       (!uygulananFiltreler.sozlesmeAdi || kayit.sozlesmeAdi.toLocaleLowerCase("tr-TR").includes(uygulananFiltreler.sozlesmeAdi.toLocaleLowerCase("tr-TR"))) &&
       (!uygulananFiltreler.sozlesmeNo || kayit.sozlesmeNo.includes(uygulananFiltreler.sozlesmeNo)) &&
@@ -6885,16 +6861,40 @@ function FiloUretimPage({
   }
 
   const exceleAktar = () => {
-    const basliklar = ["Havuz", "Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "SLA Durumu", "Başlangıç", "Bitiş", "Kullanıcı", "Durum", "Atanan", "Yaratan"]
-    const satirlar = filtreliKayitlar.map((kayit) => {
-      const sla = hesaplaSlaBilgisi(kayit)
-      return [
-        isTeklifYeniHavuzda(kayit) ? "Yeni Teklifler Havuzu" : "Teklifler Havuzu (Revizyonlu)",
-        kayit.sozlesmeAdi, kayit.sozlesmeNo, kayit.policeNo ?? "", kayit.versiyon, kayit.yenileme, kayit.urunAdi,
-        kayit.policeTipi, sla.metin, kayit.baslangic, kayit.bitis, kayit.kullanici, kayit.durum, kayit.atanan || "—",
-        kayit.yaratan,
-      ]
-    })
+    const basliklar = [
+      ...(gmMi ? ["Havuz"] : []),
+      "Sözleşme Adı",
+      "Teklif No",
+      "Poliçe No",
+      "Versiyon",
+      "Yenileme",
+      "Ürün Adı",
+      "Poliçe Tipi",
+      "Başlangıç",
+      "Bitiş",
+      "Teklif Geçerlilik",
+      "Kullanıcı",
+      "Durum",
+      "Atanan",
+      "Yaratan",
+    ]
+    const satirlar = filtreliKayitlar.map((kayit) => [
+      ...(gmMi ? [isTeklifYeniHavuzda(kayit) ? "1. Yeni Teklifler Havuzu" : "2. Teklifler Havuzu"] : []),
+      kayit.sozlesmeAdi,
+      kayit.sozlesmeNo,
+      kayit.policeNo ?? "",
+      kayit.versiyon,
+      kayit.yenileme,
+      kayit.urunAdi,
+      kayit.policeTipi,
+      kayit.baslangic,
+      kayit.bitis,
+      kayit.policeNo ? "—" : kayit.teklifGecerlilikTarihi ?? "",
+      kayit.kullanici,
+      kayit.durum,
+      kayit.atanan || "—",
+      kayit.yaratan,
+    ])
     const csv = [basliklar, ...satirlar].map((satir) => satir.map((hucre) => `"${String(hucre).replace(/"/g, '""')}"`).join(",")).join("\n")
     const link = document.createElement("a")
     link.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }))
@@ -6973,191 +6973,125 @@ function FiloUretimPage({
   return (
     <main className="flex-1 overflow-y-auto bg-gray-50 px-6 py-5">
       <div className="space-y-4">
-        {/* GM / Teklif Havuzları ve SLA Bar */}
-        <div className="rounded-2xl border border-indigo-200/80 bg-white shadow-sm overflow-hidden">
-          {/* Üst Bar: Başlık ve Canlı SLA Sayaçları */}
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-5 py-3.5 text-white flex flex-wrap items-center justify-between gap-3 border-b border-indigo-800/40">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner border border-indigo-400/30">
-                🏛️
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-white tracking-wide">
-                    {gmMi ? "Genel Müdürlük — Sözleşme Teklif Havuzları & SLA Takibi" : "Sözleşme Teklif Havuzları"}
-                  </h2>
-                  <span className="rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 text-[10px] font-bold">
-                    2 Ayrı Havuz Sistemi
-                  </span>
+        {/* SADECE GENEL MÜDÜRLÜK KULLANICILARI İÇİN 2 AYRI TEKLİF HAVUZU */}
+        {gmMi && (
+          <div className="rounded-2xl border border-indigo-200/80 bg-white shadow-sm overflow-hidden">
+            {/* Üst Bar: Başlık */}
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-5 py-3.5 text-white flex items-center justify-between border-b border-indigo-800/40">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner border border-indigo-400/30">
+                  🏛️
                 </div>
-                <p className="text-[11px] text-indigo-200/80 mt-0.5">
-                  İlk kez gelen yeni teklifler ile daha önce GM revizyonu/mesajı görmüş teklifler otomatik ayrıştırılır.
-                </p>
-              </div>
-            </div>
-
-            {/* SLA Özet Sayaçları (Canlı KPI) */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-[11px] font-semibold text-indigo-200 mr-1 hidden sm:inline">SLA Filtre / Durum:</span>
-              <button
-                type="button"
-                onClick={() => setSlaFiltresi(slaFiltresi === "uygun" ? "hepsi" : "uygun")}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                  slaFiltresi === "uygun"
-                    ? "bg-emerald-500 text-white border-emerald-400 ring-2 ring-emerald-300 shadow-sm"
-                    : "bg-emerald-950/60 border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/60"
-                }`}
-                title="SLA Süresi İçinde / Zamanında Olanlar"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span>{slaIstatistik.uygun} Zamanında</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSlaFiltresi(slaFiltresi === "kritik" ? "hepsi" : "kritik")}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                  slaFiltresi === "kritik"
-                    ? "bg-amber-500 text-white border-amber-400 ring-2 ring-amber-300 shadow-sm"
-                    : "bg-amber-950/60 border-amber-700/60 text-amber-300 hover:bg-amber-900/60"
-                }`}
-                title="Kalan Süresi 1 Saatin Altında Olan Kritik Teklifler"
-              >
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                <span>{slaIstatistik.kritik} Kritik (&lt;1s)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSlaFiltresi(slaFiltresi === "asildi" ? "hepsi" : "asildi")}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                  slaFiltresi === "asildi"
-                    ? "bg-red-500 text-white border-red-400 ring-2 ring-red-300 shadow-sm"
-                    : "bg-red-950/60 border-red-700/60 text-red-300 hover:bg-red-900/60"
-                }`}
-                title="SLA Süresi Aşılmış Teklifler"
-              >
-                <span className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
-                <span>{slaIstatistik.asildi} Aşıldı</span>
-              </button>
-
-              {slaFiltresi !== "hepsi" && (
-                <button
-                  type="button"
-                  onClick={() => setSlaFiltresi("hepsi")}
-                  className="text-[11px] underline text-indigo-300 hover:text-white ml-1 cursor-pointer font-medium"
-                >
-                  Tüm SLA&apos;ları Göster
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Alt Bar: 2 Havuz Arasında Geçiş Yapan Kart Butonları */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-slate-50 border-b border-gray-100">
-            {/* 1. Havuz: Yeni Teklifler Havuzu */}
-            <button
-              type="button"
-              onClick={() => setAktifHavuz("yeni")}
-              className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
-                aktifHavuz === "yeni"
-                  ? "border-blue-600 bg-blue-50/70 shadow-sm ring-1 ring-blue-500/20"
-                  : "border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/20"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs shadow-xs">
-                    ✨
-                  </span>
-                  <div>
-                    <h3 className="text-xs font-bold text-gray-900">1. Yeni Teklifler Havuzu</h3>
-                    <p className="text-[10px] text-gray-500">İlk kez gelen, işlem görmemiş kayıtlar</p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-bold text-white tracking-wide">
+                      Genel Müdürlük — Sözleşme Teklif Havuzları
+                    </h2>
+                    <span className="rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 text-[10px] font-bold">
+                      2 Ayrı Havuz
+                    </span>
                   </div>
+                  <p className="text-[11px] text-indigo-200/80 mt-0.5">
+                    İlk kez gelen yeni teklifler ile daha önce GM revizyonu/mesajı görmüş teklifler otomatik ayrıştırılır.
+                  </p>
                 </div>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+              </div>
+            </div>
+
+            {/* Alt Bar: 2 Havuz Arasında Geçiş Yapan Kart Butonları */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-slate-50 border-b border-gray-100">
+              {/* 1. Havuz: Yeni Teklifler Havuzu */}
+              <button
+                type="button"
+                onClick={() => setAktifHavuz("yeni")}
+                className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
                   aktifHavuz === "yeni"
-                    ? "bg-blue-600 text-white"
-                    : "bg-blue-100 text-blue-800"
-                }`}>
-                  {yeniTeklifler.length} Teklif
-                </span>
-              </div>
-              <div className="mt-2.5 flex items-center justify-between text-[11px] pt-2 border-t border-blue-200/50">
-                <span className="text-gray-500 font-medium">Standart SLA Hedefi:</span>
-                <span className="font-semibold text-blue-700 bg-blue-100/70 px-1.5 py-0.2 rounded font-mono">⏱️ 4 Saat</span>
-              </div>
-            </button>
-
-            {/* 2. Havuz: Teklifler Havuzu (Revizyon Gören & Mesajlaşılan) */}
-            <button
-              type="button"
-              onClick={() => setAktifHavuz("teklifler")}
-              className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
-                aktifHavuz === "teklifler"
-                  ? "border-amber-500 bg-amber-50/70 shadow-sm ring-1 ring-amber-500/20"
-                  : "border-gray-200 bg-white hover:border-amber-300 hover:bg-amber-50/20"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xs shadow-xs">
-                    🔄
-                  </span>
-                  <div>
-                    <h3 className="text-xs font-bold text-gray-900">2. Teklifler Havuzu</h3>
-                    <p className="text-[10px] text-gray-500">Revizyon gören &amp; mesajlaşılan kayıtlar</p>
+                    ? "border-blue-600 bg-blue-50/70 shadow-sm ring-1 ring-blue-500/20"
+                    : "border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/20"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-xs shadow-xs">
+                      ✨
+                    </span>
+                    <div>
+                      <h3 className="text-xs font-bold text-gray-900">1. Yeni Teklifler Havuzu</h3>
+                      <p className="text-[10px] text-gray-500">İlk kez gelen, henüz işlem görmemiş kayıtlar</p>
+                    </div>
                   </div>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    aktifHavuz === "yeni"
+                      ? "bg-blue-600 text-white"
+                      : "bg-blue-100 text-blue-800"
+                  }`}>
+                    {yeniTeklifler.length} Teklif
+                  </span>
                 </div>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+              </button>
+
+              {/* 2. Havuz: Teklifler Havuzu (Revizyon Gören & Mesajlaşılan) */}
+              <button
+                type="button"
+                onClick={() => setAktifHavuz("teklifler")}
+                className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
                   aktifHavuz === "teklifler"
-                    ? "bg-amber-500 text-white"
-                    : "bg-amber-100 text-amber-900"
-                }`}>
-                  {islemGorenTeklifler.length} Teklif
-                </span>
-              </div>
-              <div className="mt-2.5 flex items-center justify-between text-[11px] pt-2 border-t border-amber-200/50">
-                <span className="text-gray-500 font-medium">Revizyon SLA Hedefi:</span>
-                <span className="font-semibold text-amber-800 bg-amber-100/70 px-1.5 py-0.2 rounded font-mono">⏱️ 2 Saat</span>
-              </div>
-            </button>
-
-            {/* 3. Tümü (Hızlı Filtre) */}
-            <button
-              type="button"
-              onClick={() => setAktifHavuz("hepsi")}
-              className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
-                aktifHavuz === "hepsi"
-                  ? "border-purple-600 bg-purple-50/70 shadow-sm ring-1 ring-purple-500/20"
-                  : "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/20"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-white font-bold text-xs shadow-xs">
-                    📋
-                  </span>
-                  <div>
-                    <h3 className="text-xs font-bold text-gray-900">Tüm Teklifler</h3>
-                    <p className="text-[10px] text-gray-500">Tüm havuz kayıtlarını bir arada görün</p>
+                    ? "border-amber-500 bg-amber-50/70 shadow-sm ring-1 ring-amber-500/20"
+                    : "border-gray-200 bg-white hover:border-amber-300 hover:bg-amber-50/20"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xs shadow-xs">
+                      🔄
+                    </span>
+                    <div>
+                      <h3 className="text-xs font-bold text-gray-900">2. Teklifler Havuzu</h3>
+                      <p className="text-[10px] text-gray-500">Revizyon gören &amp; mesajlaşılan kayıtlar</p>
+                    </div>
                   </div>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    aktifHavuz === "teklifler"
+                      ? "bg-amber-500 text-white"
+                      : "bg-amber-100 text-amber-900"
+                  }`}>
+                    {islemGorenTeklifler.length} Teklif
+                  </span>
                 </div>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+              </button>
+
+              {/* 3. Tümü (Hızlı Filtre) */}
+              <button
+                type="button"
+                onClick={() => setAktifHavuz("hepsi")}
+                className={`text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer relative ${
                   aktifHavuz === "hepsi"
-                    ? "bg-purple-600 text-white"
-                    : "bg-purple-100 text-purple-900"
-                }`}>
-                  {kayitlar.length} Toplam
-                </span>
-              </div>
-              <div className="mt-2.5 flex items-center justify-between text-[11px] pt-2 border-t border-purple-200/50">
-                <span className="text-gray-500 font-medium">Aktif Filtrelenen Kayıt:</span>
-                <span className="font-semibold text-purple-800 font-mono">{filtreliKayitlar.length} Adet</span>
-              </div>
-            </button>
+                    ? "border-purple-600 bg-purple-50/70 shadow-sm ring-1 ring-purple-500/20"
+                    : "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/20"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-600 text-white font-bold text-xs shadow-xs">
+                      📋
+                    </span>
+                    <div>
+                      <h3 className="text-xs font-bold text-gray-900">Tüm Teklifler</h3>
+                      <p className="text-[10px] text-gray-500">Tüm havuz kayıtlarını bir arada görün</p>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    aktifHavuz === "hepsi"
+                      ? "bg-purple-600 text-white"
+                      : "bg-purple-100 text-purple-900"
+                  }`}>
+                    {kayitlar.length} Toplam
+                  </span>
+                </div>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
           <button
@@ -7318,7 +7252,8 @@ function FiloUretimPage({
             <table className="min-w-max w-full text-xs">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 text-gray-600">
-                  {["Havuz", "Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "SLA Durumu", "Başlangıç", "Bitiş", "Teklif Geçerlilik", "Kullanıcı", "Durum", "Atanan", "Yaratan"].map((baslik) => (
+                  {gmMi && <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Havuz</th>}
+                  {["Sözleşme Adı", "Teklif No", "Poliçe No", "Versiyon", "Yenileme", "Ürün Adı", "Poliçe Tipi", "Başlangıç", "Bitiş", "Teklif Geçerlilik", "Kullanıcı", "Durum", "Atanan", "Yaratan"].map((baslik) => (
                     <th key={baslik} className="px-3 py-3 text-left font-semibold whitespace-nowrap">{baslik}</th>
                   ))}
                   {gmMi && <th className="px-3 py-3 text-right font-semibold whitespace-nowrap text-emerald-800">İşlem</th>}
@@ -7327,7 +7262,7 @@ function FiloUretimPage({
               <tbody>
                 {filtreliKayitlar.length === 0 ? (
                   <tr>
-                    <td colSpan={gmMi ? 17 : 16} className="py-14 text-center">
+                    <td colSpan={gmMi ? 16 : 14} className="py-14 text-center">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-base font-bold">📄</div>
                         <p className="text-sm font-medium text-gray-500">Listelenecek teklif kaydı bulunamadı.</p>
@@ -7347,20 +7282,22 @@ function FiloUretimPage({
                     onClick={() => secimiGuncelle(kayit.id)}
                     className={`border-b border-gray-100 cursor-pointer transition-colors hover:bg-blue-50/40 ${secilenler.has(kayit.id) ? "bg-blue-50/80 ring-1 ring-inset ring-blue-200" : ""}`}
                   >
-                    {/* Havuz Rozeti */}
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      {isTeklifYeniHavuzda(kayit) ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-blue-700 shadow-2xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                          ✨ Yeni Teklif
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-800 shadow-2xs">
-                          <span className="text-[10px]">🔄</span>
-                          Teklifler Havuzu
-                        </span>
-                      )}
-                    </td>
+                    {/* Havuz Rozeti - Sadece Genel Müdürlük Kullanıcıları için */}
+                    {gmMi && (
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        {isTeklifYeniHavuzda(kayit) ? (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-blue-700 shadow-2xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                            ✨ Yeni Teklif
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-800 shadow-2xs">
+                            <span className="text-[10px]">🔄</span>
+                            Teklifler Havuzu
+                          </span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-3 py-3 font-semibold text-blue-700 whitespace-nowrap">{kayit.sozlesmeAdi}</td>
                     <td className="px-3 py-3 font-mono text-gray-700">{kayit.sozlesmeNo}</td>
                     <td className="px-3 py-3 font-mono text-gray-700 whitespace-nowrap">{kayit.policeNo || "—"}</td>
@@ -7368,29 +7305,6 @@ function FiloUretimPage({
                     <td className="px-3 py-3 text-right text-gray-600">{kayit.yenileme}</td>
                     <td className="px-3 py-3 text-gray-700">{kayit.urunAdi}</td>
                     <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{kayit.policeTipi}</td>
-                    {/* SLA Durumu */}
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      {(() => {
-                        const sla = hesaplaSlaBilgisi(kayit)
-                        return (
-                          <div className="flex flex-col gap-1 min-w-[130px]">
-                            <div className="flex items-center justify-between text-[11px] font-semibold">
-                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${sla.bgRenk} ${sla.borderRenk} ${sla.renk} border shadow-2xs text-[10px]`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${sla.durum === "asildi" ? "bg-red-500 animate-ping" : sla.durum === "kritik" ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
-                                {sla.metin}
-                              </span>
-                              <span className="text-[10px] text-gray-400 font-mono ml-1">{sla.hedefSaat}s</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-1 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all ${sla.durum === "asildi" ? "bg-red-500" : sla.durum === "kritik" ? "bg-amber-500" : "bg-emerald-500"}`}
-                                style={{ width: `${sla.durum === "asildi" ? 100 : sla.yuzde}%` }}
-                              />
-                            </div>
-                          </div>
-                        )
-                      })()}
-                    </td>
                     <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{kayit.baslangic}</td>
                     <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{kayit.bitis}</td>
                     <td className="px-3 py-3 whitespace-nowrap font-medium text-amber-700">
