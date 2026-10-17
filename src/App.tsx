@@ -3260,6 +3260,7 @@ interface FiloUretimKaydi {
   slaDakika?: number
   slaKalanDakika?: number
   slaGirisZamani?: string
+  sozlesmeDurumu?: string
 }
 
 export function hasTeklifCiktisi(kayit?: FiloUretimKaydi | null): boolean {
@@ -4344,6 +4345,9 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
   const [bitis, setBitis] = useState(kayitModu === "ek" ? altiAySonrasi(sistemTarihi) : inputTarihi(initialKayit?.bitis) || altiAySonrasi(sistemTarihi))
   const [policeBitisTarihi, setPoliceBitisTarihi] = useState(inputTarihi(initialKayit?.policeBitisTarihi) || altiAySonrasi(sistemTarihi))
   const [sozlesmeParametreleriAcik, setSozlesmeParametreleriAcik] = useState(Boolean(initialKayit?.policeBitisTarihi))
+  const [sozlesmeDurumu, setSozlesmeDurumu] = useState(
+    initialKayit?.sozlesmeDurumu ?? (initialKayit?.durum === "Aktif" || initialKayit?.durum === "Yürürlükte" ? "Aktif" : (initialKayit?.durum || "Aktif"))
+  )
   const [kontakNo, setKontakNo] = useState("")
   const [kontakAdi, setKontakAdi] = useState("")
   const [kontaklar, setKontaklar] = useState<FiloKontakKaydi[]>(
@@ -4619,7 +4623,8 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
       bitis: tarihFormatla(bitis),
       policeBitisTarihi: sozlesmeParametreleriAcik ? tarihFormatla(policeBitisTarihi) : undefined,
       kullanici: "MS4329",
-      durum,
+      durum: (sozlesmeModu || kayitModu === "ek") ? (sozlesmeDurumu || "Aktif") : durum,
+      sozlesmeDurumu: sozlesmeDurumu || "Aktif",
       yaratan: initialKayit?.yaratan || (acenteMi ? "Emre Acentelik" : bolgeMi ? "Bölge Uzmanı" : "MS4329"),
       atanan,
       acenteAdi: acenteler[0]?.unvan ?? "",
@@ -4734,12 +4739,18 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
 
         {aktifAdim === 1 && (
           <>
-            {sozlesmeModu ? (
+            {(sozlesmeModu || kayitModu === "ek") ? (
               <>
                 {/* ── Sözleşme Bilgileri ── */}
                 <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <h3 className="mb-4 text-sm font-bold text-gray-800">Sözleşme Bilgileri</h3>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-sm font-bold text-gray-800">Sözleşme Bilgileri</h3>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700 shadow-2xs">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Sözleşme Durumu: {sozlesmeDurumu} (Açık)
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
                       <label className={labelCls}>Sözleşme Adı <span className="text-red-500">*</span></label>
                       <input
@@ -4776,6 +4787,18 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
                         onChange={(e) => { setBitis(e.target.value); setHata("") }}
                         className={inputCls}
                       />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Sözleşme Durumu <span className="text-red-500">*</span></label>
+                      <select
+                        value={sozlesmeDurumu}
+                        onChange={(e) => setSozlesmeDurumu(e.target.value)}
+                        className={`${inputCls} font-semibold text-emerald-800 bg-emerald-50/50 border-emerald-300 focus:border-emerald-500`}
+                      >
+                        <option value="Aktif">🟢 Aktif (Açık)</option>
+                        <option value="Pasif">⚪ Pasif (Kapalı)</option>
+                        <option value="Askıda">🟡 Askıda</option>
+                      </select>
                     </div>
                   </div>
                 </section>
@@ -6250,6 +6273,12 @@ function FiloUretimGoruntulePage({
               <h3 className="mb-4 text-sm font-bold text-gray-800">Sözleşme Bilgileri</h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {bilgi("Sözleşme Adı", kayit.sozlesmeAdi)}
+                {bilgi("Sözleşme Durumu", (
+                  <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs shadow-2xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    {kayit.sozlesmeDurumu || (kayit.durum === "Sözleşme Poliçe" || kayit.durum === "Yürürlükte" ? "Aktif" : kayit.durum)} (Açık)
+                  </span>
+                ))}
                 {bilgi("Teklif No", kayit.sozlesmeNo)}
                 {bilgi("Poliçe No", kayit.policeNo)}
                 {bilgi("Başlangıç Tarihi", kayit.baslangic)}
@@ -7450,13 +7479,17 @@ function sozlesmeyiFiloKaydinaDonustur(s: SozlesmeKaydi): FiloUretimKaydi {
       }
       return {
         ...s.filoVerisi,
+        sozlesmeDurumu: s.durum === "Yürürlükte" ? "Aktif" : (s.durum || "Aktif"),
         sozlesmeNo: s.sozlesmeNo,
         baslangic: s.baslangic || s.filoVerisi.baslangic,
         bitis: s.bitis || s.filoVerisi.bitis,
         tarihce: [ek0Kaydi, ...mevcutTarihce],
       }
     }
-    return s.filoVerisi
+    return {
+      ...s.filoVerisi,
+      sozlesmeDurumu: s.durum === "Yürürlükte" ? "Aktif" : (s.durum || "Aktif"),
+    }
   }
 
   return {
@@ -7472,6 +7505,7 @@ function sozlesmeyiFiloKaydinaDonustur(s: SozlesmeKaydi): FiloUretimKaydi {
     bitis: bitisTarihi,
     kullanici: "GM_UZMAN",
     durum: "Sözleşme Poliçe",
+    sozlesmeDurumu: s.durum === "Yürürlükte" ? "Aktif" : (s.durum || "Aktif"),
     onayStatusu: "Onaylandı",
     onaylayan: "Genel Müdürlük",
     onayTarihi: s.olusturulmaTarihi,
@@ -8022,6 +8056,7 @@ function FiloUretimPage({
       <FiloUretimOlusturPage
         initialKayit={duzenlenenKayit}
         kayitModu={kayitModu}
+        sozlesmeModu={kayitModu === "ek"}
         acenteMi={acenteMi}
         bolgeMi={bolgeMi}
         gmMi={gmMi}
@@ -8574,7 +8609,7 @@ const baslangicSozlesmeler: SozlesmeKaydi[] = [
     olusturulmaTarihi: "15/01/2026",
     baslangic: "15/01/2026",
     bitis: "15/01/2027",
-    durum: "Yürürlükte",
+    durum: "Aktif",
     ozelIndirim: "15",
     filoVerisi: {
       id: 9001,
@@ -8634,7 +8669,7 @@ const baslangicSozlesmeler: SozlesmeKaydi[] = [
     olusturulmaTarihi: "01/02/2026",
     baslangic: "01/04/2026",
     bitis: "01/10/2026",
-    durum: "Yürürlükte",
+    durum: "Aktif",
     ozelFiyat: "₺420.000",
     filoVerisi: {
       id: 9002,
@@ -8802,8 +8837,12 @@ function SozlesmelerimPage({
               sozlesmeNo: kayit.sozlesmeNo || s.sozlesmeNo,
               musteriUnvani: kayit.kontakAdi || kayit.sozlesmeAdi || s.musteriUnvani,
               brans: kayit.urunAdi || s.brans,
+              durum: (kayit.sozlesmeDurumu as any) || s.durum || "Aktif",
               aracAdedi: String(kayit.araclar?.length || s.aracAdedi),
-              filoVerisi: kayit,
+              filoVerisi: {
+                ...kayit,
+                sozlesmeDurumu: kayit.sozlesmeDurumu || "Aktif",
+              },
             } : s))
           } else if (duzenlenenKayit && kayitModu === "ek") {
             const anaSozlesmeNo = duzenlenenKayit.sozlesmeNo.split("/")[0]
@@ -8817,10 +8856,12 @@ function SozlesmelerimPage({
               ...s,
               baslangic: ekBaslangic,
               bitis: ekBitis,
+              durum: (kayit.sozlesmeDurumu as any) || "Aktif",
               aracAdedi: String(kayit.araclar?.length || s.aracAdedi),
               filoVerisi: {
                 ...(s.filoVerisi || duzenlenenKayit),
                 ...kayit,
+                sozlesmeDurumu: kayit.sozlesmeDurumu || "Aktif",
                 policeNo: yeniPoliceNo,
                 baslangic: ekBaslangic,
                 bitis: ekBitis,
@@ -8839,12 +8880,13 @@ function SozlesmelerimPage({
               brans: kayit.urunAdi || "Kasko",
               aracAdedi: String(kayit.araclar?.length || 1),
               olusturulmaTarihi: new Date().toLocaleDateString("tr-TR"),
-              durum: "Yürürlükte",
+              durum: (kayit.sozlesmeDurumu as any) || "Aktif",
               baslangic: baslangicTarihi,
               bitis: bitisTarihi,
               eposta: "filo@anadolusigorta.com.tr",
               filoVerisi: {
                 ...kayit,
+                sozlesmeDurumu: kayit.sozlesmeDurumu || "Aktif",
                 sozlesmeNo: kayit.sozlesmeNo || yeniNo,
                 policeNo: `${kayit.sozlesmeNo || yeniNo}/00`,
                 baslangic: baslangicTarihi,
