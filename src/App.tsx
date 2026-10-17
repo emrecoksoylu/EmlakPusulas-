@@ -3129,6 +3129,7 @@ interface FiloTarihceKaydi {
   kullanici: string
   tur?: "teklif" | "revizyon" | "police" | "ek" | "yenileme" | "tramer"
   numara?: string
+  ekNo?: string
   baslangic?: string
   bitis?: string
   odemeNotu?: string
@@ -4503,8 +4504,11 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
       }
     }
 
+    const mevcutEkSayisi = (initialKayit?.tarihce ?? []).filter((t) => t.tur === "ek" || (t.ekNo && t.ekNo !== "0")).length
+    const yeniEkNo = mevcutEkSayisi + 1
+
     const islemMetni = kayitModu === "ek"
-      ? "Sözleşme eki oluşturuldu"
+      ? `${yeniEkNo}. Sözleşme Eki`
       : initialKayit
       ? (gmMi
           ? (yonlendirmeHedefi === "bolge" ? "GM Bölgeye Revizyona Gönderdi" : "GM Acenteye Revizyona Gönderdi")
@@ -4514,27 +4518,44 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
       : kayitTipi === "police" ? "Poliçe oluşturuldu" : "Teklif oluşturuldu"
 
     const aciklamaMetni = kayitModu === "ek"
-      ? `${policeNo} numaralı sözleşme eki oluşturuldu.`
+      ? `${policeNo} numaralı sözleşme eki (${yeniEkNo}. Ek) oluşturuldu.`
       : initialKayit
       ? `${initialKayit.sozlesmeNo} numaralı teklif revize edildi (${durum} - ${atanan || "Atandı"}).`
       : `${sozlesmeNo} numaralı ${kayitTipi === "police" ? "poliçe" : "teklif"} kaydı oluşturuldu.`
 
-    const tarihce: FiloTarihceKaydi[] = [
-      ...(initialKayit?.tarihce ?? []),
-      {
-        id: Date.now(),
-        tarih: new Date().toLocaleString("tr-TR"),
-        islem: islemMetni,
-        aciklama: aciklamaMetni,
-        kullanici: gmMi ? "GM_UZMAN" : bolgeMi ? "Bölge Uzmanı" : "MS4329",
-        tur: kayitModu === "ek" ? "ek" : initialKayit ? "revizyon" : kayitTipi,
-        numara: kayitModu === "ek" || kayitTipi === "police" ? policeNo : sozlesmeNo,
-        baslangic: tarihFormatla(baslangic),
-        bitis: tarihFormatla(bitis),
-        odemeNotu: odemeNotu || undefined,
-        dosyalar: yuklenenDosyalar.length > 0 ? yuklenenDosyalar : undefined,
-      },
-    ]
+    const anaSozlesmeNumarasi = initialKayit?.sozlesmeNo?.split("/")[0] || sozlesmeNo
+    const ek0Var = (initialKayit?.tarihce ?? []).some((t) => t.ekNo === "0" || t.tur === "police")
+    const ek0Kaydi: FiloTarihceKaydi = {
+      id: 1,
+      tarih: initialKayit?.onayTarihi || initialKayit?.baslangic || new Date().toLocaleDateString("tr-TR"),
+      islem: "Sözleşme Oluşturuldu (Ek 0)",
+      aciklama: `${anaSozlesmeNumarasi} numaralı sözleşme ilk oluşturuldu (Ek 0).`,
+      kullanici: initialKayit?.yaratan || initialKayit?.kullanici || "GM_UZMAN",
+      tur: "police",
+      numara: anaSozlesmeNumarasi,
+      ekNo: "0",
+      baslangic: initialKayit?.baslangic || tarihFormatla(baslangic),
+      bitis: initialKayit?.bitis || tarihFormatla(bitis),
+    }
+
+    const yeniEkTarihce: FiloTarihceKaydi = {
+      id: Date.now(),
+      tarih: new Date().toLocaleString("tr-TR"),
+      islem: islemMetni,
+      aciklama: aciklamaMetni,
+      kullanici: gmMi ? "GM_UZMAN" : bolgeMi ? "Bölge Uzmanı" : "MS4329",
+      tur: kayitModu === "ek" ? "ek" : initialKayit ? "revizyon" : kayitTipi,
+      numara: kayitModu === "ek" || kayitTipi === "police" ? policeNo : sozlesmeNo,
+      ekNo: kayitModu === "ek" ? String(yeniEkNo) : undefined,
+      baslangic: tarihFormatla(baslangic),
+      bitis: tarihFormatla(bitis),
+      odemeNotu: odemeNotu || undefined,
+      dosyalar: yuklenenDosyalar.length > 0 ? yuklenenDosyalar : undefined,
+    }
+
+    const tarihce: FiloTarihceKaydi[] = kayitModu === "ek" && !ek0Var
+      ? [ek0Kaydi, ...(initialKayit?.tarihce ?? []), yeniEkTarihce]
+      : [...(initialKayit?.tarihce ?? []), yeniEkTarihce]
     onSave({
       id,
       sozlesmeAdi: sozlesmeAdi.trim(),
@@ -5516,42 +5537,76 @@ function FiloUretimGoruntulePage({
 
   const islemiKaydet = () => {
     if (!islemTipi) return
-    const tarihceKaydi: FiloTarihceKaydi = {
-      id: Date.now(),
-      tarih: new Date().toLocaleString("tr-TR"),
-      islem: islemTipi === "ek" ? "Sözleşme eki oluşturuldu" : "Sözleşme yenilendi",
-      aciklama: islemTipi === "ek"
-        ? "Sözleşme bilgileri yeni ek kaydına taşındı."
-        : `Sözleşme ${kayit.yenileme + 1}. yenileme dönemine aktarıldı.`,
-      kullanici: "MS4329",
-      tur: islemTipi,
-      numara: islemTipi === "ek" ? kayit.policeNo : kayit.sozlesmeNo,
-      baslangic: tarihFormatla(islemBaslangic),
-      bitis: tarihFormatla(islemBitis),
-    }
 
     if (islemTipi === "ek") {
-      const numaraParcalari = (kayit.policeNo || `${kayit.sozlesmeNo}/00`).split("/")
-      const mevcutEk = Number(numaraParcalari[2] ?? "00")
-      const ekAnaNumara = numaraParcalari.slice(0, 2).join("/")
+      const anaSozlesmeNo = kayit.sozlesmeNo?.split("/")[0] || kayit.sozlesmeNo
+      const mevcutEkler = (kayit.tarihce ?? []).filter((t) => t.tur === "ek" || (t.ekNo && t.ekNo !== "0"))
+      const yeniEkNo = mevcutEkler.length + 1
+      const yeniPoliceNo = `${anaSozlesmeNo}/${String(yeniEkNo).padStart(2, "0")}`
+      const ekBaslangic = tarihFormatla(islemBaslangic)
+      const ekBitis = tarihFormatla(islemBitis)
+
+      // Eğer Ek 0 tarihçede yoksa oluştur
+      const ek0Var = (kayit.tarihce ?? []).some((t) => t.ekNo === "0" || t.tur === "police")
+      const ek0Kaydi: FiloTarihceKaydi = {
+        id: 1,
+        tarih: kayit.onayTarihi || kayit.baslangic || new Date().toLocaleDateString("tr-TR"),
+        islem: "Sözleşme Oluşturuldu (Ek 0)",
+        aciklama: `${anaSozlesmeNo} numaralı sözleşme ana kaydı oluşturuldu (Ek 0).`,
+        kullanici: kayit.yaratan || kayit.kullanici || "GM_UZMAN",
+        tur: "police",
+        numara: anaSozlesmeNo,
+        ekNo: "0",
+        baslangic: kayit.baslangic,
+        bitis: kayit.bitis,
+      }
+
+      const yeniTarihceKaydi: FiloTarihceKaydi = {
+        id: Date.now(),
+        tarih: new Date().toLocaleString("tr-TR"),
+        islem: `${yeniEkNo}. Sözleşme Eki`,
+        aciklama: `${yeniPoliceNo} numaralı sözleşme eki (${yeniEkNo}. Ek) oluşturuldu.`,
+        kullanici: gmMi ? "GM_UZMAN" : "MS4329",
+        tur: "ek",
+        numara: yeniPoliceNo,
+        ekNo: String(yeniEkNo),
+        baslangic: ekBaslangic,
+        bitis: ekBitis,
+      }
+
+      const guncelTarihce = ek0Var
+        ? [...(kayit.tarihce ?? []), yeniTarihceKaydi]
+        : [ek0Kaydi, ...(kayit.tarihce ?? []), yeniTarihceKaydi]
+
       onUpdate({
         ...kayit,
-        policeNo: `${ekAnaNumara}/${String(mevcutEk + 1).padStart(2, "0")}`,
-        baslangic: tarihFormatla(islemBaslangic),
-        bitis: tarihFormatla(islemBitis),
-        tarihce: [...(kayit.tarihce ?? []), {
-          ...tarihceKaydi,
-          aciklama: `${ekAnaNumara}/${String(mevcutEk + 1).padStart(2, "0")} numaralı sözleşme eki oluşturuldu.`,
-        }],
+        policeNo: yeniPoliceNo,
+        baslangic: ekBaslangic,
+        bitis: ekBitis,
+        tarihce: guncelTarihce,
       })
+      setIslemBildirimi(`${yeniEkNo}. Sözleşme Eki başarıyla oluşturuldu! Başlangıç: ${ekBaslangic}, Bitiş: ${ekBitis}`)
+      setTimeout(() => setIslemBildirimi(null), 4500)
     } else {
       onUpdate({
         ...kayit,
         yenileme: kayit.yenileme + 1,
         baslangic: tarihFormatla(islemBaslangic),
         bitis: tarihFormatla(islemBitis),
-        tarihce: [...(kayit.tarihce ?? []), tarihceKaydi],
+        tarihce: [...(kayit.tarihce ?? []), {
+          id: Date.now(),
+          tarih: new Date().toLocaleString("tr-TR"),
+          islem: "Sözleşme Yenilendi",
+          aciklama: `Sözleşme ${kayit.yenileme + 1}. yenileme dönemine aktarıldı.`,
+          kullanici: "GM_UZMAN",
+          tur: "yenileme",
+          numara: kayit.sozlesmeNo,
+          baslangic: tarihFormatla(islemBaslangic),
+          bitis: tarihFormatla(islemBitis),
+        }],
       })
+      setIslemBildirimi("Sözleşme yenileme işlemi başarıyla kaydedildi.")
+      setTimeout(() => setIslemBildirimi(null), 4500)
     }
     setIslemTipi(null)
   }
@@ -6193,29 +6248,177 @@ function FiloUretimGoruntulePage({
 
         {aktifSekme === "tarihce" && (
           <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h3 className="mb-1 text-sm font-bold text-gray-800">{policeKaydiMi ? "Ek Tarihçesi" : "Teklif Tarihçesi"}</h3>
-            <p className="mb-5 text-xs text-gray-400">{policeKaydiMi ? "Poliçe ve sözleşme ekleri" : "Teklif ve revizyon kayıtları"}</p>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-gray-900">
+                    {policeKaydiMi ? "Sözleşme Ek Tarihçesi" : "Teklif Tarihçesi"}
+                  </h3>
+                  {policeKaydiMi && (
+                    <span className="rounded-full bg-blue-100 text-blue-800 px-2.5 py-0.5 text-xs font-bold font-mono">
+                      {kayit.sozlesmeNo?.split("/")[0] || kayit.sozlesmeNo}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  {policeKaydiMi
+                    ? "Sözleşme ilk oluştuğunda Ek 0 olarak başlar; ek yapıldığında 1. Ek (Ek 1) oluşturulup başlangıç ve bitiş tarihleri ek tarihlerine göre işlenir."
+                    : "Teklif ve revizyon hareketleri"}
+                </p>
+              </div>
+
+              {policeKaydiMi && (
+                <button
+                  type="button"
+                  onClick={() => setIslemTipi("ek")}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 text-xs font-semibold shadow-xs transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                  </svg>
+                  Yeni Sözleşme Eki Ekle
+                </button>
+              )}
+            </div>
 
             {secilenTarihce && (
-              <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50/70 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-500">Salt Okunur Sözleşme Görünümü</p>
-                    <h4 className="mt-1 font-mono text-base font-bold text-blue-900">{secilenTarihce.numara}</h4>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">
+                      {secilenTarihce.ekNo === "0" ? "Sözleşme Ana Kaydı (Ek 0)" : `${secilenTarihce.ekNo || "1"}. Sözleşme Eki Detayı`}
+                    </span>
+                    <h4 className="mt-0.5 font-mono text-base font-bold text-blue-950">
+                      {secilenTarihce.numara || kayit.sozlesmeNo}
+                    </h4>
                   </div>
-                  <button onClick={() => setSecilenTarihce(null)} className="text-blue-400 hover:text-blue-700">×</button>
+                  <button onClick={() => setSecilenTarihce(null)} className="text-gray-400 hover:text-gray-700 font-bold text-sm">×</button>
                 </div>
-                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
-                  {bilgi("Sözleşme Adı", kayit.sozlesmeAdi)}
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+                  {bilgi("Sözleşme Numarası", kayit.sozlesmeNo?.split("/")[0] || kayit.sozlesmeNo)}
+                  {bilgi("Ek Numarası", secilenTarihce.ekNo !== undefined ? `Ek ${secilenTarihce.ekNo}` : "Ek 0")}
                   {bilgi("Başlangıç Tarihi", secilenTarihce.baslangic || kayit.baslangic)}
                   {bilgi("Bitiş Tarihi", secilenTarihce.bitis || kayit.bitis)}
-                  {bilgi("Araç Sayısı", kayit.araclar?.length ?? 0)}
+                  {bilgi("Oluşturan Kullanıcı", secilenTarihce.kullanici || kayit.yaratan || "GM_UZMAN")}
+                  {bilgi("İşlem Tarihi", secilenTarihce.tarih)}
+                  {bilgi("İşlem", secilenTarihce.islem)}
+                  {bilgi("Açıklama", secilenTarihce.aciklama)}
                 </div>
-                <p className="mt-3 text-xs text-blue-700">Bu ek; sözleşmenin kontak, acente, araç, teminat ve özel not bilgilerini taşır.</p>
               </div>
             )}
 
-            {tarihceKayitlari.length === 0 ? (
+            {policeKaydiMi ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-max text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-gray-50 text-gray-700">
+                      <th className="px-3.5 py-3 font-semibold">Sözleşme Numarası</th>
+                      <th className="px-3.5 py-3 font-semibold">Ek No</th>
+                      <th className="px-3.5 py-3 font-semibold">Başlangıç Tarihi</th>
+                      <th className="px-3.5 py-3 font-semibold">Bitiş Tarihi</th>
+                      <th className="px-3.5 py-3 font-semibold">Oluşturan Kullanıcı</th>
+                      <th className="px-3.5 py-3 font-semibold">İşlem / Açıklama</th>
+                      <th className="px-3.5 py-3 font-semibold">İşlem Tarihi</th>
+                      <th className="px-3.5 py-3 font-semibold text-right">İşlem</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {(() => {
+                      const anaNo = kayit.sozlesmeNo?.split("/")[0] || kayit.sozlesmeNo
+                      const tumEkler = (kayit.tarihce ?? []).filter(
+                        (t) => t.tur === "police" || t.tur === "ek" || t.ekNo !== undefined || t.islem.toLowerCase().includes("ek") || t.islem.toLowerCase().includes("sözleşme")
+                      )
+                      const ek0Kaydi = tumEkler.find((t) => t.ekNo === "0" || t.tur === "police" || t.islem.includes("Ek 0"))
+                      const digerEkler = tumEkler.filter((t) => t !== ek0Kaydi && (t.tur === "ek" || (t.ekNo && t.ekNo !== "0")))
+
+                      const normalizeEk0: FiloTarihceKaydi = ek0Kaydi || {
+                        id: 1,
+                        tarih: kayit.onayTarihi || kayit.baslangic || new Date().toLocaleDateString("tr-TR"),
+                        islem: "Sözleşme Oluşturuldu (Ek 0)",
+                        aciklama: `${anaNo} numaralı sözleşme ana kaydı oluşturuldu (Ek 0).`,
+                        numara: anaNo,
+                        ekNo: "0",
+                        baslangic: kayit.baslangic,
+                        bitis: kayit.bitis,
+                        kullanici: kayit.yaratan || kayit.kullanici || "GM_UZMAN",
+                        tur: "police",
+                      }
+
+                      const liste: FiloTarihceKaydi[] = [
+                        normalizeEk0,
+                        ...digerEkler.map((ek, idx) => ({
+                          ...ek,
+                          ekNo: ek.ekNo || String(idx + 1),
+                          numara: ek.numara || `${anaNo}/${String(idx + 1).padStart(2, "0")}`,
+                          baslangic: ek.baslangic || kayit.baslangic,
+                          bitis: ek.bitis || kayit.bitis,
+                          kullanici: ek.kullanici || "GM_UZMAN",
+                          islem: ek.islem || `${idx + 1}. Sözleşme Eki`,
+                        })),
+                      ]
+
+                      return liste.map((olay, idx) => {
+                        const isEk0 = olay.ekNo === "0" || idx === 0
+                        const ekEtiketi = isEk0 ? "Ek 0" : `${olay.ekNo || idx}. Ek`
+                        const baslangicTarihi = olay.baslangic || kayit.baslangic
+                        const bitisTarihi = olay.bitis || kayit.bitis
+                        const kullanici = olay.kullanici || kayit.yaratan || "GM_UZMAN"
+
+                        return (
+                          <tr
+                            key={olay.id || idx}
+                            className={`transition-colors hover:bg-blue-50/40 ${isEk0 ? "bg-slate-50/60" : ""}`}
+                          >
+                            <td className="px-3.5 py-3 font-mono font-bold text-blue-900 whitespace-nowrap">
+                              {anaNo}
+                            </td>
+                            <td className="px-3.5 py-3 whitespace-nowrap">
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold ${
+                                  isEk0
+                                    ? "bg-slate-100 text-slate-800 border border-slate-300"
+                                    : "bg-blue-50 text-blue-800 border border-blue-200"
+                                }`}
+                              >
+                                {isEk0 ? "🏷️ Ek 0" : `📄 ${ekEtiketi}`}
+                              </span>
+                            </td>
+                            <td className="px-3.5 py-3 font-mono text-gray-800 whitespace-nowrap font-semibold">
+                              {baslangicTarihi}
+                            </td>
+                            <td className="px-3.5 py-3 font-mono text-gray-800 whitespace-nowrap font-semibold">
+                              {bitisTarihi}
+                            </td>
+                            <td className="px-3.5 py-3 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                                👤 {kullanici}
+                              </span>
+                            </td>
+                            <td className="px-3.5 py-3 text-gray-700 max-w-xs truncate">
+                              <span className="font-semibold text-gray-900">{olay.islem}</span>
+                              {olay.aciklama && olay.aciklama !== olay.islem && (
+                                <span className="block text-[11px] text-gray-400 truncate">{olay.aciklama}</span>
+                              )}
+                            </td>
+                            <td className="px-3.5 py-3 text-gray-500 whitespace-nowrap font-mono text-[11px]">
+                              {olay.tarih}
+                            </td>
+                            <td className="px-3.5 py-3 text-right whitespace-nowrap">
+                              <button
+                                onClick={() => setSecilenTarihce(olay)}
+                                className="inline-flex items-center gap-1 rounded bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors"
+                              >
+                                İncele →
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            ) : tarihceKayitlari.length === 0 ? (
               <div className="py-10 text-center text-sm text-gray-400">Henüz tarihçe kaydı bulunmuyor.</div>
             ) : (
               <div className="overflow-x-auto">
@@ -6376,24 +6579,54 @@ interface SozlesmeKaydi {
 }
 
 function sozlesmeyiFiloKaydinaDonustur(s: SozlesmeKaydi): FiloUretimKaydi {
-  if (s.filoVerisi) return s.filoVerisi
+  const anaSozlesmeNo = s.sozlesmeNo?.split("/")[0] || s.sozlesmeNo
+  const baslangicTarihi = s.baslangic || s.olusturulmaTarihi || new Date().toLocaleDateString("tr-TR")
+  const bitisTarihi = s.bitis || "31/12/2026"
+
+  if (s.filoVerisi) {
+    const mevcutTarihce = s.filoVerisi.tarihce ?? []
+    const ek0Var = mevcutTarihce.some((t) => t.ekNo === "0" || t.tur === "police" || t.islem.includes("Ek 0"))
+    if (!ek0Var) {
+      const ek0Kaydi: FiloTarihceKaydi = {
+        id: 1,
+        tarih: s.olusturulmaTarihi || baslangicTarihi,
+        islem: "Sözleşme Oluşturuldu (Ek 0)",
+        numara: anaSozlesmeNo,
+        ekNo: "0",
+        baslangic: baslangicTarihi,
+        bitis: bitisTarihi,
+        aciklama: `${anaSozlesmeNo} numaralı sözleşme ana kaydı oluşturuldu (Ek 0).`,
+        kullanici: s.filoVerisi.yaratan || s.filoVerisi.kullanici || "GM_UZMAN",
+        tur: "police",
+      }
+      return {
+        ...s.filoVerisi,
+        sozlesmeNo: s.sozlesmeNo,
+        baslangic: s.baslangic || s.filoVerisi.baslangic,
+        bitis: s.bitis || s.filoVerisi.bitis,
+        tarihce: [ek0Kaydi, ...mevcutTarihce],
+      }
+    }
+    return s.filoVerisi
+  }
+
   return {
     id: s.id,
-    sozlesmeAdi: s.musteriUnvani ? `${s.musteriUnvani} Sözleşmesi` : "Kurumsal Filo Çerçeve Sözleşmesi",
-    sozlesmeNo: s.sozlesmeNo,
-    policeNo: `${s.sozlesmeNo}/00`,
+    sozlesmeAdi: s.sozlesmeAdi || (s.musteriUnvani ? `${s.musteriUnvani} Sözleşmesi` : "Kurumsal Filo Çerçeve Sözleşmesi"),
+    sozlesmeNo: anaSozlesmeNo,
+    policeNo: `${anaSozlesmeNo}/00`,
     versiyon: 1,
     yenileme: 0,
     urunAdi: s.brans || "Kasko",
     policeTipi: "Filo Sözleşmesi",
-    baslangic: s.olusturulmaTarihi,
-    bitis: "31.12.2026",
+    baslangic: baslangicTarihi,
+    bitis: bitisTarihi,
     kullanici: "GM_UZMAN",
     durum: "Sözleşme Poliçe",
     onayStatusu: "Onaylandı",
     onaylayan: "Genel Müdürlük",
     onayTarihi: s.olusturulmaTarihi,
-    yaratan: "Genel Müdürlük",
+    yaratan: "GM_UZMAN",
     atanan: "GM_UZMAN",
     acenteAdi: "Emre Acentelik",
     kontakNo: s.vknTckn || "3920194821",
@@ -6413,9 +6646,12 @@ function sozlesmeyiFiloKaydinaDonustur(s: SozlesmeKaydi): FiloUretimKaydi {
       {
         id: 1,
         tarih: s.olusturulmaTarihi,
-        islem: "Sözleşme Oluşturuldu",
-        numara: s.sozlesmeNo,
-        aciklama: `${s.sozlesmeNo} numaralı kurumsal filo çerçeve sözleşmesi oluşturuldu.`,
+        islem: "Sözleşme Oluşturuldu (Ek 0)",
+        numara: anaSozlesmeNo,
+        ekNo: "0",
+        baslangic: baslangicTarihi,
+        bitis: bitisTarihi,
+        aciklama: `${anaSozlesmeNo} numaralı kurumsal filo çerçeve sözleşmesi (Ek 0) oluşturuldu.`,
         kullanici: "GM_UZMAN",
         tur: "police",
       },
@@ -7416,7 +7652,140 @@ function FiloUretimPage({
   )
 }
 
-const baslangicSozlesmeler: SozlesmeKaydi[] = []
+const baslangicSozlesmeler: SozlesmeKaydi[] = [
+  {
+    id: 9001,
+    sozlesmeNo: "SZL-2026-00412",
+    sozlesmeAdi: "Kalyon Lojistik Filo Kasko Sözleşmesi",
+    musteriUnvani: "Kalyon Lojistik ve Taşımacılık A.Ş.",
+    vknTckn: "4820193812",
+    talepTipi: "Kurumsal Filo Sözleşmesi",
+    brans: "Kasko",
+    aracAdedi: 18,
+    olusturulmaTarihi: "15/01/2026",
+    baslangic: "15/01/2026",
+    bitis: "15/01/2027",
+    durum: "Yürürlükte",
+    ozelIndirim: "15",
+    filoVerisi: {
+      id: 9001,
+      sozlesmeAdi: "Kalyon Lojistik Filo Kasko Sözleşmesi",
+      sozlesmeNo: "SZL-2026-00412",
+      policeNo: "SZL-2026-00412/00",
+      versiyon: 1,
+      yenileme: 0,
+      urunAdi: "Kasko",
+      policeTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+      baslangic: "15/01/2026",
+      bitis: "15/01/2027",
+      kullanici: "GM_UZMAN",
+      durum: "Sözleşme Poliçe",
+      onayStatusu: "Onaylandı",
+      onaylayan: "Genel Müdürlük",
+      onayTarihi: "15/01/2026",
+      yaratan: "GM_UZMAN",
+      atanan: "GM_UZMAN",
+      acenteAdi: "Emre Acentelik",
+      kontakNo: "4820193812",
+      kontakAdi: "Kalyon Lojistik ve Taşımacılık A.Ş.",
+      kontaklar: [{ id: 1, no: "4820193812", ad: "Kalyon Lojistik ve Taşımacılık A.Ş." }],
+      acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+      araclar: [{
+        ...bosFiloAraci,
+        id: 1,
+        kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+        primTipi: "Özel İndirim",
+        indirimYuzdesi: "15",
+      }],
+      tarihce: [
+        {
+          id: 1,
+          tarih: "15.01.2026 10:30",
+          islem: "Sözleşme Oluşturuldu (Ek 0)",
+          aciklama: "SZL-2026-00412 numaralı sözleşme ilk oluşturuldu (Ek 0).",
+          kullanici: "GM_UZMAN",
+          tur: "police",
+          numara: "SZL-2026-00412",
+          ekNo: "0",
+          baslangic: "15/01/2026",
+          bitis: "15/01/2027",
+        },
+      ],
+    },
+  },
+  {
+    id: 9002,
+    sozlesmeNo: "SZL-2026-00589",
+    sozlesmeAdi: "Borusan Lojistik Filo Çerçeve Sözleşmesi",
+    musteriUnvani: "Borusan Lojistik Dağıtım A.Ş.",
+    vknTckn: "1234567890",
+    talepTipi: "Kurumsal Filo Sözleşmesi",
+    brans: "Kasko",
+    aracAdedi: 25,
+    olusturulmaTarihi: "01/02/2026",
+    baslangic: "01/04/2026",
+    bitis: "01/10/2026",
+    durum: "Yürürlükte",
+    ozelFiyat: "₺420.000",
+    filoVerisi: {
+      id: 9002,
+      sozlesmeAdi: "Borusan Lojistik Filo Çerçeve Sözleşmesi",
+      sozlesmeNo: "SZL-2026-00589",
+      policeNo: "SZL-2026-00589/01",
+      versiyon: 1,
+      yenileme: 0,
+      urunAdi: "Kasko",
+      policeTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+      baslangic: "01/04/2026",
+      bitis: "01/10/2026",
+      kullanici: "GM_UZMAN",
+      durum: "Sözleşme Poliçe",
+      onayStatusu: "Onaylandı",
+      onaylayan: "Genel Müdürlük",
+      onayTarihi: "01/02/2026",
+      yaratan: "GM_UZMAN",
+      atanan: "GM_UZMAN",
+      acenteAdi: "Emre Acentelik",
+      kontakNo: "1234567890",
+      kontakAdi: "Borusan Lojistik Dağıtım A.Ş.",
+      kontaklar: [{ id: 1, no: "1234567890", ad: "Borusan Lojistik Dağıtım A.Ş." }],
+      acenteler: [{ kod: "320000", unvan: "Emre Acentelik", anaAcente: true }],
+      araclar: [{
+        ...bosFiloAraci,
+        id: 1,
+        kullanimTipi: "Otomobil (Sürücü Dahil 9 Koltuk)",
+        primTipi: "Özel Fiyat",
+        sabitPrim: "420000",
+      }],
+      tarihce: [
+        {
+          id: 1,
+          tarih: "01.02.2026 09:15",
+          islem: "Sözleşme Oluşturuldu (Ek 0)",
+          aciklama: "SZL-2026-00589 numaralı sözleşme ilk oluşturuldu (Ek 0).",
+          kullanici: "GM_UZMAN",
+          tur: "police",
+          numara: "SZL-2026-00589",
+          ekNo: "0",
+          baslangic: "01/02/2026",
+          bitis: "01/02/2027",
+        },
+        {
+          id: 2,
+          tarih: "01.04.2026 14:30",
+          islem: "1. Sözleşme Eki",
+          aciklama: "SZL-2026-00589/01 numaralı sözleşme eki (1. Ek) oluşturuldu. Yeni araçlar filoya eklendi.",
+          kullanici: "GM_UZMAN",
+          tur: "ek",
+          numara: "SZL-2026-00589/01",
+          ekNo: "1",
+          baslangic: "01/04/2026",
+          bitis: "01/10/2026",
+        },
+      ],
+    },
+  },
+]
 
 const bosSozlesmeFiltreleri = {
   sozlesmeNo: "",
@@ -7437,6 +7806,7 @@ function SozlesmelerimPage({
   const [yeniAcik, setYeniAcik] = useState(false)
   const [duzenlenenKayit, setDuzenlenenKayit] = useState<FiloUretimKaydi | null>(null)
   const [goruntulenenKayit, setGoruntulenenKayit] = useState<FiloUretimKaydi | null>(null)
+  const [varsayilanGoruntulemeSekmesi, setVarsayilanGoruntulemeSekmesi] = useState<"sozlesme" | "arac" | "notlar" | "mesajlasma" | "tarihce">("sozlesme")
   const [kayitModu, setKayitModu] = useState<"normal" | "ek">("normal")
   const [secilenler, setSecilenler] = useState<Set<number>>(new Set())
   const [filtreAcik, setFiltreAcik] = useState(true)
@@ -7453,8 +7823,9 @@ function SozlesmelerimPage({
     setYeniAcik(true)
   }
 
-  const goruntulemeyiAc = (hedef = secili) => {
+  const goruntulemeyiAc = (hedef = secili, sekme: "sozlesme" | "arac" | "notlar" | "mesajlasma" | "tarihce" = "sozlesme") => {
     if (!hedef) return
+    setVarsayilanGoruntulemeSekmesi(sekme)
     setGoruntulenenKayit(sozlesmeyiFiloKaydinaDonustur(hedef))
   }
 
@@ -7469,6 +7840,7 @@ function SozlesmelerimPage({
     return (
       <FiloUretimGoruntulePage
         kayit={goruntulenenKayit}
+        varsayilanSekme={varsayilanGoruntulemeSekmesi}
         onBack={() => setGoruntulenenKayit(null)}
         onUpdate={(guncel) => {
           setSozlesmeler((prev) => prev.map((item) => item.id === guncel.id ? {
@@ -7477,6 +7849,8 @@ function SozlesmelerimPage({
             musteriUnvani: guncel.kontakAdi || guncel.sozlesmeAdi || item.musteriUnvani,
             brans: guncel.urunAdi || item.brans,
             aracAdedi: String(guncel.araclar?.length || item.aracAdedi),
+            baslangic: guncel.baslangic || item.baslangic,
+            bitis: guncel.bitis || item.bitis,
             filoVerisi: guncel,
           } : item))
           setGoruntulenenKayit(guncel)
@@ -7523,23 +7897,30 @@ function SozlesmelerimPage({
               filoVerisi: kayit,
             } : s))
           } else if (duzenlenenKayit && kayitModu === "ek") {
-            const ekNo = kayit.policeNo || `${duzenlenenKayit.sozlesmeNo}/01`
-            const yeniEk: SozlesmeKaydi = {
-              id: Date.now(),
-              sozlesmeNo: ekNo,
-              musteriUnvani: `${kayit.kontakAdi || kayit.sozlesmeAdi || duzenlenenKayit.kontakAdi || "Sözleşme"} (Ek)`,
-              vknTckn: kayit.kontakNo || duzenlenenKayit.kontakNo || "—",
-              talepTipi: "Sözleşme Eki",
-              brans: kayit.urunAdi || "Kasko",
-              aracAdedi: String(kayit.araclar?.length || 1),
-              olusturulmaTarihi: new Date().toLocaleDateString("tr-TR"),
-              durum: "Yürürlükte",
-              eposta: "filo@anadolusigorta.com.tr",
-              filoVerisi: kayit,
-            }
-            setSozlesmeler((prev) => [yeniEk, ...prev])
+            const anaSozlesmeNo = duzenlenenKayit.sozlesmeNo.split("/")[0]
+            const ekBaslangic = kayit.baslangic
+            const ekBitis = kayit.bitis
+            const mevcutEkler = (duzenlenenKayit.tarihce ?? []).filter((t) => t.tur === "ek" || (t.ekNo && t.ekNo !== "0"))
+            const yeniEkNo = mevcutEkler.length + 1
+            const yeniPoliceNo = `${anaSozlesmeNo}/${String(yeniEkNo).padStart(2, "0")}`
+
+            setSozlesmeler((prev) => prev.map((s) => s.id === duzenlenenKayit.id ? {
+              ...s,
+              baslangic: ekBaslangic,
+              bitis: ekBitis,
+              aracAdedi: String(kayit.araclar?.length || s.aracAdedi),
+              filoVerisi: {
+                ...(s.filoVerisi || duzenlenenKayit),
+                ...kayit,
+                policeNo: yeniPoliceNo,
+                baslangic: ekBaslangic,
+                bitis: ekBitis,
+              },
+            } : s))
           } else {
             const yeniNo = `SZL-2026-00${Math.floor(500 + Math.random() * 400)}`
+            const baslangicTarihi = kayit.baslangic || new Date().toLocaleDateString("tr-TR")
+            const bitisTarihi = kayit.bitis || "31/12/2026"
             const yeni: SozlesmeKaydi = {
               id: Date.now(),
               sozlesmeNo: kayit.sozlesmeNo || yeniNo,
@@ -7550,8 +7931,33 @@ function SozlesmelerimPage({
               aracAdedi: String(kayit.araclar?.length || 1),
               olusturulmaTarihi: new Date().toLocaleDateString("tr-TR"),
               durum: "Yürürlükte",
+              baslangic: baslangicTarihi,
+              bitis: bitisTarihi,
               eposta: "filo@anadolusigorta.com.tr",
-              filoVerisi: kayit,
+              filoVerisi: {
+                ...kayit,
+                sozlesmeNo: kayit.sozlesmeNo || yeniNo,
+                policeNo: `${kayit.sozlesmeNo || yeniNo}/00`,
+                baslangic: baslangicTarihi,
+                bitis: bitisTarihi,
+                durum: "Sözleşme Poliçe",
+                kullanici: "GM_UZMAN",
+                yaratan: "GM_UZMAN",
+                tarihce: [
+                  {
+                    id: Date.now(),
+                    tarih: new Date().toLocaleString("tr-TR"),
+                    islem: "Sözleşme Oluşturuldu (Ek 0)",
+                    aciklama: `${kayit.sozlesmeNo || yeniNo} numaralı sözleşme ilk oluşturuldu (Ek 0).`,
+                    kullanici: "GM_UZMAN",
+                    tur: "police",
+                    numara: kayit.sozlesmeNo || yeniNo,
+                    ekNo: "0",
+                    baslangic: baslangicTarihi,
+                    bitis: bitisTarihi,
+                  },
+                ],
+              },
             }
             setSozlesmeler((prev) => [yeni, ...prev])
           }
@@ -7699,6 +8105,18 @@ function SozlesmelerimPage({
                 </svg>
                 Görüntüle
               </button>
+              <button
+                onClick={() => secili && goruntulemeyiAc(secili, "tarihce")}
+                title="Seçili Sözleşmenin Ek Tarihçesini Görüntüle"
+                disabled={secilenler.size !== 1}
+                className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                Ek Tarihçesi
+              </button>
               {gmMi && (
                 <button
                   onClick={() => sozlesmeEkiAc()}
@@ -7734,11 +8152,11 @@ function SozlesmelerimPage({
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
                   </th>
-                  <th className="px-4 py-3 font-semibold">Sözleşme No</th>
+                  <th className="px-4 py-3 font-semibold">Sözleşme No / Ek</th>
                   <th className="px-4 py-3 font-semibold">Müşteri Ünvanı</th>
                   <th className="px-4 py-3 font-semibold">Branş</th>
                   <th className="px-4 py-3 font-semibold text-center">Araç Sayısı</th>
-                  <th className="px-4 py-3 font-semibold">Oluşturulma Tarihi</th>
+                  <th className="px-4 py-3 font-semibold">Başlangıç - Bitiş</th>
                   <th className="px-4 py-3 font-semibold text-center">Durum</th>
                   <th className="px-4 py-3 font-semibold text-right">İşlemler</th>
                 </tr>
@@ -7753,6 +8171,9 @@ function SozlesmelerimPage({
                 ) : (
                   filtreli.map((s) => {
                     const seciliMi = secilenler.has(s.id)
+                    const ekler = (s.filoVerisi?.tarihce ?? []).filter((t) => t.tur === "ek" || (t.ekNo && t.ekNo !== "0"))
+                    const ekSayisi = ekler.length
+
                     return (
                       <tr
                         key={s.id}
@@ -7771,7 +8192,18 @@ function SozlesmelerimPage({
                           />
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="font-mono font-semibold text-blue-700">{s.sozlesmeNo}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-semibold text-blue-700">{s.sozlesmeNo}</span>
+                            {ekSayisi > 0 ? (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 text-[10px] font-bold">
+                                📄 {ekSayisi}. Ek
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 text-[10px] font-semibold">
+                                🏷️ Ek 0
+                              </span>
+                            )}
+                          </div>
                           {(s.ozelIndirim || s.ozelFiyat || s.sabitFiyat) && (
                             <div className="flex flex-wrap items-center gap-1 mt-0.5">
                               {s.ozelIndirim && (
@@ -7800,7 +8232,9 @@ function SozlesmelerimPage({
                         <td className="px-4 py-3 font-medium text-gray-800">{s.musteriUnvani}</td>
                         <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.brans}</td>
                         <td className="px-4 py-3 text-center text-gray-600">{s.aracAdedi}</td>
-                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{s.olusturulmaTarihi}</td>
+                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap font-mono text-[11px]">
+                          {s.baslangic || s.olusturulmaTarihi} - {s.bitis || "31/12/2026"}
+                        </td>
                         <td className="px-4 py-3 text-center whitespace-nowrap">
                           <span className="inline-flex rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
                             {s.durum}
@@ -7809,7 +8243,14 @@ function SozlesmelerimPage({
                         <td className="px-4 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1.5">
                             <button
-                              onClick={() => goruntulemeyiAc(s)}
+                              onClick={() => goruntulemeyiAc(s, "tarihce")}
+                              title="Ek Tarihçesini Görüntüle"
+                              className="inline-flex items-center gap-1 rounded border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors"
+                            >
+                              <span className="text-[11px]">🕒</span> Ek Tarihçesi
+                            </button>
+                            <button
+                              onClick={() => goruntulemeyiAc(s, "sozlesme")}
                               title="Görüntüle"
                               className="p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                             >
