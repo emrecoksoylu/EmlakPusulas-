@@ -3276,6 +3276,7 @@ interface FiloAracDetayi {
   operasyonelKiralik: boolean
   kiralik: boolean
   kuryeKargo: boolean
+  elektrikliArac: boolean
   acenteKomisyonu: string
   anadoluHizmetDahil: boolean
   teminatBilgileri: boolean
@@ -3611,6 +3612,7 @@ const bosFiloAraci: Omit<FiloAracDetayi, "id"> = {
   operasyonelKiralik: false,
   kiralik: false,
   kuryeKargo: false,
+  elektrikliArac: false,
   acenteKomisyonu: "",
   anadoluHizmetDahil: true,
   teminatBilgileri: false,
@@ -4328,16 +4330,27 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
                 </select>
               </div>
             </div>
-            {!acenteMi && (
-            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
-              {teknikSecimler.map(({ alan, label }) => (
-                <label key={alan} className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                  <input type="checkbox" checked={Boolean(aracFormu[alan])} onChange={(e) => aracAlaniGuncelle(alan, e.target.checked)} className="rounded border-gray-300" />
-                  {label}
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { alan: "operasyonelKiralik", label: "Operasyonel Kiralık" },
+                { alan: "kiralik", label: "Kiralık" },
+                { alan: "kuryeKargo", label: "Kargo / Kurye Aracı" },
+                { alan: "elektrikliArac", label: "Elektrikli Araç" },
+              ].map(({ alan, label }) => (
+                <label
+                  key={alan}
+                  className="flex items-center gap-2.5 rounded-lg border border-gray-200 bg-gray-50/70 p-2.5 text-xs font-semibold text-gray-700 hover:bg-blue-50/50 hover:border-blue-200 cursor-pointer transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(aracFormu[alan as keyof typeof aracFormu])}
+                    onChange={(e) => aracAlaniGuncelle(alan as keyof typeof aracFormu, e.target.checked as any)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <span>{label}</span>
                 </label>
               ))}
             </div>
-            )}
 
             <div className="my-5 h-px bg-gray-100" />
             <div className="mb-3 flex items-center justify-between">
@@ -4407,7 +4420,15 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
                     <tr key={arac.id} className="border-t border-gray-100">
                       <td className="px-3 py-3 text-gray-400">{index + 1}</td>
                       <td className="px-3 py-3 font-semibold text-gray-700">{arac.kullanimTipi}</td>
-                      <td className="px-3 py-3 text-gray-600">{arac.kullanimSekli || "—"}</td>
+                      <td className="px-3 py-3 text-gray-600">
+                        <div>{arac.kullanimSekli || "—"}</div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {arac.operasyonelKiralik && <span className="rounded bg-blue-50 px-1 text-[10px] font-semibold text-blue-700 border border-blue-200">Op. Kiralık</span>}
+                          {arac.kiralik && <span className="rounded bg-purple-50 px-1 text-[10px] font-semibold text-purple-700 border border-purple-200">Kiralık</span>}
+                          {arac.kuryeKargo && <span className="rounded bg-amber-50 px-1 text-[10px] font-semibold text-amber-700 border border-amber-200">Kargo</span>}
+                          {arac.elektrikliArac && <span className="rounded bg-emerald-50 px-1 text-[10px] font-semibold text-emerald-700 border border-emerald-200">Elektrikli</span>}
+                        </div>
+                      </td>
                       {sozlesmeModu ? (
                         <>
                           <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{arac.kilitMekanizmasiLimiti || "—"}</td>
@@ -4756,7 +4777,8 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
                     ["Taşınan Emtia", arac.tasinanEmtiaDahil],
                     ["Operasyonel Kiralık", arac.operasyonelKiralik],
                     ["Kiralık", arac.kiralik],
-                    ["Kurye / Kargo", arac.kuryeKargo],
+                    ["Kargo / Kurye", arac.kuryeKargo],
+                    ["Elektrikli Araç", arac.elektrikliArac],
                     ["Anadolu Hizmet", arac.anadoluHizmetDahil],
                     ["Teminat Bilgileri", arac.teminatBilgileri],
                   ].filter(([, secili]) => secili).map(([label]) => (
