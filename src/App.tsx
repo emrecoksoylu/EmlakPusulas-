@@ -5901,6 +5901,7 @@ function FiloUretimGoruntulePage({
   bolgeMi = false,
   gmMi = false,
   varsayilanSekme = "sozlesme",
+  akis = "teklif",
 }: {
   kayit: FiloUretimKaydi
   onBack: () => void
@@ -5910,9 +5911,10 @@ function FiloUretimGoruntulePage({
   acenteMi?: boolean
   bolgeMi?: boolean
   gmMi?: boolean
-  varsayilanSekme?: "sozlesme" | "prim" | "arac" | "notlar" | "odeme" | "mesajlasma" | "tarihce"
+  varsayilanSekme?: "sozlesme" | "prim" | "arac" | "notlar" | "odeme" | "mesajlasma" | "tarihce" | "filo360"
+  akis?: "teklif" | "sozlesme"
 }) {
-  const [aktifSekme, setAktifSekme] = useState<"sozlesme" | "prim" | "arac" | "notlar" | "odeme" | "mesajlasma" | "tarihce">(varsayilanSekme)
+  const [aktifSekme, setAktifSekme] = useState<"sozlesme" | "prim" | "arac" | "notlar" | "odeme" | "mesajlasma" | "tarihce" | "filo360">(varsayilanSekme)
   const [teklifCiktisiModalAcik, setTeklifCiktisiModalAcik] = useState(false)
   const [islemTipi, setIslemTipi] = useState<"ek" | "yenileme" | null>(null)
   const [secilenTarihce, setSecilenTarihce] = useState<FiloTarihceKaydi | null>(null)
@@ -5981,6 +5983,9 @@ function FiloUretimGoruntulePage({
   const [islemBitis, setIslemBitis] = useState(isoTarih(altiAySonrasi))
   const tarihFormatla = (tarih: string) => tarih.split("-").reverse().join("/")
   const policeKaydiMi = kayit.durum === "Sözleşme Poliçe"
+  const isTeklifAkisi = akis === "teklif" && !policeKaydiMi
+  const filo360Goster = Boolean(gmMi && isTeklifAkisi)
+  const guvenliAktifSekme = (aktifSekme === "filo360" && !filo360Goster) ? "sozlesme" : aktifSekme
   const tarihceKayitlari = (kayit.tarihce ?? []).filter((olay) =>
     policeKaydiMi
       ? ["police", "ek", "yenileme", "tramer"].includes(olay.tur ?? "")
@@ -6222,7 +6227,9 @@ function FiloUretimGoruntulePage({
       </div>
 
       <div className="mx-auto max-w-6xl space-y-5 px-6 py-6">
-        <div className="grid grid-cols-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className={`grid overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ${
+          filo360Goster ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-7" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
+        }`}>
           {([
             ["sozlesme", "Sözleşme ve Paydaşlar"],
             ["prim", "Prim Detayları"],
@@ -6230,9 +6237,32 @@ function FiloUretimGoruntulePage({
             ["notlar", "Özel Şartlar ve Notlar"],
             policeKaydiMi ? ["odeme", "Ödeme Yöntemleri"] : ["mesajlasma", "Mesajlaşma"],
             ["tarihce", "Ek Tarihçe"],
+            ...(filo360Goster ? [["filo360", "Filo 360"]] as const : []),
           ] as const).map(([id, label]) => (
-            <button key={id} onClick={() => setAktifSekme(id)} className={`px-4 py-3 text-sm font-semibold relative ${aktifSekme === id ? "bg-blue-600 text-white" : "text-gray-500 hover:bg-gray-50"}`}>
-              {label}
+            <button
+              key={id}
+              onClick={() => setAktifSekme(id as any)}
+              className={`px-3 py-3 text-xs sm:text-sm font-semibold relative transition-colors border-b lg:border-b-0 border-gray-100 ${
+                guvenliAktifSekme === id
+                  ? id === "filo360"
+                    ? "bg-purple-700 text-white shadow-xs"
+                    : "bg-blue-600 text-white shadow-xs"
+                  : id === "filo360"
+                  ? "text-purple-700 bg-purple-50/70 hover:bg-purple-100/70 font-bold"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                {id === "filo360" && <span>🌐</span>}
+                {label}
+                {id === "filo360" && (
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider ${
+                    guvenliAktifSekme === id ? "bg-white/20 text-white" : "bg-purple-100 text-purple-800"
+                  }`}>
+                    GM
+                  </span>
+                )}
+              </span>
               {id === "prim" && hasTeklifCiktisi(kayit) && (
                 <span className="ml-1.5 inline-block w-2 h-2 rounded-full bg-emerald-400 align-middle" title="Teklif Çıktısı Hazır" />
               )}
@@ -7411,6 +7441,424 @@ function FiloUretimGoruntulePage({
             )}
           </section>
         )}
+
+        {guvenliAktifSekme === "filo360" && filo360Goster && (
+          <div className="space-y-5 animate-in fade-in duration-150">
+            {/* Header Banner */}
+            <div className="rounded-xl border border-purple-200 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white p-5 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/30 border border-purple-400/40 px-2.5 py-0.5 text-xs font-bold text-purple-200">
+                      🏛️ Genel Müdürlük Filo 360° Risk Analitiği
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/30 border border-emerald-400/40 px-2.5 py-0.5 text-xs font-bold text-emerald-200">
+                      ✓ Mevcut Müşteri (8 Önceki Poliçe)
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/30 border border-amber-400/40 px-2.5 py-0.5 text-xs font-bold text-amber-200">
+                      ⭐ Kurumsal Filo A+
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold tracking-tight">
+                    {kayit.kontakAdi || kayit.sozlesmeAdi || "Kurumsal Filo Müşterisi"}
+                  </h3>
+                  <p className="text-xs text-purple-200/80">
+                    VKN/TCKN: <strong className="font-mono text-white">{kayit.kontakNo || "3920194821"}</strong> · Yetkili Acente: <strong className="text-white">{kayit.acenteAdi || "Emre Acentelik"}</strong> · Portföy: <strong>3 Yıldır Anadolu Sigorta Müşterisi</strong>
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAktifSekme("prim")}
+                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 text-xs font-bold shadow-md transition-all cursor-pointer"
+                  >
+                    <span>🖩</span>
+                    <span>Prim Detaylarına Git &amp; Fiyat Belirle</span>
+                  </button>
+                  {hasTramerEvent && (
+                    <button
+                      type="button"
+                      onClick={() => setExcelModalAcik(true)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3.5 py-2 text-xs font-semibold backdrop-blur-xs transition-colors"
+                    >
+                      <span>📊</span> Tramer Excel Tablosu
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 4 KPI Gösterge Kartları */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {/* KPI 1: Teknik Kâr / Zarar */}
+              <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-white to-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Kümülatif Teknik K/Z</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 text-sm">📈</span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="font-mono text-2xl font-black text-emerald-700">+₺1.420.000</span>
+                  <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold text-emerald-800">Kârlı</span>
+                </div>
+                <div className="mt-2.5 pt-2.5 border-t border-emerald-100/80 text-[11px] text-gray-600 space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>Toplam Net Prim:</span>
+                    <strong className="font-mono text-gray-800">₺4.122.500</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Ödenen + Muallak:</span>
+                    <strong className="font-mono text-red-700">₺2.702.500</strong>
+                  </div>
+                  <div className="flex justify-between text-emerald-700 font-semibold pt-0.5">
+                    <span>Net Teknik Kâr Marjı:</span>
+                    <span>%34,4</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI 2: Hasar / Prim Oranı (Loss Ratio) */}
+              <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/80 via-white to-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Hasar / Prim Oranı (LR)</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-700 text-sm">🛡️</span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="font-mono text-2xl font-black text-blue-800">%52,3</span>
+                  <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold text-emerald-800">İdeal Risk</span>
+                </div>
+                <div className="mt-2.5 pt-2.5 border-t border-blue-100/80 text-[11px] text-gray-600 space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>Şirket Üst Limiti:</span>
+                    <strong className="font-mono text-gray-700">&lt; %65,0</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Sektör Ortalaması:</span>
+                    <strong className="font-mono text-gray-700">%68,4</strong>
+                  </div>
+                  <div className="flex justify-between text-blue-700 font-semibold pt-0.5">
+                    <span>Araç Başı Kaza Frekansı:</span>
+                    <span>%18,5 (Düşük)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI 3: Daha Önce Poliçe Yapmış mı? */}
+              <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50/80 via-white to-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Daha Önce Poliçe Yaptı mı?</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-700 text-sm">📋</span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="text-xl font-black text-purple-900">EVET (8 Poliçe)</span>
+                  <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[11px] font-bold text-purple-800">3 Yıllık</span>
+                </div>
+                <div className="mt-2.5 pt-2.5 border-t border-purple-100/80 text-[11px] text-gray-600 space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>Poliçe Dağılımı:</span>
+                    <strong className="text-gray-800">5 Kasko · 3 Trafik</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>İlk Poliçe Tarihi:</span>
+                    <strong className="font-mono text-gray-800">15/01/2023</strong>
+                  </div>
+                  <div className="flex justify-between text-purple-700 font-semibold pt-0.5">
+                    <span>Yenileme Sadakati:</span>
+                    <span>%100 (Kesintisiz)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI 4: Müşteri Risk Skoru & Cari Teklif */}
+              <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50/80 via-white to-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Portföy Karnesi &amp; Skor</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-700 text-sm">⭐</span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="font-mono text-2xl font-black text-amber-900">84 / 100</span>
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-bold text-amber-800">Düşük Risk</span>
+                </div>
+                <div className="mt-2.5 pt-2.5 border-t border-amber-100/80 text-[11px] text-gray-600 space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>Hasarsızlık Basamağı:</span>
+                    <strong className="text-emerald-700 font-bold">5. Basamak (%30)</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Cari Teklif Araç Sayısı:</span>
+                    <strong className="font-mono text-gray-800">{kayit.araclar?.length || 13} Araç</strong>
+                  </div>
+                  <div className="flex justify-between text-amber-800 font-semibold pt-0.5">
+                    <span>Ağır Hasar / Pert:</span>
+                    <span>0 Adet (Kusursuz)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* İki Büyük Analiz Bloğu */}
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+              {/* Sol Taraf: Teknik Kâr / Zarar & Finansal Performans (7 Sütun) */}
+              <div className="space-y-5 lg:col-span-7">
+                <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                        <span>📊</span>
+                        Yıllık Teknik Kâr / Zarar Çizelgesi (2023 - 2026)
+                      </h4>
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        Müşterinin Anadolu Sigorta bünyesindeki yıllık prim üretimi, hasar ödemeleri ve teknik marjı
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                      Kümülatif Kâr: +₺1.420.000
+                    </span>
+                  </div>
+
+                  {/* Yıllık Tablo */}
+                  <div className="overflow-x-auto rounded-lg border border-gray-100">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50 text-gray-700 font-semibold">
+                          <th className="px-3 py-2.5">Dönem</th>
+                          <th className="px-3 py-2.5">Branş / Araç</th>
+                          <th className="px-3 py-2.5 text-right">Net Prim</th>
+                          <th className="px-3 py-2.5 text-right">Ödenen Hasar</th>
+                          <th className="px-3 py-2.5 text-right">Muallak</th>
+                          <th className="px-3 py-2.5 text-center">LR (Hasar/Prim)</th>
+                          <th className="px-3 py-2.5 text-right">Teknik K/Z</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 font-sans">
+                        <tr className="hover:bg-gray-50/60">
+                          <td className="px-3 py-2.5 font-semibold text-gray-800">2023 / 2024</td>
+                          <td className="px-3 py-2.5 text-gray-600">Filo Kasko (18 Araç)</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-gray-800">₺890.000</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-gray-700">₺320.000</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-gray-500">₺60.000</td>
+                          <td className="px-3 py-2.5 text-center">
+                            <span className="rounded bg-emerald-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-emerald-800">%42,7</span>
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono font-bold text-emerald-700">+₺510.000</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50/60">
+                          <td className="px-3 py-2.5 font-semibold text-gray-800">2024 / 2025</td>
+                          <td className="px-3 py-2.5 text-gray-600">Filo Kasko (24 Araç)</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-gray-800">₺1.420.000</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-gray-700">₺610.000</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-gray-500">₺100.000</td>
+                          <td className="px-3 py-2.5 text-center">
+                            <span className="rounded bg-emerald-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-emerald-800">%50,0</span>
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono font-bold text-emerald-700">+₺710.000</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50/60">
+                          <td className="px-3 py-2.5 font-semibold text-gray-800">2025 / 2026</td>
+                          <td className="px-3 py-2.5 text-gray-600">Kasko + Trafik (30 Araç)</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-gray-800">₺1.812.500</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-gray-700">₺1.210.000</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-gray-500">₺402.500</td>
+                          <td className="px-3 py-2.5 text-center">
+                            <span className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-amber-800">%88,9</span>
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono font-bold text-emerald-700">+₺200.000</td>
+                        </tr>
+                        <tr className="bg-emerald-50/60 font-bold border-t-2 border-emerald-200">
+                          <td className="px-3 py-3 text-emerald-950">GENEL TOPLAM</td>
+                          <td className="px-3 py-3 text-emerald-900">30 Araç (Maks)</td>
+                          <td className="px-3 py-3 text-right font-mono text-emerald-950">₺4.122.500</td>
+                          <td className="px-3 py-3 text-right font-mono text-gray-800">₺2.140.000</td>
+                          <td className="px-3 py-3 text-right font-mono text-gray-600">₺562.500</td>
+                          <td className="px-3 py-3 text-center">
+                            <span className="rounded bg-emerald-200 text-emerald-900 px-2 py-0.5 font-mono text-xs font-black">%52,3</span>
+                          </td>
+                          <td className="px-3 py-3 text-right font-mono text-sm font-black text-emerald-800">+₺1.420.000</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Hasar Kırılımı ve Dağılım Çubukları */}
+                  <div className="pt-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-gray-700">Hasar Türü Maliyet Dağılımı:</span>
+                      <span className="text-[11px] text-emerald-700 font-semibold">✓ ₺340.000 Rücu Başarıyla Tahsil Edildi</span>
+                    </div>
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100 flex">
+                      <div style={{ width: "62%" }} className="bg-red-500" title="Çarpışma / Maddi Hasar (%62)" />
+                      <div style={{ width: "18%" }} className="bg-amber-400" title="Cam Kırılması (%18)" />
+                      <div style={{ width: "20%" }} className="bg-blue-400" title="Asistans / Çekici (%20)" />
+                    </div>
+                    <div className="mt-2.5 grid grid-cols-3 gap-2 text-[11px]">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                        <span className="text-gray-600">Çarpışma: <strong>%62</strong> (₺1.675.000)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                        <span className="text-gray-600">Cam: <strong>%18</strong> (₺486.000)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                        <span className="text-gray-600">Asistans: <strong>%20</strong> (₺541.500)</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              {/* Sağ Taraf: Daha Önce Poliçe Yapmış mı? & Poliçe Geçmişi (5 Sütun) */}
+              <div className="space-y-5 lg:col-span-5">
+                <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                        <span>🏛️</span>
+                        Anadolu Sigorta Poliçe Geçmişi
+                      </h4>
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        Müşterinin daha önce düzenlenmiş poliçeleri ve yürürlük durumları
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-purple-50 border border-purple-200 px-2.5 py-0.5 text-xs font-bold text-purple-700">
+                      8 Kayıt
+                    </span>
+                  </div>
+
+                  {/* Vurgulu Doğrulama Kutusu */}
+                  <div className="rounded-lg border border-emerald-300 bg-emerald-50/80 p-3 text-xs text-emerald-900 flex items-start gap-2.5">
+                    <span className="text-base font-bold text-emerald-700">✓</span>
+                    <div>
+                      <strong className="block font-bold">Müşteri Daha Önce Poliçe Yaptı (Doğrulandı)</strong>
+                      <p className="text-[11px] text-emerald-800 mt-0.5 leading-relaxed">
+                        Müşteri şirketimiz bünyesinde <strong>3 takvim yılıdır</strong> kesintisiz sigortalıdır. Bugüne kadar 5 Kasko ve 3 Trafik poliçesi tanzim edilmiş olup hiçbir dönemde prim temerrüdü veya tahsilat iptali yaşanmamıştır.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Geçmiş Poliçeler Listesi */}
+                  <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                    {[
+                      {
+                        no: "429104812/0",
+                        brans: "Genişletilmiş Filo Kasko",
+                        vade: "15/01/2025 - 15/01/2026",
+                        arac: 30,
+                        prim: "₺1.650.000",
+                        durum: "Yürürlükte",
+                        hasar: "3 Dosya (Hafif Hasar)",
+                        aktif: true,
+                      },
+                      {
+                        no: "381920194/0",
+                        brans: "Zorunlu Mali Mesuliyet (Trafik)",
+                        vade: "15/01/2025 - 15/01/2026",
+                        arac: 30,
+                        prim: "₺480.000",
+                        durum: "Yürürlükte",
+                        hasar: "1 Dosya",
+                        aktif: true,
+                      },
+                      {
+                        no: "291039481/0",
+                        brans: "Kurumsal Filo Kasko",
+                        vade: "15/01/2024 - 15/01/2025",
+                        arac: 24,
+                        prim: "₺1.420.000",
+                        durum: "Vadesi Doldu (Yenilendi)",
+                        hasar: "2 Dosya",
+                        aktif: false,
+                      },
+                      {
+                        no: "198204912/0",
+                        brans: "Zorunlu Mali Mesuliyet (Trafik)",
+                        vade: "15/01/2024 - 15/01/2025",
+                        arac: 24,
+                        prim: "₺340.000",
+                        durum: "Vadesi Doldu (Yenilendi)",
+                        hasar: "0 Hasar (Temiz)",
+                        aktif: false,
+                      },
+                      {
+                        no: "109283741/0",
+                        brans: "Kurumsal Filo Kasko",
+                        vade: "15/01/2023 - 15/01/2024",
+                        arac: 18,
+                        prim: "₺890.000",
+                        durum: "Vadesi Doldu (Yenilendi)",
+                        hasar: "1 Dosya",
+                        aktif: false,
+                      },
+                      {
+                        no: "91028471/0",
+                        brans: "Zorunlu Mali Mesuliyet (Trafik)",
+                        vade: "15/01/2023 - 15/01/2024",
+                        arac: 18,
+                        prim: "₺280.000",
+                        durum: "Vadesi Doldu (Yenilendi)",
+                        hasar: "0 Hasar (Temiz)",
+                        aktif: false,
+                      },
+                    ].map((p, idx) => (
+                      <div
+                        key={idx}
+                        className={`rounded-xl border p-3 text-xs transition-all ${
+                          p.aktif
+                            ? "border-emerald-200 bg-emerald-50/40 shadow-2xs"
+                            : "border-gray-200 bg-gray-50/60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono font-bold text-blue-900">{p.no}</span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              p.aktif
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                : "bg-gray-200 text-gray-700"
+                            }`}
+                          >
+                            {p.durum}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between text-gray-700 font-semibold">
+                          <span>{p.brans}</span>
+                          <span className="font-mono text-gray-900">{p.prim}</span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between text-[11px] text-gray-500">
+                          <span>Vade: {p.vade}</span>
+                          <span className="text-gray-600 font-medium">{p.hasar}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            {/* Alt Kısım: Genel Müdürlük Aktüeryal Underwriting Notu & Karar Destek */}
+            <div className="rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 p-5 shadow-xs">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-1 max-w-3xl">
+                  <h4 className="text-sm font-bold text-indigo-950 flex items-center gap-2">
+                    <span>💡</span>
+                    Genel Müdürlük Aktüerya &amp; Underwriting Risk Yorumu
+                  </h4>
+                  <p className="text-xs text-indigo-900/90 leading-relaxed">
+                    Müşteri son 3 dönem boyunca şirketimize kümülatif olarak <strong>+₺1.420.000 teknik kâr</strong> sağlamıştır. Hasar/Prim oranı (<strong>%52,3</strong>) şirketimizin kritik üst sınırı olan %65'in oldukça altındadır. Kurumsal bağlılığın korunması ve acentemizin rekabette avantaj sağlaması için bu teklife <strong>%12 - %15 özel indirim</strong> veya toplam <strong>₺400.000 - ₺430.000</strong> bandında özel filo primi tanımlanması aktüeryal kârlılık hedeflerimizle tam uyumludur.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAktifSekme("prim")}
+                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-5 py-2.5 text-xs font-bold shadow-sm transition-all cursor-pointer shrink-0"
+                >
+                  <span>🖩</span>
+                  <span>Prim Detayları Sekmesine Git &amp; Fiyat Gir</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {excelModalAcik && (
@@ -7869,7 +8317,7 @@ function FiloUretimPage({
   const [yeniKayitAcik, setYeniKayitAcik] = useState(false)
   const [duzenlenenKayit, setDuzenlenenKayit] = useState<FiloUretimKaydi | null>(null)
   const [goruntulenenKayit, setGoruntulenenKayit] = useState<FiloUretimKaydi | null>(null)
-  const [varsayilanGoruntulemeSekmesi, setVarsayilanGoruntulemeSekmesi] = useState<"sozlesme" | "prim" | "arac" | "notlar" | "mesajlasma" | "tarihce">("sozlesme")
+  const [varsayilanGoruntulemeSekmesi, setVarsayilanGoruntulemeSekmesi] = useState<"sozlesme" | "prim" | "arac" | "notlar" | "mesajlasma" | "tarihce" | "filo360">("sozlesme")
   const [teklifCiktisiModalKayit, setTeklifCiktisiModalKayit] = useState<FiloUretimKaydi | null>(null)
   const [excelViewerKayit, setExcelViewerKayit] = useState<FiloUretimKaydi | null>(null)
   const [sozlesmeModalKayit, setSozlesmeModalKayit] = useState<FiloUretimKaydi | null>(null)
@@ -7971,7 +8419,7 @@ function FiloUretimPage({
     setYeniKayitAcik(true)
   }
 
-  const goruntulemeyiAc = (sekme: "sozlesme" | "prim" | "arac" | "notlar" | "mesajlasma" | "tarihce" = "sozlesme") => {
+  const goruntulemeyiAc = (sekme: "sozlesme" | "prim" | "arac" | "notlar" | "mesajlasma" | "tarihce" | "filo360" = "sozlesme") => {
     if (secilenler.size !== 1) return
     const kayit = kayitlar.find((item) => secilenler.has(item.id))
     if (kayit) {
@@ -8047,6 +8495,7 @@ function FiloUretimPage({
         bolgeMi={bolgeMi}
         gmMi={gmMi}
         varsayilanSekme={varsayilanGoruntulemeSekmesi}
+        akis="teklif"
       />
     )
   }
@@ -8814,6 +9263,7 @@ function SozlesmelerimPage({
         acenteMi={kullaniciTuru === "acente"}
         bolgeMi={kullaniciTuru === "bolge"}
         gmMi={kullaniciTuru === "gm"}
+        akis="sozlesme"
       />
     )
   }
