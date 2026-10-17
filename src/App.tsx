@@ -3294,6 +3294,321 @@ interface FiloAracDetayi {
   hukuksalKorumaLimiti: string
   anadoluHizmetDurumu: string
   anadoluHizmetPaketi: string
+  teminatSatirlari?: TeminatSatiri[]
+}
+
+export interface TeminatSatiri {
+  id: string
+  secili: boolean
+  tur: "Ana Teminat" | "Alt Teminat"
+  ad: string
+  limitTipi: "kapali" | "combobox"
+  limitDegeri?: string
+  limitSecenekleri?: string[]
+  muafiyetTipi: "kapali" | "combobox"
+  muafiyetDegeri?: string
+  muafiyetSecenekleri?: string[]
+}
+
+export const VARSAYILAN_TEMINAT_LISTESI: Omit<TeminatSatiri, "secili" | "limitDegeri" | "muafiyetDegeri">[] = [
+  {
+    id: "kasko",
+    tur: "Ana Teminat",
+    ad: "Kasko",
+    limitTipi: "kapali",
+    muafiyetTipi: "combobox",
+    muafiyetSecenekleri: ["Muafiyetsiz", "%1 Muafiyetli", "%2 Muafiyetli", "%3 Muafiyetli", "%5 Muafiyetli"],
+  },
+  {
+    id: "deprem",
+    tur: "Alt Teminat",
+    ad: "Deprem",
+    limitTipi: "kapali",
+    muafiyetTipi: "combobox",
+    muafiyetSecenekleri: ["Muafiyetsiz", "%5 Muafiyetli", "%10 Muafiyetli", "%20 Muafiyetli"],
+  },
+  {
+    id: "carpma",
+    tur: "Alt Teminat",
+    ad: "Çarpma",
+    limitTipi: "kapali",
+    muafiyetTipi: "combobox",
+    muafiyetSecenekleri: ["Muafiyetsiz", "1.000 TL Muafiyetli", "2.500 TL Muafiyetli", "5.000 TL Muafiyetli", "%2 Muafiyetli"],
+  },
+  {
+    id: "calinma",
+    tur: "Alt Teminat",
+    ad: "Çalınma / Çalınmaya Teşebbüs Muafiyeti",
+    limitTipi: "kapali",
+    muafiyetTipi: "combobox",
+    muafiyetSecenekleri: ["Muafiyetsiz", "%5 Muafiyetli", "%10 Muafiyetli"],
+  },
+  {
+    id: "glhht",
+    tur: "Alt Teminat",
+    ad: "Grev, Lokavt, Halk Hareketleri ve Terör Muafiyeti",
+    limitTipi: "kapali",
+    muafiyetTipi: "combobox",
+    muafiyetSecenekleri: ["Muafiyetsiz", "%5 Muafiyetli", "%10 Muafiyetli", "%20 Muafiyetli"],
+  },
+  {
+    id: "kilit",
+    tur: "Alt Teminat",
+    ad: "Kilit Mekanizması",
+    limitTipi: "combobox",
+    limitSecenekleri: ["25.000 TL", "40.000 TL", "50.000 TL", "60.000 TL", "75.000 TL", "100.000 TL"],
+    muafiyetTipi: "kapali",
+  },
+  {
+    id: "koltuk_ferdi_kaza",
+    tur: "Ana Teminat",
+    ad: "Koltuk Ferdi Kaza",
+    limitTipi: "kapali",
+    muafiyetTipi: "kapali",
+  },
+  {
+    id: "olum",
+    tur: "Alt Teminat",
+    ad: "Ölüm",
+    limitTipi: "kapali",
+    muafiyetTipi: "kapali",
+  },
+  {
+    id: "surekli_sakatlik",
+    tur: "Alt Teminat",
+    ad: "Sürekli Sakatlık",
+    limitTipi: "kapali",
+    muafiyetTipi: "kapali",
+  },
+  {
+    id: "tedavi",
+    tur: "Alt Teminat",
+    ad: "Tedavi",
+    limitTipi: "kapali",
+    muafiyetTipi: "kapali",
+  },
+  {
+    id: "ams_ana",
+    tur: "Ana Teminat",
+    ad: "Artan Mali Sorumluluk",
+    limitTipi: "kapali",
+    muafiyetTipi: "kapali",
+  },
+  {
+    id: "ams_alt",
+    tur: "Alt Teminat",
+    ad: "Artan Mali Sorumluluk",
+    limitTipi: "combobox",
+    limitSecenekleri: ["5.000.000 TL", "10.000.000 TL", "15.000.000 TL", "20.000.000 TL", "50.000.000 TL", "Sınırsız"],
+    muafiyetTipi: "kapali",
+  },
+  {
+    id: "ams_manevi",
+    tur: "Alt Teminat",
+    ad: "Artan Mali Sorumluluk manevi",
+    limitTipi: "combobox",
+    limitSecenekleri: ["500.000 TL", "1.000.000 TL", "2.500.000 TL", "5.000.000 TL"],
+    muafiyetTipi: "kapali",
+  },
+  {
+    id: "hukuksal_koruma",
+    tur: "Ana Teminat",
+    ad: "Hukuksal Koruma",
+    limitTipi: "combobox",
+    limitSecenekleri: ["25.000 TL", "40.000 TL", "50.000 TL", "60.000 TL", "100.000 TL"],
+    muafiyetTipi: "kapali",
+  },
+  {
+    id: "ikame_secenekleri",
+    tur: "Ana Teminat",
+    ad: "İkame Seçenekleri",
+    limitTipi: "combobox",
+    limitSecenekleri: ["İkamesiz", "7 Gün (C Segmenti)", "14 Gün (C Segmenti)", "15 Gün (C Segmenti)", "30 Gün (D Segmenti)"],
+    muafiyetTipi: "kapali",
+  },
+]
+
+export const varsayilanTeminatSatirlari = (): TeminatSatiri[] => {
+  return VARSAYILAN_TEMINAT_LISTESI.map((item) => ({
+    ...item,
+    secili: true,
+    limitDegeri: item.limitSecenekleri
+      ? (item.id === "kilit" ? "40.000 TL" : item.id === "ams_alt" ? "10.000.000 TL" : item.id === "ams_manevi" ? "2.500.000 TL" : item.id === "hukuksal_koruma" ? "40.000 TL" : item.id === "ikame_secenekleri" ? "7 Gün (C Segmenti)" : item.limitSecenekleri[0])
+      : "",
+    muafiyetDegeri: item.muafiyetSecenekleri ? item.muafiyetSecenekleri[0] : "",
+  }))
+}
+
+interface TeminatDetaylariTablosuProps {
+  satirlar?: TeminatSatiri[]
+  onChange?: (yeniSatirlar: TeminatSatiri[]) => void
+  readOnly?: boolean
+}
+
+function TeminatDetaylariTablosu({
+  satirlar,
+  onChange,
+  readOnly = false,
+}: TeminatDetaylariTablosuProps) {
+  const liste = satirlar && satirlar.length > 0 ? satirlar : varsayilanTeminatSatirlari()
+  const tumuSecili = liste.every((s) => s.secili)
+
+  const handleTumunuDegistir = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly || !onChange) return
+    const yeni = liste.map((s) => ({ ...s, secili: e.target.checked }))
+    onChange(yeni)
+  }
+
+  const handleSatirSecim = (index: number, secili: boolean) => {
+    if (readOnly || !onChange) return
+    const yeni = [...liste]
+    yeni[index] = { ...yeni[index], secili }
+    onChange(yeni)
+  }
+
+  const handleDegerGuncelle = (index: number, alan: "limitDegeri" | "muafiyetDegeri", deger: string) => {
+    if (readOnly || !onChange) return
+    const yeni = [...liste]
+    yeni[index] = { ...yeni[index], [alan]: deger }
+    onChange(yeni)
+  }
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-xs">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-left text-xs">
+          <thead>
+            <tr className="border-b border-gray-300 bg-gray-50 text-gray-800">
+              <th className="w-24 border-r border-gray-200 px-3 py-2.5 text-center font-bold">
+                <div className="flex items-center justify-center gap-1.5">
+                  {!readOnly && (
+                    <input
+                      type="checkbox"
+                      checked={tumuSecili}
+                      onChange={handleTumunuDegistir}
+                      className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      title="Tümünü Seç / Kaldır"
+                    />
+                  )}
+                  <span>CheckBox</span>
+                </div>
+              </th>
+              <th className="w-32 border-r border-gray-200 px-3 py-2.5 font-bold text-gray-700">Tür</th>
+              <th className="border-r border-gray-200 px-3 py-2.5 font-bold text-gray-800">Teminat adı</th>
+              <th className="w-60 border-r border-gray-200 px-3 py-2.5 font-bold text-gray-800">Olaybaşı limit</th>
+              <th className="w-60 px-3 py-2.5 font-bold text-gray-800">Muafiyet</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {liste.map((satir, idx) => {
+              const isAna = satir.tur === "Ana Teminat"
+              const satirPasif = !satir.secili && !readOnly
+
+              return (
+                <tr
+                  key={satir.id}
+                  className={`transition-colors ${
+                    satirPasif
+                      ? "bg-gray-50/70 text-gray-400"
+                      : isAna
+                      ? "bg-slate-50/60 hover:bg-slate-100/60 font-medium"
+                      : "hover:bg-gray-50/70"
+                  }`}
+                >
+                  {/* Checkbox */}
+                  <td className="border-r border-gray-200 px-3 py-2 text-center align-middle">
+                    {readOnly ? (
+                      satir.secili ? (
+                        <span className="font-bold text-blue-700">✓</span>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )
+                    ) : (
+                      <input
+                        type="checkbox"
+                        checked={satir.secili}
+                        onChange={(e) => handleSatirSecim(idx, e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                    )}
+                  </td>
+
+                  {/* Tür */}
+                  <td className="border-r border-gray-200 px-3 py-2 align-middle whitespace-nowrap">
+                    {isAna ? (
+                      <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200">
+                        Ana Teminat
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium text-gray-600 bg-gray-100 border border-gray-200">
+                        Alt Teminat
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Teminat Adı */}
+                  <td className="border-r border-gray-200 px-3 py-2 align-middle">
+                    <span className={`text-xs ${isAna ? "font-bold text-gray-900" : "font-medium text-gray-700 pl-2"}`}>
+                      {!isAna && <span className="text-gray-400 mr-1.5 font-normal">↳</span>}
+                      {satir.ad}
+                    </span>
+                  </td>
+
+                  {/* Olaybaşı Limit */}
+                  <td className="border-r border-gray-200 px-3 py-2 align-middle">
+                    {satir.limitTipi === "kapali" ? (
+                      <span className="inline-flex items-center text-xs font-medium text-gray-400">
+                        Kapalı
+                      </span>
+                    ) : readOnly ? (
+                      <span className="text-xs font-semibold text-gray-800">{satir.limitDegeri || "—"}</span>
+                    ) : (
+                      <select
+                        disabled={!satir.secili}
+                        value={satir.limitDegeri || (satir.limitSecenekleri ? satir.limitSecenekleri[0] : "")}
+                        onChange={(e) => handleDegerGuncelle(idx, "limitDegeri", e.target.value)}
+                        className="w-full rounded border border-gray-300 bg-white px-2.5 py-1 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        {satir.limitSecenekleri?.map((sec) => (
+                          <option key={sec} value={sec}>
+                            {sec}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
+
+                  {/* Muafiyet */}
+                  <td className="px-3 py-2 align-middle">
+                    {satir.muafiyetTipi === "kapali" ? (
+                      <span className="inline-flex items-center text-xs font-medium text-gray-400">
+                        Kapalı
+                      </span>
+                    ) : readOnly ? (
+                      <span className="text-xs font-semibold text-gray-800">{satir.muafiyetDegeri || "—"}</span>
+                    ) : (
+                      <select
+                        disabled={!satir.secili}
+                        value={satir.muafiyetDegeri || (satir.muafiyetSecenekleri ? satir.muafiyetSecenekleri[0] : "")}
+                        onChange={(e) => handleDegerGuncelle(idx, "muafiyetDegeri", e.target.value)}
+                        className="w-full rounded border border-gray-300 bg-white px-2.5 py-1 text-xs text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        {satir.muafiyetSecenekleri?.map((sec) => (
+                          <option key={sec} value={sec}>
+                            {sec}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
 }
 
 const bosFiloAraci: Omit<FiloAracDetayi, "id"> = {
@@ -3328,6 +3643,7 @@ const bosFiloAraci: Omit<FiloAracDetayi, "id"> = {
   hukuksalKorumaLimiti: "40000",
   anadoluHizmetDurumu: "Zorunlu",
   anadoluHizmetPaketi: "Anadolu Hizmet - İkamesiz",
+  teminatSatirlari: varsayilanTeminatSatirlari(),
 }
 
 const filoUretimBaslangicVerisi: FiloUretimKaydi[] = []
@@ -4041,119 +4357,46 @@ function FiloUretimOlusturPage({ onBack, onSave, initialKayit, kayitModu = "norm
             )}
 
             <div className="my-5 h-px bg-gray-100" />
-            <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-500">Teminat Detayları</h4>
-
-            <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="mb-3 flex items-center justify-between">
               <div>
-                <label className={labelCls}>Kilit Mekanizması Limiti</label>
-                <select
-                  value={aracFormu.kilitMekanizmasiLimiti}
-                  onChange={(e) => aracAlaniGuncelle("kilitMekanizmasiLimiti", e.target.value)}
-                  className={inputCls}
-                >
-                  <option>40.000 TL</option>
-                  <option>50.000 TL</option>
-                  <option>60.000 TL</option>
-                </select>
+                <h4 className="text-xs font-bold uppercase tracking-wide text-gray-500">Teminat Detayları</h4>
+                <p className="mt-0.5 text-xs text-gray-400">Ana ve alt teminatlara ait limit ve muafiyet parametreleri</p>
               </div>
+              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 border border-blue-200/60">
+                15 Teminat Tanımlı
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              <div className="overflow-hidden rounded-xl border border-gray-200">
-                <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-                  <p className="text-xs font-bold text-gray-700">Koltuk Ferdi Kaza</p>
-                </div>
-                <div className="divide-y divide-gray-100">
-                  {[
-                    { label: "Ölüm", durum: "koltukOlumDurumu", limit: "koltukOlumLimiti" },
-                    { label: "Sürekli Sakatlık", durum: "koltukSakatlikDurumu", limit: "koltukSakatlikLimiti" },
-                    { label: "Tedavi", durum: "koltukTedaviDurumu", limit: "koltukTedaviLimiti" },
-                  ].map((satir) => (
-                    <div key={satir.label} className="grid grid-cols-[1fr_130px_150px] items-center gap-2 px-3 py-2.5">
-                      <span className="text-xs font-medium text-gray-700">{satir.label}</span>
-                      <select
-                        value={String(aracFormu[satir.durum as keyof typeof aracFormu])}
-                        onChange={(e) => setAracFormu((prev) => ({ ...prev, [satir.durum]: e.target.value }))}
-                        className={inputCls}
-                      >
-                        <option>Zorunlu</option><option>Önerilen</option><option>İsteğe Bağlı</option>
-                      </select>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          min="0"
-                          value={String(aracFormu[satir.limit as keyof typeof aracFormu])}
-                          onChange={(e) => setAracFormu((prev) => ({ ...prev, [satir.limit]: e.target.value }))}
-                          className={`${inputCls} pr-8 text-right`}
-                        />
-                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">₺</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="overflow-hidden rounded-xl border border-gray-200">
-                <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-                  <p className="text-xs font-bold text-gray-700">Sorumluluk ve Hizmet Teminatları</p>
-                </div>
-                <div className="divide-y divide-gray-100">
-                  {[
-                    { label: "Artan Mali Sorumluluk", durum: "artanMaliSorumlulukDurumu", limit: "artanMaliSorumlulukLimiti", options: ["5000000", "10000000", "15000000", "20000000", "9999999999"] },
-                    { label: "Artan Mali Sorumluluk Manevi Tazminat", durum: "maneviTazminatDurumu", limit: "maneviTazminatLimiti", options: ["1000000", "2500000", "5000000"] },
-                    { label: "Hukuksal Koruma", durum: "hukuksalKorumaDurumu", limit: "hukuksalKorumaLimiti", options: ["40000", "50000", "60000"] },
-                    {
-                      label: "Anadolu Hizmet",
-                      durum: "anadoluHizmetDurumu",
-                      paket: "anadoluHizmetPaketi",
-                      paketOptions: [
-                        "Anadolu Hizmet Hususi Otomobil 7/48 (Anadolu Grup 1) Pert Dahil",
-                        "Anadolu Hizmet Hususi Otomobil 7/48 (Anadolu Grup 2) Pert Dahil",
-                        "Anadolu Hizmet - İkamesiz",
-                        "Anadolu Hizmet Hususi 15/48 Otomobil (Anadolu Grup 1) Pert Dahil",
-                        "Anadolu Hizmet Hususi 30/48 Otomobil (Anadolu Grup 1) Pert Dahil",
-                        "Anadolu Hizmet Hususi 15/48 Otomobil (Anadolu Grup 2) Pert Dahil",
-                        "Anadolu Hizmet Hususi 30/48 Otomobil (Anadolu Grup 2) Pert Dahil",
-                        "Anadolu Hizmet Hususi Otomobil 7/48 (Anadolu Grup 3) Pert Dahil",
-                        "Anadolu Hizmet Hususi Otomobil 15/48 (Anadolu Grup 3) Pert Dahil",
-                        "Anadolu Hizmet Hususi Otomobil 30/48 (Anadolu Grup 3) Pert Dahil",
-                      ],
-                    },
-                  ].map((satir) => (
-                    <div key={satir.label} className="grid grid-cols-[1fr_120px_230px] items-center gap-2 px-3 py-2.5">
-                      <span className="text-xs font-medium text-gray-700">{satir.label}</span>
-                      <select
-                        value={String(aracFormu[satir.durum as keyof typeof aracFormu])}
-                        onChange={(e) => setAracFormu((prev) => ({ ...prev, [satir.durum]: e.target.value }))}
-                        className={inputCls}
-                      >
-                        <option>Zorunlu</option><option>Önerilen</option><option>İsteğe Bağlı</option>
-                      </select>
-                      {satir.paket && satir.paketOptions ? (
-                        <select
-                          value={String(aracFormu[satir.paket as keyof typeof aracFormu])}
-                          onChange={(e) => setAracFormu((prev) => ({ ...prev, [satir.paket as string]: e.target.value }))}
-                          className={inputCls}
-                          title={String(aracFormu[satir.paket as keyof typeof aracFormu])}
-                        >
-                          {satir.paketOptions.map((paket) => <option key={paket}>{paket}</option>)}
-                        </select>
-                      ) : satir.limit && satir.options ? (
-                        <select
-                          value={String(aracFormu[satir.limit as keyof typeof aracFormu])}
-                          onChange={(e) => setAracFormu((prev) => ({ ...prev, [satir.limit as string]: e.target.value }))}
-                          className={`${inputCls} text-right`}
-                        >
-                          {satir.options.map((limit) => <option key={limit} value={limit}>{Number(limit).toLocaleString("tr-TR")} TL</option>)}
-                        </select>
-                      ) : (
-                        <span className="px-3 text-xs text-gray-400">Limit uygulanmıyor</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <TeminatDetaylariTablosu
+              satirlar={aracFormu.teminatSatirlari && aracFormu.teminatSatirlari.length > 0 ? aracFormu.teminatSatirlari : varsayilanTeminatSatirlari()}
+              onChange={(yeniSatirlar) => {
+                setAracFormu((prev) => {
+                  const guncel = { ...prev, teminatSatirlari: yeniSatirlar }
+                  const kilit = yeniSatirlar.find((s) => s.id === "kilit")
+                  if (kilit?.limitDegeri) guncel.kilitMekanizmasiLimiti = kilit.limitDegeri
+                  const ams = yeniSatirlar.find((s) => s.id === "ams_alt")
+                  if (ams?.limitDegeri) {
+                    const num = ams.limitDegeri.replace(/[^0-9]/g, "")
+                    guncel.artanMaliSorumlulukLimiti = num || "9999999999"
+                  }
+                  const manevi = yeniSatirlar.find((s) => s.id === "ams_manevi")
+                  if (manevi?.limitDegeri) {
+                    const num = manevi.limitDegeri.replace(/[^0-9]/g, "")
+                    guncel.maneviTazminatLimiti = num || "2500000"
+                  }
+                  const hukuk = yeniSatirlar.find((s) => s.id === "hukuksal_koruma")
+                  if (hukuk?.limitDegeri) {
+                    const num = hukuk.limitDegeri.replace(/[^0-9]/g, "")
+                    guncel.hukuksalKorumaLimiti = num || "40000"
+                  }
+                  const ikame = yeniSatirlar.find((s) => s.id === "ikame_secenekleri")
+                  if (ikame?.limitDegeri) {
+                    guncel.anadoluHizmetPaketi = ikame.limitDegeri
+                  }
+                  return guncel
+                })
+              }}
+            />
 
             <div className="mt-5 flex justify-end">
               <button onClick={aracEkle} className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
@@ -4512,15 +4755,14 @@ function FiloUretimGoruntulePage({ kayit, onBack, onUpdate, onSozlesmeEki }: {
                   {bilgi("Sabit Prim", arac.sabitPrim ? `${arac.sabitPrim} TL` : "—")}
                   {bilgi("Özel Fiyat Oranı", arac.ozelFiyatOrani ? `%${arac.ozelFiyatOrani}` : "—")}
                   {bilgi("Acente Komisyonu", arac.acenteKomisyonu ? `%${arac.acenteKomisyonu}` : "—")}
-                  {bilgi("Kilit Mekanizması Limiti", arac.kilitMekanizmasiLimiti)}
-                  {bilgi("Koltuk Ferdi Kaza - Ölüm", `${Number(arac.koltukOlumLimiti).toLocaleString("tr-TR")} TL · ${arac.koltukOlumDurumu}`)}
-                  {bilgi("Koltuk Ferdi Kaza - Sakatlık", `${Number(arac.koltukSakatlikLimiti).toLocaleString("tr-TR")} TL · ${arac.koltukSakatlikDurumu}`)}
-                  {bilgi("Koltuk Ferdi Kaza - Tedavi", `${Number(arac.koltukTedaviLimiti).toLocaleString("tr-TR")} TL · ${arac.koltukTedaviDurumu}`)}
-                  {bilgi("Artan Mali Sorumluluk", `${Number(arac.artanMaliSorumlulukLimiti).toLocaleString("tr-TR")} TL · ${arac.artanMaliSorumlulukDurumu}`)}
-                  {bilgi("Manevi Tazminat", `${Number(arac.maneviTazminatLimiti).toLocaleString("tr-TR")} TL · ${arac.maneviTazminatDurumu}`)}
-                  {bilgi("Hukuksal Koruma", `${Number(arac.hukuksalKorumaLimiti).toLocaleString("tr-TR")} TL · ${arac.hukuksalKorumaDurumu}`)}
-                  {bilgi("Anadolu Hizmet", `${arac.anadoluHizmetPaketi} · ${arac.anadoluHizmetDurumu}`)}
                 </div>
+
+                <div className="my-5 h-px bg-gray-100" />
+                <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-500">Teminat Detayları</h4>
+                <TeminatDetaylariTablosu
+                  satirlar={arac.teminatSatirlari && arac.teminatSatirlari.length > 0 ? arac.teminatSatirlari : varsayilanTeminatSatirlari()}
+                  readOnly={true}
+                />
                 <div className="mt-4 flex flex-wrap gap-2">
                   {[
                     ["Tüm Teminatlar", arac.tumTeminatlarDahil],
